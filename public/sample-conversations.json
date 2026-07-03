@@ -1,0 +1,5102 @@
+[
+  {
+    "type": "conversation",
+    "id": "conv_1_671",
+    "created_at": 1781904037,
+    "updated_at": 1781907637,
+    "waiting_since": 1781905837,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Issue with professional headshots",
+      "body": "Customer says: Issue with professional headshots. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 1"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 577,
+      "time_to_admin_reply": 4727,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1456,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 2197
+    },
+    "conversation_rating": null,
+    "title": "Issue with professional headshots",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_2_4480",
+    "created_at": 1782502319,
+    "updated_at": 1782505919,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "App crashing on startup",
+      "body": "Customer says: App crashing on startup. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 2"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 395,
+      "time_to_admin_reply": 2762,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 376,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 7,
+      "handling_time": 1962
+    },
+    "conversation_rating": null,
+    "title": "App crashing on startup",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_3_6063",
+    "created_at": 1782530668,
+    "updated_at": 1782534268,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Bug with billing page",
+      "body": "Customer says: Bug with billing page. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 3"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1289,
+      "time_to_admin_reply": 4398,
+      "time_to_first_close": 44094,
+      "time_to_last_close": 63019,
+      "median_time_to_reply": 980,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 4,
+      "handling_time": 2911
+    },
+    "conversation_rating": null,
+    "title": "Bug with billing page",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_4_2856",
+    "created_at": 1781544286,
+    "updated_at": 1781547886,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 4"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3310,
+      "time_to_admin_reply": 730,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1525,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 1522
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_5_7780",
+    "created_at": 1781552379,
+    "updated_at": 1781555979,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Bug with billing page",
+      "body": "Customer says: Bug with billing page. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 5"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2419,
+      "time_to_admin_reply": 6919,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1575,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 8,
+      "handling_time": 1866
+    },
+    "conversation_rating": null,
+    "title": "Bug with billing page",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_6_1321",
+    "created_at": 1783080018,
+    "updated_at": 1783083618,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 6"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2505,
+      "time_to_admin_reply": 2112,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 72,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 8,
+      "handling_time": 3290
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_7_3953",
+    "created_at": 1782237146,
+    "updated_at": 1782240746,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 7"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1824,
+      "time_to_admin_reply": 5623,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 101,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 9,
+      "handling_time": 44
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_8_7652",
+    "created_at": 1780893402,
+    "updated_at": 1780897002,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Issue with professional headshots",
+      "body": "Customer says: Issue with professional headshots. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 8"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1492,
+      "time_to_admin_reply": 2026,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 456,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 8,
+      "handling_time": 1163
+    },
+    "conversation_rating": null,
+    "title": "Issue with professional headshots",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_9_7761",
+    "created_at": 1781155870,
+    "updated_at": 1781159470,
+    "waiting_since": 1781157670,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Missing files after sync",
+      "body": "Customer says: Missing files after sync. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 9"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1021,
+      "time_to_admin_reply": 4651,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1799,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 1299
+    },
+    "conversation_rating": null,
+    "title": "Missing files after sync",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_10_221",
+    "created_at": 1780759935,
+    "updated_at": 1780763535,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 10"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3013,
+      "time_to_admin_reply": 2172,
+      "time_to_first_close": 1932,
+      "time_to_last_close": 54237,
+      "median_time_to_reply": 184,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 3535
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_11_7458",
+    "created_at": 1781639723,
+    "updated_at": 1781643323,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 11"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 441,
+      "time_to_admin_reply": 3757,
+      "time_to_first_close": 53343,
+      "time_to_last_close": 58251,
+      "median_time_to_reply": 1624,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 6,
+      "handling_time": 2081
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_12_5075",
+    "created_at": 1782994004,
+    "updated_at": 1782997604,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 12"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3021,
+      "time_to_admin_reply": 1566,
+      "time_to_first_close": 7329,
+      "time_to_last_close": 81,
+      "median_time_to_reply": 1572,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 1,
+      "handling_time": 2101
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_13_638",
+    "created_at": 1782828996,
+    "updated_at": 1782832596,
+    "waiting_since": 1782830796,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 13"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 171,
+      "time_to_admin_reply": 3362,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 656,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 2089
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_14_7780",
+    "created_at": 1780762627,
+    "updated_at": 1780766227,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 14"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2248,
+      "time_to_admin_reply": 5493,
+      "time_to_first_close": 6373,
+      "time_to_last_close": 3109,
+      "median_time_to_reply": 1691,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 2929
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_15_9270",
+    "created_at": 1782040593,
+    "updated_at": 1782044193,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 15"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3493,
+      "time_to_admin_reply": 6856,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 806,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 7,
+      "handling_time": 2005
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_16_1109",
+    "created_at": 1781746411,
+    "updated_at": 1781750011,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Bug with billing page",
+      "body": "Customer says: Bug with billing page. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 16"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2554,
+      "time_to_admin_reply": 462,
+      "time_to_first_close": 71528,
+      "time_to_last_close": 72201,
+      "median_time_to_reply": 528,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 6,
+      "handling_time": 1638
+    },
+    "conversation_rating": null,
+    "title": "Bug with billing page",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_17_8732",
+    "created_at": 1782808418,
+    "updated_at": 1782812018,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 17"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2816,
+      "time_to_admin_reply": 4046,
+      "time_to_first_close": 81336,
+      "time_to_last_close": 20696,
+      "median_time_to_reply": 119,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 2,
+      "handling_time": 350
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_18_2746",
+    "created_at": 1781846394,
+    "updated_at": 1781849994,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 18"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3064,
+      "time_to_admin_reply": 4957,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 508,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 7,
+      "handling_time": 646
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_19_3737",
+    "created_at": 1781479514,
+    "updated_at": 1781483114,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Login failed",
+      "body": "Customer says: Login failed. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 19"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1875,
+      "time_to_admin_reply": 3118,
+      "time_to_first_close": 63113,
+      "time_to_last_close": 42419,
+      "median_time_to_reply": 561,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 1010
+    },
+    "conversation_rating": null,
+    "title": "Login failed",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_20_5929",
+    "created_at": 1781395407,
+    "updated_at": 1781399007,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 20"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3298,
+      "time_to_admin_reply": 3658,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 58,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 9,
+      "handling_time": 1286
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_21_1475",
+    "created_at": 1783051399,
+    "updated_at": 1783054999,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Where can I find the invoice?",
+      "body": "Customer says: Where can I find the invoice?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 21"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 555,
+      "time_to_admin_reply": 6032,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 814,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 1619
+    },
+    "conversation_rating": null,
+    "title": "Where can I find the invoice?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_22_3354",
+    "created_at": 1782449561,
+    "updated_at": 1782453161,
+    "waiting_since": 1782451361,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 22"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1735,
+      "time_to_admin_reply": 3718,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 668,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 5,
+      "handling_time": 3073
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_23_797",
+    "created_at": 1781779944,
+    "updated_at": 1781783544,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 23"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3006,
+      "time_to_admin_reply": 6339,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1646,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 8,
+      "handling_time": 2364
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_24_4937",
+    "created_at": 1782330740,
+    "updated_at": 1782334340,
+    "waiting_since": 1782332540,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Need help with team billing",
+      "body": "Customer says: Need help with team billing. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 24"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2405,
+      "time_to_admin_reply": 3773,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 47,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 1,
+      "handling_time": 1694
+    },
+    "conversation_rating": null,
+    "title": "Need help with team billing",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_25_4288",
+    "created_at": 1782722019,
+    "updated_at": 1782725619,
+    "waiting_since": 1782723819,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Issue with professional headshots",
+      "body": "Customer says: Issue with professional headshots. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 25"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 53,
+      "time_to_admin_reply": 3613,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 911,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 2,
+      "handling_time": 1919
+    },
+    "conversation_rating": null,
+    "title": "Issue with professional headshots",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_26_6904",
+    "created_at": 1782720921,
+    "updated_at": 1782724521,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 26"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 131,
+      "time_to_admin_reply": 6331,
+      "time_to_first_close": 29802,
+      "time_to_last_close": 12241,
+      "median_time_to_reply": 725,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 2,
+      "handling_time": 3379
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_27_205",
+    "created_at": 1780593598,
+    "updated_at": 1780597198,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Login failed",
+      "body": "Customer says: Login failed. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 27"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 237,
+      "time_to_admin_reply": 342,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1242,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 3280
+    },
+    "conversation_rating": null,
+    "title": "Login failed",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_28_176",
+    "created_at": 1781512795,
+    "updated_at": 1781516395,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Where can I find the invoice?",
+      "body": "Customer says: Where can I find the invoice?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 28"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 970,
+      "time_to_admin_reply": 6986,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 779,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 9,
+      "handling_time": 674
+    },
+    "conversation_rating": null,
+    "title": "Where can I find the invoice?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_29_10",
+    "created_at": 1782652782,
+    "updated_at": 1782656382,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "App crashing on startup",
+      "body": "Customer says: App crashing on startup. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 29"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2632,
+      "time_to_admin_reply": 1964,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1147,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 4,
+      "handling_time": 3399
+    },
+    "conversation_rating": null,
+    "title": "App crashing on startup",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_30_6715",
+    "created_at": 1782928538,
+    "updated_at": 1782932138,
+    "waiting_since": 1782930338,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Where can I find the invoice?",
+      "body": "Customer says: Where can I find the invoice?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 30"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3317,
+      "time_to_admin_reply": 5387,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 72,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 8,
+      "handling_time": 3079
+    },
+    "conversation_rating": null,
+    "title": "Where can I find the invoice?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_31_1854",
+    "created_at": 1780777496,
+    "updated_at": 1780781096,
+    "waiting_since": 1780779296,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Login failed",
+      "body": "Customer says: Login failed. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 31"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3369,
+      "time_to_admin_reply": 5324,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1583,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 4,
+      "handling_time": 270
+    },
+    "conversation_rating": null,
+    "title": "Login failed",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_32_4460",
+    "created_at": 1781114889,
+    "updated_at": 1781118489,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 32"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2490,
+      "time_to_admin_reply": 2251,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 253,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 7,
+      "handling_time": 2911
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_33_2688",
+    "created_at": 1780663565,
+    "updated_at": 1780667165,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Login failed",
+      "body": "Customer says: Login failed. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 33"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2417,
+      "time_to_admin_reply": 6523,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1079,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 5,
+      "handling_time": 462
+    },
+    "conversation_rating": null,
+    "title": "Login failed",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_34_7660",
+    "created_at": 1780627599,
+    "updated_at": 1780631199,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 34"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1776,
+      "time_to_admin_reply": 5303,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1595,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 5,
+      "handling_time": 2952
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_35_420",
+    "created_at": 1782724228,
+    "updated_at": 1782727828,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Login failed",
+      "body": "Customer says: Login failed. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 35"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1937,
+      "time_to_admin_reply": 902,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 490,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 2029
+    },
+    "conversation_rating": null,
+    "title": "Login failed",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_36_6594",
+    "created_at": 1781837383,
+    "updated_at": 1781840983,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Missing files after sync",
+      "body": "Customer says: Missing files after sync. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 36"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 781,
+      "time_to_admin_reply": 821,
+      "time_to_first_close": 16716,
+      "time_to_last_close": 40134,
+      "median_time_to_reply": 1169,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 7,
+      "handling_time": 1694
+    },
+    "conversation_rating": null,
+    "title": "Missing files after sync",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_37_577",
+    "created_at": 1782820751,
+    "updated_at": 1782824351,
+    "waiting_since": 1782822551,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Missing files after sync",
+      "body": "Customer says: Missing files after sync. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 37"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1689,
+      "time_to_admin_reply": 1891,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 506,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 2,
+      "handling_time": 1300
+    },
+    "conversation_rating": null,
+    "title": "Missing files after sync",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_38_256",
+    "created_at": 1782684014,
+    "updated_at": 1782687614,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Bug with billing page",
+      "body": "Customer says: Bug with billing page. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 38"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2542,
+      "time_to_admin_reply": 979,
+      "time_to_first_close": 5789,
+      "time_to_last_close": 3541,
+      "median_time_to_reply": 1251,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 9,
+      "handling_time": 2217
+    },
+    "conversation_rating": null,
+    "title": "Bug with billing page",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_39_5630",
+    "created_at": 1780821182,
+    "updated_at": 1780824782,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Where can I find the invoice?",
+      "body": "Customer says: Where can I find the invoice?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 39"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 721,
+      "time_to_admin_reply": 4617,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 410,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 7,
+      "handling_time": 2056
+    },
+    "conversation_rating": null,
+    "title": "Where can I find the invoice?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_40_3348",
+    "created_at": 1781493745,
+    "updated_at": 1781497345,
+    "waiting_since": 1781495545,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Issue with professional headshots",
+      "body": "Customer says: Issue with professional headshots. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 40"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1086,
+      "time_to_admin_reply": 5442,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1279,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 2061
+    },
+    "conversation_rating": null,
+    "title": "Issue with professional headshots",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_41_1606",
+    "created_at": 1780966735,
+    "updated_at": 1780970335,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 41"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 162,
+      "time_to_admin_reply": 4807,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1441,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 6,
+      "handling_time": 1535
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_42_6653",
+    "created_at": 1782389334,
+    "updated_at": 1782392934,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 42"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1867,
+      "time_to_admin_reply": 4975,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1683,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 5,
+      "handling_time": 397
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_43_9342",
+    "created_at": 1780661976,
+    "updated_at": 1780665576,
+    "waiting_since": 1780663776,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 43"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2387,
+      "time_to_admin_reply": 1094,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1224,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 227
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_44_9964",
+    "created_at": 1782416931,
+    "updated_at": 1782420531,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 44"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 833,
+      "time_to_admin_reply": 59,
+      "time_to_first_close": 81467,
+      "time_to_last_close": 77395,
+      "median_time_to_reply": 671,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 9,
+      "handling_time": 2965
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_45_6250",
+    "created_at": 1781732885,
+    "updated_at": 1781736485,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Issue with professional headshots",
+      "body": "Customer says: Issue with professional headshots. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 45"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1330,
+      "time_to_admin_reply": 6684,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1102,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 5,
+      "handling_time": 3450
+    },
+    "conversation_rating": null,
+    "title": "Issue with professional headshots",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_46_8387",
+    "created_at": 1782703562,
+    "updated_at": 1782707162,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 46"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2467,
+      "time_to_admin_reply": 6849,
+      "time_to_first_close": 8767,
+      "time_to_last_close": 13561,
+      "median_time_to_reply": 974,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 8,
+      "handling_time": 2714
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_47_4518",
+    "created_at": 1781987264,
+    "updated_at": 1781990864,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "App crashing on startup",
+      "body": "Customer says: App crashing on startup. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 47"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3595,
+      "time_to_admin_reply": 2287,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1699,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 1,
+      "handling_time": 2623
+    },
+    "conversation_rating": null,
+    "title": "App crashing on startup",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_48_9959",
+    "created_at": 1780716770,
+    "updated_at": 1780720370,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Login failed",
+      "body": "Customer says: Login failed. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 48"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2995,
+      "time_to_admin_reply": 4946,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 504,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 1898
+    },
+    "conversation_rating": null,
+    "title": "Login failed",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_49_9305",
+    "created_at": 1781228805,
+    "updated_at": 1781232405,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 49"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2372,
+      "time_to_admin_reply": 5167,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 790,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 1,
+      "handling_time": 862
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_50_1434",
+    "created_at": 1782991766,
+    "updated_at": 1782995366,
+    "waiting_since": 1782993566,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Where can I find the invoice?",
+      "body": "Customer says: Where can I find the invoice?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 50"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1029,
+      "time_to_admin_reply": 6805,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 846,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 5,
+      "handling_time": 104
+    },
+    "conversation_rating": null,
+    "title": "Where can I find the invoice?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_51_4414",
+    "created_at": 1780617169,
+    "updated_at": 1780620769,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 51"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 11,
+      "time_to_admin_reply": 6,
+      "time_to_first_close": 24671,
+      "time_to_last_close": 5703,
+      "median_time_to_reply": 660,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 1788
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_52_9626",
+    "created_at": 1781834289,
+    "updated_at": 1781837889,
+    "waiting_since": 1781836089,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "App crashing on startup",
+      "body": "Customer says: App crashing on startup. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 52"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3514,
+      "time_to_admin_reply": 4395,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 927,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 6,
+      "handling_time": 2339
+    },
+    "conversation_rating": null,
+    "title": "App crashing on startup",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_53_3347",
+    "created_at": 1781984387,
+    "updated_at": 1781987987,
+    "waiting_since": 1781986187,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Issue with professional headshots",
+      "body": "Customer says: Issue with professional headshots. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 53"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1110,
+      "time_to_admin_reply": 2684,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 638,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 1748
+    },
+    "conversation_rating": null,
+    "title": "Issue with professional headshots",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_54_2873",
+    "created_at": 1782524603,
+    "updated_at": 1782528203,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 54"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2427,
+      "time_to_admin_reply": 730,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1650,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 8,
+      "handling_time": 2916
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_55_1711",
+    "created_at": 1782166670,
+    "updated_at": 1782170270,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 55"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3333,
+      "time_to_admin_reply": 6153,
+      "time_to_first_close": 12328,
+      "time_to_last_close": 64648,
+      "median_time_to_reply": 1253,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 1,
+      "handling_time": 2866
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_56_2741",
+    "created_at": 1780567260,
+    "updated_at": 1780570860,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Where can I find the invoice?",
+      "body": "Customer says: Where can I find the invoice?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 56"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2518,
+      "time_to_admin_reply": 1936,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 906,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 4,
+      "handling_time": 1495
+    },
+    "conversation_rating": null,
+    "title": "Where can I find the invoice?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_57_1721",
+    "created_at": 1783032143,
+    "updated_at": 1783035743,
+    "waiting_since": 1783033943,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 57"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1273,
+      "time_to_admin_reply": 5644,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 190,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 215
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_58_8178",
+    "created_at": 1782953793,
+    "updated_at": 1782957393,
+    "waiting_since": 1782955593,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "App crashing on startup",
+      "body": "Customer says: App crashing on startup. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 58"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 456,
+      "time_to_admin_reply": 6826,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 35,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 2,
+      "handling_time": 3460
+    },
+    "conversation_rating": null,
+    "title": "App crashing on startup",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_59_9697",
+    "created_at": 1782149172,
+    "updated_at": 1782152772,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 59"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2479,
+      "time_to_admin_reply": 2949,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1606,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 7,
+      "handling_time": 1449
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_60_4329",
+    "created_at": 1782443716,
+    "updated_at": 1782447316,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Where can I find the invoice?",
+      "body": "Customer says: Where can I find the invoice?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 60"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 362,
+      "time_to_admin_reply": 765,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1079,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 2,
+      "handling_time": 1994
+    },
+    "conversation_rating": null,
+    "title": "Where can I find the invoice?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_61_700",
+    "created_at": 1782707554,
+    "updated_at": 1782711154,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Where can I find the invoice?",
+      "body": "Customer says: Where can I find the invoice?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 61"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1998,
+      "time_to_admin_reply": 1084,
+      "time_to_first_close": 72713,
+      "time_to_last_close": 20810,
+      "median_time_to_reply": 1092,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 1,
+      "handling_time": 2617
+    },
+    "conversation_rating": null,
+    "title": "Where can I find the invoice?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_62_854",
+    "created_at": 1780572953,
+    "updated_at": 1780576553,
+    "waiting_since": 1780574753,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Login failed",
+      "body": "Customer says: Login failed. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 62"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3326,
+      "time_to_admin_reply": 4011,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 200,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 2,
+      "handling_time": 1264
+    },
+    "conversation_rating": null,
+    "title": "Login failed",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_63_2445",
+    "created_at": 1781105196,
+    "updated_at": 1781108796,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 63"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2606,
+      "time_to_admin_reply": 6934,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 140,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 7,
+      "handling_time": 1020
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_64_3625",
+    "created_at": 1781088091,
+    "updated_at": 1781091691,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Bug with billing page",
+      "body": "Customer says: Bug with billing page. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 64"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 668,
+      "time_to_admin_reply": 2289,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 583,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 7,
+      "handling_time": 16
+    },
+    "conversation_rating": null,
+    "title": "Bug with billing page",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_65_8132",
+    "created_at": 1781488440,
+    "updated_at": 1781492040,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 65"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 951,
+      "time_to_admin_reply": 6154,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 973,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 6,
+      "handling_time": 2353
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_66_7",
+    "created_at": 1782913865,
+    "updated_at": 1782917465,
+    "waiting_since": 1782915665,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Missing files after sync",
+      "body": "Customer says: Missing files after sync. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 66"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2782,
+      "time_to_admin_reply": 5553,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1593,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 2709
+    },
+    "conversation_rating": null,
+    "title": "Missing files after sync",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_67_5945",
+    "created_at": 1782207142,
+    "updated_at": 1782210742,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "App crashing on startup",
+      "body": "Customer says: App crashing on startup. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 67"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1701,
+      "time_to_admin_reply": 4613,
+      "time_to_first_close": 79009,
+      "time_to_last_close": 58255,
+      "median_time_to_reply": 1542,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 5,
+      "handling_time": 1006
+    },
+    "conversation_rating": null,
+    "title": "App crashing on startup",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_68_1551",
+    "created_at": 1782434214,
+    "updated_at": 1782437814,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Login failed",
+      "body": "Customer says: Login failed. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 68"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1809,
+      "time_to_admin_reply": 2787,
+      "time_to_first_close": 66773,
+      "time_to_last_close": 55622,
+      "median_time_to_reply": 68,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 8,
+      "handling_time": 3395
+    },
+    "conversation_rating": null,
+    "title": "Login failed",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_69_1628",
+    "created_at": 1781980708,
+    "updated_at": 1781984308,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 69"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 221,
+      "time_to_admin_reply": 4443,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 61,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 8,
+      "handling_time": 3384
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_70_4825",
+    "created_at": 1780627036,
+    "updated_at": 1780630636,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Need help with team billing",
+      "body": "Customer says: Need help with team billing. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 70"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3369,
+      "time_to_admin_reply": 2801,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 298,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 2660
+    },
+    "conversation_rating": null,
+    "title": "Need help with team billing",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_71_5756",
+    "created_at": 1780895239,
+    "updated_at": 1780898839,
+    "waiting_since": 1780897039,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 71"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 51,
+      "time_to_admin_reply": 2174,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1456,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 8,
+      "handling_time": 216
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_72_3019",
+    "created_at": 1782847787,
+    "updated_at": 1782851387,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 72"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1805,
+      "time_to_admin_reply": 7190,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1350,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 1462
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_73_9666",
+    "created_at": 1780577195,
+    "updated_at": 1780580795,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 73"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 535,
+      "time_to_admin_reply": 429,
+      "time_to_first_close": 48710,
+      "time_to_last_close": 74083,
+      "median_time_to_reply": 1171,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 2780
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_74_7941",
+    "created_at": 1781574578,
+    "updated_at": 1781578178,
+    "waiting_since": 1781576378,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Where can I find the invoice?",
+      "body": "Customer says: Where can I find the invoice?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 74"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2690,
+      "time_to_admin_reply": 630,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1495,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 792
+    },
+    "conversation_rating": null,
+    "title": "Where can I find the invoice?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_75_9679",
+    "created_at": 1780571693,
+    "updated_at": 1780575293,
+    "waiting_since": 1780573493,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 75"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 821,
+      "time_to_admin_reply": 6756,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1008,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 6,
+      "handling_time": 575
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_76_877",
+    "created_at": 1781430175,
+    "updated_at": 1781433775,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Issue with professional headshots",
+      "body": "Customer says: Issue with professional headshots. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 76"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2196,
+      "time_to_admin_reply": 948,
+      "time_to_first_close": 64547,
+      "time_to_last_close": 73263,
+      "median_time_to_reply": 1440,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 6,
+      "handling_time": 1804
+    },
+    "conversation_rating": null,
+    "title": "Issue with professional headshots",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_77_7954",
+    "created_at": 1782968273,
+    "updated_at": 1782971873,
+    "waiting_since": 1782970073,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 77"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 157,
+      "time_to_admin_reply": 2981,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 134,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 6,
+      "handling_time": 2933
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_78_247",
+    "created_at": 1781837671,
+    "updated_at": 1781841271,
+    "waiting_since": 1781839471,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Need help with team billing",
+      "body": "Customer says: Need help with team billing. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 78"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1579,
+      "time_to_admin_reply": 6154,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 97,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 1793
+    },
+    "conversation_rating": null,
+    "title": "Need help with team billing",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_79_8200",
+    "created_at": 1780543457,
+    "updated_at": 1780547057,
+    "waiting_since": 1780545257,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Where can I find the invoice?",
+      "body": "Customer says: Where can I find the invoice?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 79"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2653,
+      "time_to_admin_reply": 2815,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 645,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 1700
+    },
+    "conversation_rating": null,
+    "title": "Where can I find the invoice?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_80_1491",
+    "created_at": 1781648880,
+    "updated_at": 1781652480,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Where can I find the invoice?",
+      "body": "Customer says: Where can I find the invoice?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 80"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1772,
+      "time_to_admin_reply": 3573,
+      "time_to_first_close": 34070,
+      "time_to_last_close": 72220,
+      "median_time_to_reply": 878,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 100
+    },
+    "conversation_rating": null,
+    "title": "Where can I find the invoice?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_81_2366",
+    "created_at": 1782009279,
+    "updated_at": 1782012879,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Issue with professional headshots",
+      "body": "Customer says: Issue with professional headshots. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 81"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2238,
+      "time_to_admin_reply": 4835,
+      "time_to_first_close": 31882,
+      "time_to_last_close": 19086,
+      "median_time_to_reply": 169,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 5,
+      "handling_time": 796
+    },
+    "conversation_rating": null,
+    "title": "Issue with professional headshots",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_82_5041",
+    "created_at": 1782740877,
+    "updated_at": 1782744477,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Missing files after sync",
+      "body": "Customer says: Missing files after sync. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 82"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2080,
+      "time_to_admin_reply": 4054,
+      "time_to_first_close": 13309,
+      "time_to_last_close": 38557,
+      "median_time_to_reply": 548,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 8,
+      "handling_time": 2400
+    },
+    "conversation_rating": null,
+    "title": "Missing files after sync",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_83_2220",
+    "created_at": 1782085730,
+    "updated_at": 1782089330,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 83"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 936,
+      "time_to_admin_reply": 1375,
+      "time_to_first_close": 84646,
+      "time_to_last_close": 53916,
+      "median_time_to_reply": 1424,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 2464
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_84_9513",
+    "created_at": 1781304430,
+    "updated_at": 1781308030,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Need help with team billing",
+      "body": "Customer says: Need help with team billing. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 84"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 979,
+      "time_to_admin_reply": 4969,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1666,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 5,
+      "handling_time": 1614
+    },
+    "conversation_rating": null,
+    "title": "Need help with team billing",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_85_467",
+    "created_at": 1782196162,
+    "updated_at": 1782199762,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Need help with team billing",
+      "body": "Customer says: Need help with team billing. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 85"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 843,
+      "time_to_admin_reply": 2952,
+      "time_to_first_close": 61121,
+      "time_to_last_close": 71907,
+      "median_time_to_reply": 954,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 1,
+      "handling_time": 2131
+    },
+    "conversation_rating": null,
+    "title": "Need help with team billing",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_86_7377",
+    "created_at": 1781937604,
+    "updated_at": 1781941204,
+    "waiting_since": 1781939404,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Bug with billing page",
+      "body": "Customer says: Bug with billing page. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 86"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2317,
+      "time_to_admin_reply": 5590,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1230,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 6,
+      "handling_time": 1139
+    },
+    "conversation_rating": null,
+    "title": "Bug with billing page",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_87_1760",
+    "created_at": 1782837215,
+    "updated_at": 1782840815,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "email",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 87"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 160,
+      "time_to_admin_reply": 686,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1373,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 9,
+      "handling_time": 575
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_88_1221",
+    "created_at": 1781950778,
+    "updated_at": 1781954378,
+    "waiting_since": 1781952578,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Login failed",
+      "body": "Customer says: Login failed. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 88"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3482,
+      "time_to_admin_reply": 2614,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1432,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 1,
+      "handling_time": 1342
+    },
+    "conversation_rating": null,
+    "title": "Login failed",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_89_6448",
+    "created_at": 1781875330,
+    "updated_at": 1781878930,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 89"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1131,
+      "time_to_admin_reply": 129,
+      "time_to_first_close": 24289,
+      "time_to_last_close": 15375,
+      "median_time_to_reply": 785,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 4,
+      "handling_time": 235
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_90_5452",
+    "created_at": 1780680950,
+    "updated_at": 1780684550,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Bug with billing page",
+      "body": "Customer says: Bug with billing page. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 90"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3007,
+      "time_to_admin_reply": 3103,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 359,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 1747
+    },
+    "conversation_rating": null,
+    "title": "Bug with billing page",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_91_7232",
+    "created_at": 1780838765,
+    "updated_at": 1780842365,
+    "waiting_since": 1780840565,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Cannot upload avatar",
+      "body": "Customer says: Cannot upload avatar. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 91"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2662,
+      "time_to_admin_reply": 4864,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1183,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 4,
+      "handling_time": 1262
+    },
+    "conversation_rating": null,
+    "title": "Cannot upload avatar",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_92_1089",
+    "created_at": 1782222415,
+    "updated_at": 1782226015,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Need help with team billing",
+      "body": "Customer says: Need help with team billing. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 92"
+      },
+      "attachments": []
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2265,
+      "time_to_admin_reply": 392,
+      "time_to_first_close": 74066,
+      "time_to_last_close": 4118,
+      "median_time_to_reply": 539,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 5,
+      "handling_time": 1831
+    },
+    "conversation_rating": null,
+    "title": "Need help with team billing",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_93_8485",
+    "created_at": 1780996330,
+    "updated_at": 1780999930,
+    "waiting_since": 1780998130,
+    "snoozed_until": null,
+    "source": {
+      "type": "email",
+      "subject": "Issue with professional headshots",
+      "body": "Customer says: Issue with professional headshots. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 93"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 316,
+      "time_to_admin_reply": 801,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 359,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 2264
+    },
+    "conversation_rating": null,
+    "title": "Issue with professional headshots",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_94_7937",
+    "created_at": 1781415881,
+    "updated_at": 1781419481,
+    "waiting_since": 1781417681,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Where can I find the invoice?",
+      "body": "Customer says: Where can I find the invoice?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 94"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3374,
+      "time_to_admin_reply": 6115,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1358,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 9,
+      "handling_time": 134
+    },
+    "conversation_rating": null,
+    "title": "Where can I find the invoice?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_95_8641",
+    "created_at": 1781375548,
+    "updated_at": 1781379148,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "Feature request: dark mode",
+      "body": "Customer says: Feature request: dark mode. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 95"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2200,
+      "time_to_admin_reply": 722,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 453,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 4,
+      "handling_time": 1474
+    },
+    "conversation_rating": null,
+    "title": "Feature request: dark mode",
+    "custom_attributes": {
+      "AI Title": "Feature Request",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_96_2912",
+    "created_at": 1780530225,
+    "updated_at": 1780533825,
+    "waiting_since": 1780532025,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Need help with team billing",
+      "body": "Customer says: Need help with team billing. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 96"
+      },
+      "attachments": []
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 2604,
+      "time_to_admin_reply": 6877,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1348,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 3,
+      "handling_time": 285
+    },
+    "conversation_rating": null,
+    "title": "Need help with team billing",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": false
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_97_4756",
+    "created_at": 1781584781,
+    "updated_at": 1781588381,
+    "waiting_since": null,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "Bug with billing page",
+      "body": "Customer says: Bug with billing page. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 97"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "closed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3436,
+      "time_to_admin_reply": 4539,
+      "time_to_first_close": 71025,
+      "time_to_last_close": 53239,
+      "median_time_to_reply": 934,
+      "count_reopens": 1,
+      "count_assignments": 1,
+      "count_conversation_parts": 10,
+      "handling_time": 3243
+    },
+    "conversation_rating": null,
+    "title": "Bug with billing page",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_98_311",
+    "created_at": 1780872170,
+    "updated_at": 1780875770,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "App crashing on startup",
+      "body": "Customer says: App crashing on startup. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 98"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 3242,
+      "time_to_admin_reply": 4309,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 209,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 5,
+      "handling_time": 342
+    },
+    "conversation_rating": null,
+    "title": "App crashing on startup",
+    "custom_attributes": {
+      "AI Title": "Bug Report",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_99_4944",
+    "created_at": 1781612846,
+    "updated_at": 1781616446,
+    "waiting_since": 1781614646,
+    "snoozed_until": null,
+    "source": {
+      "type": "conversation",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 99"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": true,
+    "state": "open",
+    "tags": {
+      "tags": []
+    },
+    "priority": "priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1598,
+      "time_to_admin_reply": 2834,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 849,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 6,
+      "handling_time": 1332
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": false,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  },
+  {
+    "type": "conversation",
+    "id": "conv_100_604",
+    "created_at": 1782547422,
+    "updated_at": 1782551022,
+    "waiting_since": null,
+    "snoozed_until": 1783208518.048,
+    "source": {
+      "type": "conversation",
+      "subject": "How do I change my password?",
+      "body": "Customer says: How do I change my password?. Please investigate.",
+      "author": {
+        "type": "user",
+        "name": "User 100"
+      },
+      "attachments": [
+        {
+          "type": "image",
+          "url": "http://example.com/img.png"
+        }
+      ]
+    },
+    "open": false,
+    "state": "snoozed",
+    "tags": {
+      "tags": []
+    },
+    "priority": "not_priority",
+    "sla_applied": null,
+    "statistics": {
+      "time_to_assignment": 1357,
+      "time_to_admin_reply": 5275,
+      "time_to_first_close": null,
+      "time_to_last_close": null,
+      "median_time_to_reply": 1611,
+      "count_reopens": 0,
+      "count_assignments": 1,
+      "count_conversation_parts": 1,
+      "handling_time": 1730
+    },
+    "conversation_rating": null,
+    "title": "How do I change my password?",
+    "custom_attributes": {
+      "AI Title": "General Inquiry",
+      "Has attachments": true
+    },
+    "ai_agent_participated": true,
+    "company": null,
+    "conversation_parts": {
+      "conversation_parts": [],
+      "total_count": 0
+    },
+    "_sourceFilename": "sample-conversations.json"
+  }
+]
