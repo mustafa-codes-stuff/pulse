@@ -29,19 +29,19 @@ export default function Percentiles({ data }: { data: PulseConversation[] }) {
 
   return (
     <div className="w-full h-full min-h-[400px] p-6 bg-card border border-border rounded-xl flex flex-col">
-      <div className="mb-6 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold">Response & Resolution Times</h2>
-        <div className="flex items-center gap-4 text-sm font-medium">
+      <div className="mb-6 shrink-0 flex flex-col gap-3">
+        <h2 className="text-base font-semibold">Response & Resolution Times</h2>
+        <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
           <div className="flex items-center gap-1.5 text-chart-2">
-            <div className="w-3 h-3 rounded bg-chart-2" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-chart-2" />
             <span>Median (P50)</span>
           </div>
           <div className="flex items-center gap-1.5 text-chart-4">
-            <div className="w-3 h-3 rounded bg-chart-4" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-chart-4" />
             <span>P90</span>
           </div>
           <div className="flex items-center gap-1.5 text-chart-1">
-            <div className="w-3 h-3 rounded bg-chart-1" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-chart-1" />
             <span>P99 (Long-tail)</span>
           </div>
         </div>

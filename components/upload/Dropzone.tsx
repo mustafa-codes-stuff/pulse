@@ -21,88 +21,76 @@ export default function Dropzone() {
     });
   }, [router]);
 
-  const processFiles = useCallback((fileList: FileList) => {
-    setIsParsing(true);
-    setError(null);
+    const processFiles = useCallback(async (fileList: FileList | File[]) => {
+      setIsParsing(true);
+      setError(null);
 
-    const files = Array.from(fileList);
-    if (files.length === 0) return;
+      const files = Array.from(fileList);
+      if (files.length === 0) return;
 
-    const allConversations: PulseConversation[] = [];
-    let processedCount = 0;
-    let hasError = false;
+      const allConversations: PulseConversation[] = [];
+      let hasError = false;
 
-    // Use a single worker for all files could be complex with state, 
-    // so we spawn a short-lived worker per file, or process them one by one.
-    // For simplicity and parallel speed, we spawn a worker per file.
-    
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        if (hasError) return;
-        const content = e.target?.result as string;
+      for (const file of files) {
+        if (hasError) break;
         
-        const worker = new Worker(new URL('../../lib/parser/worker.ts', import.meta.url), { type: 'module' });
-        
-        worker.onmessage = async (event: MessageEvent<ParseResponse>) => {
-          const response = event.data;
-          if (response.type === 'success') {
-            allConversations.push(...response.data);
-            processedCount++;
-            if (processedCount === files.length && !hasError) {
-              try {
-                // Deduplicate by conversation ID
-                const seenIds = new Set<string>();
-                const deduplicated = allConversations.filter(c => {
-                  if (seenIds.has(c.id)) return false;
-                  seenIds.add(c.id);
-                  return true;
-                });
-                
-                await saveConversations(deduplicated);
-                router.push('/support');
-              } catch (err) {
-                setError("Failed to save to local storage.");
-                setIsParsing(false);
+        try {
+          const content = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+            reader.readAsText(file);
+          });
+
+          const conversations = await new Promise<PulseConversation[]>((resolve, reject) => {
+            const worker = new Worker(new URL('../../lib/parser/worker.ts', import.meta.url), { type: 'module' });
+            worker.onmessage = (event: MessageEvent<ParseResponse>) => {
+              const response = event.data;
+              if (response.type === 'success') {
+                resolve(response.data);
+              } else {
+                reject(new Error(`Error in ${file.name}: ${response.error}`));
               }
-            }
-          } else {
-            if (!hasError) {
-              hasError = true;
-              setError(`Error in file ${file.name}: ${response.error}`);
-              setIsParsing(false);
-            }
-          }
-          worker.terminate();
-        };
+              worker.terminate();
+            };
+            worker.onerror = () => {
+              reject(new Error(`Worker failed to parse ${file.name}`));
+              worker.terminate();
+            };
+            worker.postMessage({
+              type: 'parse_string',
+              content,
+              filename: file.name
+            } as ParseRequest);
+          });
 
-        worker.onerror = (err) => {
-          if (!hasError) {
-            hasError = true;
-            setError(`Worker failed to parse ${file.name}.`);
-            setIsParsing(false);
-          }
-          worker.terminate();
-        };
-
-        worker.postMessage({
-          type: 'parse_string',
-          content,
-          filename: file.name
-        } as ParseRequest);
-      };
-
-      reader.onerror = () => {
-        if (!hasError) {
+          allConversations.push(...conversations);
+        } catch (err: any) {
           hasError = true;
-          setError(`Failed to read file ${file.name}.`);
+          setError(err.message || `Failed to process ${file.name}`);
+          setIsParsing(false);
+          return; // Stop processing further files
+        }
+      }
+
+      if (!hasError) {
+        try {
+          // Deduplicate by conversation ID
+          const seenIds = new Set<string>();
+          const deduplicated = allConversations.filter(c => {
+            if (seenIds.has(c.id)) return false;
+            seenIds.add(c.id);
+            return true;
+          });
+          
+          await saveConversations(deduplicated);
+          router.push('/support');
+        } catch (err) {
+          setError("Failed to save to local storage. Dataset may be too large.");
           setIsParsing(false);
         }
-      };
-
-      reader.readAsText(file);
-    });
-  }, [router]);
+      }
+    }, [router]);
 
   const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -175,6 +163,7 @@ export default function Dropzone() {
       >
         <input 
           type="file" 
+          multiple
           accept=".json,application/json" 
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           onChange={onFileChange}

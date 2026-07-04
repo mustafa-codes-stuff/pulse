@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { PulseConversation } from '@/lib/types';
 import ConversationList from './ConversationList';
 import EngineeringConversationList from './EngineeringConversationList';
-import { X } from 'lucide-react';
+import { X, Filter } from 'lucide-react';
 
 interface ConversationModalProps {
   isOpen: boolean;
@@ -39,8 +39,14 @@ export default function ConversationModal({ isOpen, onClose, title, conversation
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border bg-secondary/30 shrink-0">
           <div>
-            <h2 className="text-xl font-bold">{title}</h2>
-            <p className="text-sm text-muted-foreground mt-1">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold">Filtered Results</h2>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-chart-1/10 border border-chart-1/20 text-chart-1 rounded-full text-xs font-semibold">
+                <Filter className="w-3.5 h-3.5" />
+                <span>{title}</span>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
               Showing {conversations.length.toLocaleString()} matching conversations
             </p>
           </div>
@@ -55,9 +61,9 @@ export default function ConversationModal({ isOpen, onClose, title, conversation
         {/* Content */}
         <div className="flex-1 overflow-auto bg-muted/10 p-6">
           {type === 'engineering' ? (
-            <EngineeringConversationList data={conversations} initialFilter={initialFilter} />
+            <EngineeringConversationList data={conversations} initialFilter={initialFilter} isModal={true} />
           ) : (
-            <ConversationList data={conversations} initialFilter={initialFilter} />
+            <ConversationList data={conversations} initialFilter={initialFilter} isModal={true} />
           )}
         </div>
       </div>

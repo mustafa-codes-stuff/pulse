@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, LayoutDashboard, BrainCircuit, Upload, Moon, Sun } from 'lucide-react';
+import { Activity, LayoutDashboard, BrainCircuit, Upload, Moon, Sun, X, Calendar, FileText } from 'lucide-react';
+import { format, fromUnixTime } from 'date-fns';
 import { useState } from 'react';
 import DatasetManager from '@/components/dataset/DatasetManager';
 import ThemeToggle from '@/components/ui/ThemeToggle';
@@ -49,13 +50,18 @@ export default function Sidebar() {
         </nav>
 
         <div className="p-4 border-t border-border space-y-4">
-          <button
-            onClick={() => setIsManagerOpen(true)}
-            className="w-full flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-lg text-sm font-medium transition-colors cursor-pointer"
-          >
-            <Upload className="w-4 h-4" />
-            Manage Dataset
-          </button>
+          <div className="p-4 bg-primary/5 rounded-xl border-2 border-primary/30 shadow-sm relative overflow-hidden group">
+            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+            <h3 className="text-sm font-bold text-foreground mb-1 relative z-10">Dataset Manager</h3>
+            <p className="text-xs text-muted-foreground mb-3 leading-relaxed relative z-10">Add, remove, or clear JSON log files to update analysis.</p>
+            <button
+              onClick={() => setIsManagerOpen(true)}
+              className="relative z-10 w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-sm font-bold transition-all cursor-pointer shadow-md hover:shadow-lg active:scale-[0.98]"
+            >
+              <Upload className="w-4 h-4" />
+              Manage Dataset
+            </button>
+          </div>
         </div>
       </aside>
       

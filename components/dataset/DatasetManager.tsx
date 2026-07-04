@@ -56,7 +56,7 @@ export default function DatasetManager({
     window.location.href = '/';
   };
 
-  const handleAppendFiles = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAppendFiles = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
     setIsProcessing(true);
@@ -64,59 +64,77 @@ export default function DatasetManager({
     
     const files = Array.from(e.target.files);
     const newConversations: PulseConversation[] = [];
-    let processedCount = 0;
     let hasError = false;
 
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = async (evt) => {
-        if (hasError) return;
-        const content = evt.target?.result as string;
-        const worker = new Worker(new URL('../../lib/parser/worker.ts', import.meta.url), { type: 'module' });
-        
-        worker.onmessage = async (event: MessageEvent<ParseResponse>) => {
-          const response = event.data;
-          if (response.type === 'success') {
-            newConversations.push(...response.data);
-            processedCount++;
-            
-            if (processedCount === files.length && !hasError) {
-              // If the current dataset is ONLY the sample data, we should discard it when uploading real data
-              const isOnlySampleData = data.length > 0 && data.every(c => c._sourceFilename === 'sample-conversations.json');
-              
-              const rawMerged = isOnlySampleData 
-                ? [...newConversations] 
-                : [...data, ...newConversations];
-                
-              // Deduplicate by conversation ID
-              const seenIds = new Set<string>();
-              const merged = rawMerged.filter(c => {
-                if (seenIds.has(c.id)) return false;
-                seenIds.add(c.id);
-                return true;
-              });
-                
-              await saveConversations(merged);
-              window.location.reload();
-            }
-          } else {
-            if (!hasError) {
-              hasError = true;
-              setError(`Error parsing ${file.name}: ${response.error}`);
-              setIsProcessing(false);
-            }
-          }
-          worker.terminate();
-        };
+    for (const file of files) {
+      if (hasError) break;
+      
+      try {
+        const content = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (evt) => resolve(evt.target?.result as string);
+          reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+          reader.readAsText(file);
+        });
 
-        worker.postMessage({
-          type: 'parse_string',
-          content,
-          filename: file.name
-        } as ParseRequest);
-      };
-      reader.readAsText(file);
-    });
+        const conversations = await new Promise<PulseConversation[]>((resolve, reject) => {
+          const worker = new Worker(new URL('../../lib/parser/worker.ts', import.meta.url), { type: 'module' });
+          
+          worker.onmessage = (event: MessageEvent<ParseResponse>) => {
+            const response = event.data;
+            if (response.type === 'success') {
+              resolve(response.data);
+            } else {
+              reject(new Error(`Error parsing ${file.name}: ${response.error}`));
+            }
+            worker.terminate();
+          };
+
+          worker.onerror = () => {
+            reject(new Error(`Worker failed to parse ${file.name}`));
+            worker.terminate();
+          };
+
+          worker.postMessage({
+            type: 'parse_string',
+            content,
+            filename: file.name
+          } as ParseRequest);
+        });
+
+        newConversations.push(...conversations);
+      } catch (err: any) {
+        hasError = true;
+        setError(err.message || `Failed to process ${file.name}`);
+        setIsProcessing(false);
+        return; // Stop processing further files
+      }
+    }
+
+    if (!hasError) {
+      try {
+        // If the current dataset is ONLY the sample data, we should discard it when uploading real data
+        const isOnlySampleData = data.length > 0 && data.every(c => c._sourceFilename === 'sample-conversations.json');
+        
+        const rawMerged = isOnlySampleData 
+          ? [...newConversations] 
+          : [...data, ...newConversations];
+          
+        // Deduplicate by conversation ID
+        const seenIds = new Set<string>();
+        const merged = rawMerged.filter(c => {
+          if (seenIds.has(c.id)) return false;
+          seenIds.add(c.id);
+          return true;
+        });
+          
+        await saveConversations(merged);
+        window.location.reload();
+      } catch (err) {
+        setError("Failed to save to local storage. Dataset may be too large.");
+        setIsProcessing(false);
+      }
+    }
   }, [data]);
 
   if (!isOpen) return null;
@@ -162,7 +180,7 @@ export default function DatasetManager({
                 <button 
                   onClick={() => handleRemoveFile(filename)}
                   disabled={isProcessing}
-                  className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors disabled:opacity-50"
+                  className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors disabled:opacity-50 cursor-pointer"
                   title="Remove file"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -182,28 +200,25 @@ export default function DatasetManager({
           <button 
             onClick={handleClearAll}
             disabled={isProcessing}
-            className="text-sm font-medium text-destructive hover:underline disabled:opacity-50"
+            className="text-sm font-medium text-destructive hover:underline disabled:opacity-50 cursor-pointer"
           >
             Clear All Data
           </button>
           
-          <div className="relative">
+          <label className={`relative cursor-pointer ${isProcessing ? 'opacity-50 pointer-events-none' : ''}`}>
             <input 
               type="file" 
               multiple
               accept=".json,application/json" 
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              className="hidden"
               onChange={handleAppendFiles}
               disabled={isProcessing}
             />
-            <button 
-              disabled={isProcessing}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
+            <div className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
               <Plus className="w-4 h-4" />
               Append Files
-            </button>
-          </div>
+            </div>
+          </label>
         </div>
       </div>
     </div>

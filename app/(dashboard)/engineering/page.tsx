@@ -5,10 +5,8 @@ import { getConversations } from '@/lib/storage';
 import { PulseConversation } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import ThemeClusters from '@/components/dashboard/ThemeClusters';
-import ClassificationBreakdown from '@/components/dashboard/ClassificationBreakdown';
 import AnomalyFeed from '@/components/dashboard/AnomalyFeed';
-import ComplexIssues from '@/components/dashboard/ComplexIssues';
+import IssueLeaderboards from '@/components/dashboard/IssueLeaderboards';
 import EngineeringConversationList from '@/components/dashboard/EngineeringConversationList';
 
 export default function EngineeringPage() {
@@ -39,16 +37,14 @@ export default function EngineeringPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Engineering & Product</h1>
           <p className="text-muted-foreground mt-1">
-            Complaint themes, spike detection, and bug reports.
+            Actionable bug and feature leaderboards, impact analysis, and triage.
           </p>
         </div>
       </div>
       
-      <ThemeClusters data={data} />
+      <IssueLeaderboards data={data} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <ClassificationBreakdown data={data} />
-        <ComplexIssues data={data} />
+      <div className="pt-4">
         <AnomalyFeed data={data} />
       </div>
 

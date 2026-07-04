@@ -3,21 +3,22 @@
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
 import { format, fromUnixTime, isAfter, subDays } from 'date-fns';
-import { AlertCircle, Search, Filter, ChevronLeft, ChevronRight, X, FileJson, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertCircle, Search, ChevronLeft, ChevronRight, X, FileJson, ChevronDown, ChevronUp } from 'lucide-react';
+import ConversationThreadModal from './ConversationThreadModal';
 
 export default function ConversationList({ 
   data, 
-  initialFilter 
+  initialFilter,
+  isModal = false
 }: { 
   data: PulseConversation[],
-  initialFilter?: { status?: string, sort?: string }
+  initialFilter?: { status?: string, sort?: string },
+  isModal?: boolean
 }) {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>(initialFilter?.status || 'all');
-  const [timeFilter, setTimeFilter] = useState<string>('all');
   const [sortFilter, setSortFilter] = useState<string>(initialFilter?.sort || 'newest');
   const [currentPage, setCurrentPage] = useState(1);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<PulseConversation | null>(null);
   const [rawLogModalData, setRawLogModalData] = useState<PulseConversation | null>(null);
   const itemsPerPage = 50;
 
@@ -28,19 +29,7 @@ export default function ConversationList({
   };
 
   const filteredData = useMemo(() => {
-    const now = new Date();
-    
     return data.filter(conv => {
-      // Status Filter
-      if (statusFilter !== 'all' && conv.state !== statusFilter) return false;
-      
-      // Time Filter
-      if (timeFilter !== 'all') {
-        const convDate = fromUnixTime(conv.created_at);
-        if (timeFilter === '7d' && !isAfter(convDate, subDays(now, 7))) return false;
-        if (timeFilter === '30d' && !isAfter(convDate, subDays(now, 30))) return false;
-      }
-      
       // Search Filter (checks title, subject, and body)
       if (search.trim() !== '') {
         const query = search.toLowerCase();
@@ -57,9 +46,12 @@ export default function ConversationList({
     }).sort((a, b) => {
       if (sortFilter === 'newest') return b.created_at - a.created_at;
       if (sortFilter === 'oldest') return a.created_at - b.created_at;
+      if (sortFilter === 'time_to_admin_reply_desc') return (b.statistics?.time_to_admin_reply || 0) - (a.statistics?.time_to_admin_reply || 0);
+      if (sortFilter === 'reopens_desc') return (b.statistics?.count_reopens || 0) - (a.statistics?.count_reopens || 0);
+      if (sortFilter === 'csat_asc') return (a.conversation_rating?.rating || 6) - (b.conversation_rating?.rating || 6); // 6 puts unrated at bottom
       return 0;
     });
-  }, [data, search, statusFilter, timeFilter, sortFilter]);
+  }, [data, search, sortFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -74,55 +66,29 @@ export default function ConversationList({
 
   return (
     <>
-    <div className="w-full bg-card border border-border rounded-xl overflow-hidden flex flex-col">
-      <div className="p-6 border-b border-border flex flex-col gap-4 md:flex-row md:items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Raw Conversations</h2>
-          <p className="text-sm text-muted-foreground">Filter and paginate through the dataset</p>
-        </div>
+    <div className={`w-full flex flex-col ${isModal ? '' : 'bg-card border border-border rounded-xl overflow-hidden'}`}>
+      <div className={`flex flex-col gap-4 md:flex-row md:items-center justify-between ${isModal ? 'pb-4' : 'p-6 border-b border-border'}`}>
+        {!isModal && (
+          <div>
+            <h2 className="text-lg font-semibold">Raw Conversations</h2>
+            <p className="text-sm text-muted-foreground">Filter and paginate through the dataset</p>
+          </div>
+        )}
         
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input 
-              type="text" 
-              placeholder="Search text..." 
-              value={search}
-              onChange={(e) => handleFilterChange(setSearch, e.target.value)}
-              className="pl-9 pr-4 py-1.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 w-full sm:w-48"
-            />
-          </div>
-          
-          <select 
-            value={statusFilter}
-            onChange={(e) => handleFilterChange(setStatusFilter, e.target.value)}
-            className="px-3 py-1.5 text-sm bg-background border border-border rounded-lg focus:outline-none cursor-pointer"
-          >
-            <option value="all">All Statuses</option>
-            <option value="open">Open</option>
-            <option value="closed">Closed</option>
-            <option value="snoozed">Snoozed</option>
-          </select>
-          
-          <select 
-            value={timeFilter}
-            onChange={(e) => handleFilterChange(setTimeFilter, e.target.value)}
-            className="px-3 py-1.5 text-sm bg-background border border-border rounded-lg focus:outline-none cursor-pointer"
-          >
-            <option value="all">All Time</option>
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-          </select>
-
-          <select 
-            value={sortFilter}
-            onChange={(e) => handleFilterChange(setSortFilter, e.target.value)}
-            className="px-3 py-1.5 text-sm bg-background border border-border rounded-lg focus:outline-none cursor-pointer"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-          </select>
+        <div className={`flex flex-wrap items-center gap-3 ${isModal ? 'w-full justify-end' : ''}`}>
+          {!isModal && (
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input 
+                type="text" 
+                placeholder="Search text..." 
+                value={search}
+                onChange={(e) => handleFilterChange(setSearch, e.target.value)}
+                className="pl-9 pr-4 py-1.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 w-full sm:w-48"
+              />
+            </div>
+          )}
         </div>
       </div>
       
@@ -130,7 +96,21 @@ export default function ConversationList({
       <div className="flex items-center px-6 py-3 bg-secondary/50 border-b border-border text-xs font-medium text-muted-foreground uppercase tracking-wider">
         <div className="flex-1 min-w-0 pr-4">Subject & Details</div>
         <div className="w-32 shrink-0 hidden sm:block">Status</div>
-        <div className="w-48 shrink-0 hidden md:block">Created At</div>
+        <div 
+          className="w-48 shrink-0 hidden md:block cursor-pointer hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded px-1 -ml-1 transition-colors"
+          onClick={() => handleFilterChange(setSortFilter, sortFilter === 'newest' ? 'oldest' : 'newest')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleFilterChange(setSortFilter, sortFilter === 'newest' ? 'oldest' : 'newest');
+            }
+          }}
+          tabIndex={0}
+          role="columnheader"
+          aria-sort={sortFilter === 'newest' ? 'descending' : 'ascending'}
+        >
+          Created At {sortFilter === 'newest' ? '↓' : '↑'}
+        </div>
       </div>
 
       {/* List */}
@@ -141,20 +121,22 @@ export default function ConversationList({
           </div>
         ) : (
           paginatedData.map((conv, idx) => {
-            // Robust fallbacks for missing data
-            const displayTitle = conv.title || 'Untitled Conversation';
             const rawBody = conv.source.body ? conv.source.body.replace(/<[^>]*>?/gm, ' ').trim() : '';
+            const fallbackTitle = rawBody.length > 60 ? rawBody.substring(0, 60) + '...' : rawBody;
+            const displayTitle = conv.title || (conv.custom_attributes?.['AI Title'] as string) || fallbackTitle || 'Untitled Conversation';
             const displaySubject = conv.source.subject || (rawBody.length > 80 ? rawBody.substring(0, 80) + '...' : rawBody) || 'No description provided.';
             
-            const isExpanded = expandedId === (conv.id || String(idx));
             
             return (
               <div key={conv.id || idx} className="border-b border-border transition-colors">
                 <div 
-                  className={`flex items-center px-6 py-4 transition-colors hover:bg-secondary/10 ${isExpanded ? 'bg-secondary/5' : ''}`}
+                  onClick={() => setSelectedConversation(conv)}
+                  className={`flex items-center px-6 py-4 transition-colors hover:bg-secondary/20 cursor-pointer`}
                 >
                   <div className="flex-1 min-w-0 pr-4 space-y-1">
-                    <p className="text-sm font-semibold text-foreground line-clamp-1">{displayTitle}</p>
+                    <p className="text-sm font-semibold text-foreground line-clamp-1">
+                      {displayTitle}
+                    </p>
                     <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{displaySubject}</p>
                     
                     {/* Mobile only Status/Date */}
@@ -194,36 +176,8 @@ export default function ConversationList({
                     <span className="text-sm text-muted-foreground mr-4">
                       {format(fromUnixTime(conv.created_at), 'MMM d, yyyy HH:mm')}
                     </span>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setExpandedId(isExpanded ? null : (conv.id || String(idx)));
-                      }}
-                      className="p-1.5 rounded-md hover:bg-secondary transition-colors"
-                    >
-                      {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                    </button>
                   </div>
                 </div>
-                
-                {/* Expanded Details Panel */}
-                {isExpanded && (
-                  <div className="px-6 py-4 bg-secondary/10 border-t border-border/50 text-sm">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-semibold">Conversation Details</h4>
-                      <button 
-                        onClick={() => setRawLogModalData(conv)}
-                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 rounded-md transition-colors"
-                      >
-                        <FileJson className="w-4 h-4" /> View Raw Log
-                      </button>
-                    </div>
-                    <div 
-                      className="text-sm text-foreground/90 whitespace-pre-wrap break-words bg-background p-4 rounded-lg border border-border"
-                      dangerouslySetInnerHTML={{ __html: conv.source.body || 'No description provided.' }}
-                    />
-                  </div>
-                )}
               </div>
             );
           })
@@ -282,6 +236,17 @@ export default function ConversationList({
           </div>
         </div>
       )}
+
+      {/* Conversation Thread Modal */}
+      <ConversationThreadModal 
+        isOpen={!!selectedConversation}
+        onClose={() => setSelectedConversation(null)}
+        conversation={selectedConversation}
+        onViewRawLog={(conv) => {
+          setRawLogModalData(conv);
+          // Keep the thread modal open, raw log modal will just stack above it due to z-index.
+        }}
+      />
     </>
   );
 }
