@@ -73,7 +73,7 @@ export default function AnomalyFeed({ data }: { data: PulseConversation[] }) {
   }, [data]);
 
   return (
-    <div className="w-full bg-card border border-border rounded-xl flex flex-col h-full min-h-[400px]">
+    <div className="w-full bg-card border border-border rounded-xl flex flex-col max-h-[600px]">
       <div className="p-6 border-b border-border flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-chart-1" />
@@ -86,7 +86,7 @@ export default function AnomalyFeed({ data }: { data: PulseConversation[] }) {
       
       <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-4 content-start scrollbar-thin">
         {anomalies.length === 0 ? (
-          <div className="md:col-span-2 h-full flex flex-col items-center justify-center text-muted-foreground text-sm">
+          <div className="md:col-span-2 py-12 flex flex-col items-center justify-center text-muted-foreground text-sm">
             <p>No significant anomalies detected in this dataset.</p>
           </div>
         ) : (
