@@ -152,10 +152,10 @@ export default function DatasetManager({
           <div className="space-y-2">
             {fileStats.map(({ filename, count }) => (
               <div key={filename} className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/30">
-                <div className="flex items-center gap-3">
-                  <FileJson className="w-5 h-5 text-chart-2" />
-                  <div>
-                    <p className="text-sm font-medium truncate max-w-[200px]">{filename}</p>
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <FileJson className="w-5 h-5 text-chart-2 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate" title={filename}>{filename}</p>
                     <p className="text-xs text-muted-foreground">{count.toLocaleString()} conversations</p>
                   </div>
                 </div>
