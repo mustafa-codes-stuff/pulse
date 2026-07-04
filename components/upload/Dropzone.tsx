@@ -41,10 +41,17 @@ export default function Dropzone() {
           if (response.type === 'success') {
             allConversations.push(...response.data);
             processedCount++;
-            
             if (processedCount === files.length && !hasError) {
               try {
-                await saveConversations(allConversations);
+                // Deduplicate by conversation ID
+                const seenIds = new Set<string>();
+                const deduplicated = allConversations.filter(c => {
+                  if (seenIds.has(c.id)) return false;
+                  seenIds.add(c.id);
+                  return true;
+                });
+                
+                await saveConversations(deduplicated);
                 router.push('/support');
               } catch (err) {
                 setError("Failed to save to local storage.");

@@ -84,9 +84,17 @@ export default function DatasetManager({
               // If the current dataset is ONLY the sample data, we should discard it when uploading real data
               const isOnlySampleData = data.length > 0 && data.every(c => c._sourceFilename === 'sample-conversations.json');
               
-              const merged = isOnlySampleData 
+              const rawMerged = isOnlySampleData 
                 ? [...newConversations] 
                 : [...data, ...newConversations];
+                
+              // Deduplicate by conversation ID
+              const seenIds = new Set<string>();
+              const merged = rawMerged.filter(c => {
+                if (seenIds.has(c.id)) return false;
+                seenIds.add(c.id);
+                return true;
+              });
                 
               await saveConversations(merged);
               window.location.reload();
