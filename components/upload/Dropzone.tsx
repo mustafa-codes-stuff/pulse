@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { UploadCloud, FileJson, Loader2, AlertCircle } from 'lucide-react';
-import { saveConversations, getConversations } from '@/lib/storage';
+import { saveConversations, clearConversations } from '@/lib/storage';
 import { PulseConversation } from '@/lib/types';
 import { ParseRequest, ParseResponse } from '@/lib/parser/worker';
 
@@ -14,12 +14,9 @@ export default function Dropzone() {
   const router = useRouter();
 
   useEffect(() => {
-    getConversations().then(data => {
-      if (data && data.length > 0) {
-        router.replace('/support');
-      }
-    });
-  }, [router]);
+    // Reset data when someone accesses the homepage
+    clearConversations();
+  }, []);
 
     const processFiles = useCallback(async (fileList: FileList | File[]) => {
       setIsParsing(true);
