@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { UploadCloud, FileJson, Loader2, AlertCircle } from 'lucide-react';
-import { saveConversations } from '@/lib/storage';
+import { saveConversations, getConversations } from '@/lib/storage';
 import { PulseConversation } from '@/lib/types';
 import { ParseRequest, ParseResponse } from '@/lib/parser/worker';
 
@@ -12,6 +12,14 @@ export default function Dropzone() {
   const [isParsing, setIsParsing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    getConversations().then(data => {
+      if (data && data.length > 0) {
+        router.replace('/support');
+      }
+    });
+  }, [router]);
 
   const processFiles = useCallback((fileList: FileList) => {
     setIsParsing(true);
