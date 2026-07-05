@@ -371,11 +371,11 @@ export default function AttentionCallouts({ data, mode = 'support' }: { data: Pu
   return (
     <div className="mb-4">
       <div className="bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden flex flex-col">
-        <div className="px-6 py-4 border-b border-border bg-secondary/10 flex items-center gap-2">
+        <div className="px-6 py-4 border-b border-border bg-secondary/10 flex items-center gap-2 shrink-0">
           <CheckCircle2 className="w-5 h-5 text-chart-2" />
           <h2 className="text-base font-semibold">Pulse Check</h2>
         </div>
-        <div className="divide-y divide-border/50">
+        <div className="divide-y divide-border/50 max-h-[260px] overflow-y-auto scrollbar-thin">
           {alertCallouts.map(callout => renderCalloutRow(callout))}
 
           {passedCallouts.length > 0 && (
