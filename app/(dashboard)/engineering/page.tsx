@@ -5,9 +5,10 @@ import { getConversations } from '@/lib/storage';
 import { PulseConversation } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import AnomalyFeed from '@/components/dashboard/AnomalyFeed';
+import { format, fromUnixTime } from 'date-fns';
 import IssueLeaderboards from '@/components/dashboard/IssueLeaderboards';
 import EngineeringConversationList from '@/components/dashboard/EngineeringConversationList';
+import AttentionCallouts from '@/components/dashboard/AttentionCallouts';
 import { filterAnalyzableConversations } from '@/lib/analytics/filters';
 
 export default function EngineeringPage() {
@@ -64,11 +65,9 @@ export default function EngineeringPage() {
         </div>
       </div>
 
-      <IssueLeaderboards data={analyzableData} />
+      <AttentionCallouts data={analyzableData} mode="engineering" />
 
-      <div>
-        <AnomalyFeed data={analyzableData} />
-      </div>
+      <IssueLeaderboards data={analyzableData} />
 
       <div>
         <EngineeringConversationList data={analyzableData} />

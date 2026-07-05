@@ -48,7 +48,20 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
           </div>
         ) : (
           <div className="space-y-4">
-            {agentMetrics.slice(0, 10).map((agent, index) => (
+            {agentMetrics.slice(0, 10).map((agent, index) => {
+              const allAvgTurns = agentMetrics.map(a => a.avgTurns).filter((t): t is number => t !== null).sort((a, b) => a - b);
+              const p50 = allAvgTurns.length > 0 ? allAvgTurns[Math.floor(allAvgTurns.length * 0.5)] : 0;
+              const p75 = allAvgTurns.length > 0 ? allAvgTurns[Math.floor(allAvgTurns.length * 0.75)] : 0;
+              const p90 = allAvgTurns.length > 0 ? allAvgTurns[Math.floor(allAvgTurns.length * 0.90)] : 0;
+              
+              let turnColor = 'text-foreground';
+              if (agent.avgTurns !== null) {
+                if (agent.avgTurns > p90) turnColor = 'text-destructive';
+                else if (agent.avgTurns > p75) turnColor = 'text-chart-4';
+                else if (agent.avgTurns <= p50) turnColor = 'text-chart-2';
+              }
+
+              return (
               <div 
                 key={agent.id} 
                 onClick={() => {
@@ -78,6 +91,15 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
                 </div>
                 
                 <div className="flex items-center gap-3 shrink-0">
+                  {agent.avgTurns !== null && (
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] uppercase text-muted-foreground font-semibold">Turns</span>
+                      <span className={`flex items-center gap-1 font-bold text-sm ${turnColor}`}>
+                        ~{agent.avgTurns.toFixed(1)} avg
+                      </span>
+                    </div>
+                  )}
+
                   {agent.csatAvg !== null && (
                     <div className={`flex flex-col items-end`}>
                       <span className="text-[10px] uppercase text-muted-foreground font-semibold">CSAT</span>
@@ -106,7 +128,7 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
                   )}
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         )}
         </div>

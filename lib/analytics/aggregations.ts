@@ -86,6 +86,7 @@ export interface AgentMetrics {
   name: string;
   volume: number;
   medianTimeToAdminReply: number | null;
+  avgTurns: number | null;
   csatTotal: number;
   csatCount: number;
   csatAvg: number | null;
@@ -96,7 +97,7 @@ export interface AgentMetrics {
 }
 
 export function aggregateAgentPerformance(conversations: PulseConversation[]): AgentMetrics[] {
-  const map = new Map<string, { name: string; replies: number[]; volume: number; csatTotal: number; csatCount: number; frictionCount: number; reopenCount: number }>();
+  const map = new Map<string, { name: string; replies: number[]; turnsTotal: number; turnsCount: number; volume: number; csatTotal: number; csatCount: number; frictionCount: number; reopenCount: number }>();
   
   const thresholds = computeDatasetThresholds(conversations);
 
@@ -109,11 +110,15 @@ export function aggregateAgentPerformance(conversations: PulseConversation[]): A
     const agentId = String(lastAdminPart.author?.id || 'unknown');
 
     if (!map.has(agentId)) {
-      map.set(agentId, { name: agentName, replies: [], volume: 0, csatTotal: 0, csatCount: 0, frictionCount: 0, reopenCount: 0 });
+      map.set(agentId, { name: agentName, replies: [], turnsTotal: 0, turnsCount: 0, volume: 0, csatTotal: 0, csatCount: 0, frictionCount: 0, reopenCount: 0 });
     }
     const record = map.get(agentId)!;
     
     record.volume += 1;
+    const parts = conv.conversation_parts?.conversation_parts || [];
+    record.turnsTotal += parts.filter(p => p.part_type === 'comment').length;
+    record.turnsCount += 1;
+
     if (conv.statistics?.time_to_admin_reply != null) {
       record.replies.push(conv.statistics.time_to_admin_reply);
     }
@@ -141,6 +146,7 @@ export function aggregateAgentPerformance(conversations: PulseConversation[]): A
       name: record.name,
       volume: record.volume,
       medianTimeToAdminReply: median,
+      avgTurns: record.turnsCount > 0 ? record.turnsTotal / record.turnsCount : null,
       csatTotal: record.csatTotal,
       csatCount: record.csatCount,
       csatAvg: record.csatCount > 0 ? record.csatTotal / record.csatCount : null,
@@ -178,11 +184,32 @@ export function computeDatasetThresholds(conversations: PulseConversation[]): Es
   return { handlingTimeP90, backAndForthP90 };
 }
 
-export const FRUSTRATION_PATTERNS = [
+export const FRUSTRATION_PATTERNS_DIRECT = [
   /\bfrustrat/i, /\bdisappoint/i, /\bunacceptable/i, /\bridiculous/i,
   /\bas i said/i, /\bstill not/i, /\bdidn't answer/i, /\balready told/i,
-  /\bnot (what|how) i/i, /\bwaste of/i
+  /\bnot (what|how) i/i, /\bwaste of/i,
+  /\bhorrible/i, /\bterrible/i, /\bawful/i, /\bfurious/i,
+  /\bscam/i, /\brip.?off/i, /\bnever again/i, /\bworst/i,
+  /\bstill waiting/i, /\bno response/i
 ];
+
+export const FRUSTRATION_PATTERNS_CONTEXTUAL = [
+  { pattern: /\brefund/i, guard: /(angry|frustrat|ridiculous|unacceptable|scam|rip.?off|horrible|terrible|awful|furious|worst|!)/i },
+  { pattern: /\bmanager/i, guard: /(complain|unacceptable|ridiculous|frustrat|angry|horrible|terrible|awful|furious|worst|!)/i },
+  { pattern: /\bsupervisor/i, guard: /(complain|unacceptable|ridiculous|frustrat|angry|horrible|terrible|awful|furious|worst|!)/i },
+  { pattern: /\bescalat/i, guard: /(want to|need to|going to)/i },
+  { pattern: /\bignor/i, guard: /(you|being|are)/i }
+];
+
+export function hasFrustrationPattern(body: string): { hasFrustration: boolean, matchedPattern?: string } {
+  for (const pat of FRUSTRATION_PATTERNS_DIRECT) {
+    if (pat.test(body)) return { hasFrustration: true, matchedPattern: pat.source };
+  }
+  for (const { pattern, guard } of FRUSTRATION_PATTERNS_CONTEXTUAL) {
+    if (pattern.test(body) && guard.test(body)) return { hasFrustration: true, matchedPattern: pattern.source };
+  }
+  return { hasFrustration: false };
+}
 
 export function computeEscalationRisk(
   conv: PulseConversation,
@@ -212,7 +239,7 @@ export function computeEscalationRisk(
       for (let j = i + 1; j < parts.length; j++) {
         if (parts[j].author?.type === 'user' || parts[j].author?.type === 'lead') {
           const body = (parts[j].body || '').replace(/<[^>]*>?/gm, ' ');
-          if (FRUSTRATION_PATTERNS.some(pat => pat.test(body))) {
+          if (hasFrustrationPattern(body).hasFrustration) {
             hasFrustration = true;
           }
           break; // Stop looking after the first response
@@ -224,6 +251,58 @@ export function computeEscalationRisk(
   if (hasFrustration) risk += 0.2;
 
   return Math.min(risk, 1.0);
+}
+
+export interface FrustrationPair {
+  conversation: PulseConversation;
+  agentPartId: string;
+  agentName: string;
+  agentReplySnippet: string;
+  customerPartId: string;
+  customerReplySnippet: string;
+  frustrationPattern: string;
+}
+
+export function extractFrustrationPairs(conversations: PulseConversation[]): FrustrationPair[] {
+  const pairs: FrustrationPair[] = [];
+
+  for (const conv of conversations) {
+    const parts = conv.conversation_parts?.conversation_parts || [];
+    
+    // Iterate to find frustrated customer replies
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i].author?.type === 'user' || parts[i].author?.type === 'lead') {
+        const customerBody = (parts[i].body || '').replace(/<[^>]*>?/gm, ' ');
+        const { hasFrustration, matchedPattern } = hasFrustrationPattern(customerBody);
+        
+        if (hasFrustration) {
+          // Find the closest preceding admin reply
+          let adminPart = null;
+          for (let j = i - 1; j >= 0; j--) {
+            if (parts[j].author?.type === 'admin') {
+              adminPart = parts[j];
+              break;
+            }
+          }
+          
+          if (adminPart) {
+            const agentBody = (adminPart.body || '').replace(/<[^>]*>?/gm, ' ');
+            pairs.push({
+              conversation: conv,
+              agentPartId: adminPart.id,
+              agentName: adminPart.author?.name || 'Unknown Agent',
+              agentReplySnippet: agentBody.length > 120 ? agentBody.substring(0, 120) + '...' : agentBody,
+              customerPartId: parts[i].id,
+              customerReplySnippet: customerBody.length > 120 ? customerBody.substring(0, 120) + '...' : customerBody,
+              frustrationPattern: matchedPattern || 'unknown'
+            });
+          }
+        }
+      }
+    }
+  }
+
+  return pairs.sort((a, b) => b.conversation.created_at - a.conversation.created_at);
 }
 export const CATEGORY_FRIENDLY_NAMES: Record<string, string> = {
   rendering_quality: 'Rendering & Image Quality',
@@ -247,6 +326,7 @@ export interface CategoryPainMetrics {
   averageCsat: number | null;
   reopenRate: number;
   painIndex: number;
+  lowConfidenceCount: number;
   conversations: PulseConversation[];
 }
 
@@ -264,6 +344,7 @@ function calculateCategoryMetrics(
       averageCsat: null,
       reopenRate: 0,
       painIndex: 0,
+      lowConfidenceCount: 0,
       conversations: []
     };
   }
@@ -276,8 +357,12 @@ function calculateCategoryMetrics(
   let reopenedCount = 0;
   let csatSum = 0;
   let csatCount = 0;
+  let lowConfidenceCount = 0;
 
   convs.forEach(c => {
+    const { confidence } = classifyConversation(c.title || '', c.source.body);
+    if (confidence === 'low') lowConfidenceCount++;
+    
     totalEscalationRisk += computeEscalationRisk(c, thresholds);
     if (c.statistics?.count_reopens > 0) {
       reopenedCount++;
@@ -309,6 +394,7 @@ function calculateCategoryMetrics(
     averageCsat,
     reopenRate: firstFixFailureRate,
     painIndex,
+    lowConfidenceCount,
     conversations: convs
   };
 }
@@ -332,7 +418,7 @@ export function aggregateIssues(conversations: PulseConversation[]): {
   allCategories.forEach(cat => groups[cat] = []);
 
   conversations.forEach(c => {
-    const classification = classifyConversation(c.title || '', c.source.body);
+    const { category: classification } = classifyConversation(c.title || '', c.source.body);
     if (groups[classification]) {
       groups[classification].push(c);
     } else {

@@ -165,8 +165,8 @@ export default function ConversationList({
                       <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded border border-border">
                         <MessageSquareWarning className="w-3 h-3" />
                         {
-                          1 + (conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment' || p.part_type === 'note').length
-                        } messages
+                          (conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment').length
+                        } turns
                       </span>
                       {computeEscalationRisk(conv, thresholds) > 0.5 && (
                         <span className="text-[10px] text-destructive font-semibold flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded border border-destructive/20">

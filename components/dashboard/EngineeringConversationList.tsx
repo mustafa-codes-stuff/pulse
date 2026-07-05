@@ -33,10 +33,10 @@ export default function EngineeringConversationList({
 
   const processedData = useMemo(() => {
     return data.map(conv => {
-      const classification = classifyConversation(conv.title || '', conv.source.body);
+      const { category: classification, confidence } = classifyConversation(conv.title || '', conv.source.body);
       const hasAttachments = !!conv.custom_attributes?.['Has attachments'] || (conv.source.attachments && conv.source.attachments.length > 0);
       const escalationRisk = computeEscalationRisk(conv, thresholds);
-      return { ...conv, classification, hasAttachments, escalationRisk };
+      return { ...conv, classification, confidence, hasAttachments, escalationRisk };
     });
   }, [data, thresholds]);
 
@@ -82,18 +82,21 @@ export default function EngineeringConversationList({
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const getClassificationBadge = (classification: string) => {
+  const getClassificationBadge = (classification: string, confidence?: string) => {
     const bugCategories = ['rendering_quality', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs'];
     const featureCategories = ['customization_request', 'core_feature_request'];
     
     const label = CATEGORY_FRIENDLY_NAMES[classification] || classification;
+    const isLowConf = confidence === 'low';
+    const borderStyle = isLowConf ? 'border-dashed opacity-80' : 'border-solid';
+    const confIcon = isLowConf ? <span className="font-bold opacity-70" title="Uncertain classification">?</span> : null;
     
     if (bugCategories.includes(classification)) {
-      return <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-destructive/10 text-destructive border border-destructive/20"><Bug className="w-3 h-3" /> {label}</span>;
+      return <span className={`inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-destructive/10 text-destructive border border-destructive/20 ${borderStyle}`}>{confIcon}<Bug className="w-3 h-3" /> {label}</span>;
     } else if (featureCategories.includes(classification)) {
-      return <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-chart-2/10 text-chart-2 border border-chart-2/20"><Lightbulb className="w-3 h-3" /> {label}</span>;
+      return <span className={`inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-chart-2/10 text-chart-2 border border-chart-2/20 ${borderStyle}`}>{confIcon}<Lightbulb className="w-3 h-3" /> {label}</span>;
     } else {
-      return <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-muted text-muted-foreground border-2 border-border shadow-sm"><CheckCircle2 className="w-3 h-3" /> {label}</span>;
+      return <span className={`inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-muted text-muted-foreground border border-border shadow-sm ${borderStyle}`}>{confIcon}<CheckCircle2 className="w-3 h-3" /> {label}</span>;
     }
   };
 
@@ -235,8 +238,8 @@ export default function EngineeringConversationList({
                       <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded border border-border">
                         <MessageSquareWarning className="w-3 h-3" />
                         {
-                          1 + (conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment' || p.part_type === 'note').length
-                        } messages
+                          (conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment').length
+                        } turns
                       </span>
                       {(conv as any).escalationRisk >= 0.5 && (
                           <div className="group relative flex items-center">
@@ -253,7 +256,7 @@ export default function EngineeringConversationList({
                     </div>
                     
                     <div className="w-40 shrink-0 hidden sm:block">
-                      {getClassificationBadge(conv.classification)}
+                      {getClassificationBadge(conv.classification, (conv as any).confidence)}
                     </div>
 
                     <div className="w-24 shrink-0 hidden lg:flex items-center justify-end">

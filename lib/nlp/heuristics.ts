@@ -27,31 +27,59 @@ const PRESALES_REGEX = /\b(sample|try before|preview|coupon|discount|price|prici
 const DELIVERY_REGEX = /\b(how long|where is|not received|pending|waiting|generating|status|ready|when will|duration|turnaround)\b/i;
 const BUG_REGEX = /\b(bug|broken|error|crash|fail|failing|failed|doesn't work|does not work|stuck|glitch|not loading|not working)\b/i;
 
+export interface ClassificationResult {
+  category: TicketClassification;
+  confidence: 'high' | 'low';
+}
+
 /**
  * Classify a conversation into one of the 12 specific categories based on heuristics.
+ * Returns the category and a confidence score.
  */
-export function classifyConversation(title: string, body: string | null | undefined): TicketClassification {
+export function classifyConversation(title: string, body: string | null | undefined): ClassificationResult {
   const text = ((title || '') + ' ' + stripHtml(body)).toLowerCase();
 
-  if (SPAM_SYSTEM_REGEX.test(text)) return 'system_automated';
-  if (REFUND_REGEX.test(text)) return 'refund_request';
-  if (CANCEL_REGEX.test(text)) return 'subscription_cancel';
-  if (PAYMENT_REGEX.test(text)) return 'payment_checkout';
-  if (AUTH_REGEX.test(text)) return 'auth_access';
-  if (UPLOAD_REGEX.test(text)) return 'upload_flow';
-  if (RENDER_REGEX.test(text)) return 'rendering_quality';
-  if (CUSTOMIZE_REGEX.test(text)) return 'customization_request';
-  if (FEATURE_REGEX.test(text)) return 'core_feature_request';
-  if (DELIVERY_REGEX.test(text)) return 'delivery_status';
-  if (PRESALES_REGEX.test(text)) return 'pre_sales_info';
-  if (BUG_REGEX.test(text)) return 'other_bugs';
+  const matches = [
+    { cat: 'system_automated' as TicketClassification, regex: SPAM_SYSTEM_REGEX },
+    { cat: 'refund_request' as TicketClassification, regex: REFUND_REGEX },
+    { cat: 'subscription_cancel' as TicketClassification, regex: CANCEL_REGEX },
+    { cat: 'payment_checkout' as TicketClassification, regex: PAYMENT_REGEX },
+    { cat: 'auth_access' as TicketClassification, regex: AUTH_REGEX },
+    { cat: 'upload_flow' as TicketClassification, regex: UPLOAD_REGEX },
+    { cat: 'rendering_quality' as TicketClassification, regex: RENDER_REGEX },
+    { cat: 'customization_request' as TicketClassification, regex: CUSTOMIZE_REGEX },
+    { cat: 'core_feature_request' as TicketClassification, regex: FEATURE_REGEX },
+    { cat: 'delivery_status' as TicketClassification, regex: DELIVERY_REGEX },
+    { cat: 'pre_sales_info' as TicketClassification, regex: PRESALES_REGEX },
+    { cat: 'other_bugs' as TicketClassification, regex: BUG_REGEX }
+  ];
+
+  let matchedCategories: TicketClassification[] = [];
+  let firstMatch: TicketClassification | null = null;
+
+  for (const match of matches) {
+    if (match.regex.test(text)) {
+      matchedCategories.push(match.cat);
+      if (!firstMatch) {
+        firstMatch = match.cat;
+      }
+    }
+  }
+
+  // High confidence: exactly one specific regex matched, or refund/auth matched (very specific)
+  // Low confidence: multiple matched, or fallback used
+  if (firstMatch) {
+    const isHighlySpecific = firstMatch === 'refund_request' || firstMatch === 'auth_access';
+    const confidence = (matchedCategories.length === 1 || isHighlySpecific) ? 'high' : 'low';
+    return { category: firstMatch, confidence };
+  }
 
   // Fallbacks
   if (text.includes('redo') || text.includes('photo') || text.includes('shot')) {
-    return 'rendering_quality';
+    return { category: 'rendering_quality', confidence: 'low' };
   }
   
-  return 'pre_sales_info'; // Default category for general questions/pre-sales
+  return { category: 'pre_sales_info', confidence: 'low' }; // Default category for general questions/pre-sales
 }
 
 /**

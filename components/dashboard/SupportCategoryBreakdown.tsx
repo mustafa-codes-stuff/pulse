@@ -35,7 +35,7 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
 
     let totalOpsCount = 0;
     data.forEach(c => {
-      const classification = classifyConversation(c.title || '', c.source.body);
+      const { category: classification } = classifyConversation(c.title || '', c.source.body);
       if (supportCategories.includes(classification)) {
         groups[classification].push(c);
         totalOpsCount++;

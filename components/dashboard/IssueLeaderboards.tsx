@@ -93,9 +93,9 @@ export default function IssueLeaderboards({ data }: { data: PulseConversation[] 
                       >
                         Pain: {item.painIndex}%
                       </div>
-                      <div className="flex items-center gap-1 px-1.5 py-0.5 bg-secondary/50 rounded border border-border/50 text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-1 px-1.5 py-0.5 bg-secondary/50 rounded border border-border/50 text-[10px] text-muted-foreground" title={item.lowConfidenceCount > 0 ? `${item.lowConfidenceCount} tickets have uncertain classification` : ''}>
                         <MessageSquare className="w-3 h-3" />
-                        {item.count}
+                        {item.count} {item.lowConfidenceCount > 0 && `· ${item.lowConfidenceCount} uncertain`}
                       </div>
                     </div>
                   </div>

@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useRef, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
 import { format, fromUnixTime } from 'date-fns';
-import { User, Bot, Shield, FileJson } from 'lucide-react';
+import { User, Bot, Shield, AlertTriangle } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import { hasFrustrationPattern } from '@/lib/analytics/aggregations';
 
 export default function ConversationThread({ 
   conversation
@@ -43,6 +45,35 @@ export default function ConversationThread({
     }
   };
 
+  const flaggedPairs = useMemo(() => {
+    const flagged = new Set<string>();
+    for (let i = 0; i < visibleParts.length; i++) {
+      if (visibleParts[i].author?.type === 'admin') {
+        for (let j = i + 1; j < visibleParts.length; j++) {
+          if (visibleParts[j].author?.type === 'user' || visibleParts[j].author?.type === 'lead') {
+            const body = (visibleParts[j].body || '').replace(/<[^>]*>?/gm, ' ');
+            if (hasFrustrationPattern(body).hasFrustration) {
+              flagged.add(visibleParts[i].id); // admin part
+              flagged.add(visibleParts[j].id); // customer part
+            }
+            break;
+          }
+        }
+      }
+    }
+    return flagged;
+  }, [visibleParts]);
+
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [flaggedPairs]);
+
+  const firstFlaggedId = Array.from(flaggedPairs)[0];
+
   return (
     <div className="w-full flex flex-col bg-background p-6 rounded-lg border border-border">
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-border/50">
@@ -69,8 +100,10 @@ export default function ConversationThread({
           const isNote = part.type === 'note';
           const label = isUser ? "Customer message" : isNote ? "Internal note" : "Agent message";
           
+          const isFlagged = flaggedPairs.has(part.id);
+          
           return (
-            <div key={part.id} className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}>
+            <div key={part.id} className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`} ref={part.id === firstFlaggedId ? scrollRef : null}>
               <div 
                 className={`flex flex-col max-w-[85%] ${isUser ? 'items-end' : 'items-start'}`}
                 role="article"
@@ -96,10 +129,20 @@ export default function ConversationThread({
                 </div>
 
                 {/* Bubble */}
+                {isFlagged && isUser && (
+                   <div className="flex items-center gap-1 text-[10px] text-destructive font-bold mb-1 mr-2 px-2 py-0.5 bg-destructive/10 rounded border border-destructive/20">
+                     <AlertTriangle className="w-3 h-3" />
+                     ⚠ Frustrated response detected
+                   </div>
+                )}
                 <div 
                   className={`
                     px-4 py-3 rounded-2xl text-sm break-words shadow-sm
-                    ${isUser 
+                    ${isFlagged && isUser 
+                      ? 'bg-destructive/10 text-foreground border-2 border-destructive/50 rounded-tr-sm' 
+                      : isFlagged && !isUser
+                      ? 'bg-secondary text-secondary-foreground border-2 border-destructive/30 rounded-tl-sm'
+                      : isUser 
                       ? 'bg-primary text-primary-foreground rounded-tr-sm' 
                       : isNote
                         ? 'bg-chart-3/15 text-foreground border border-chart-3/30 rounded-tl-sm'
