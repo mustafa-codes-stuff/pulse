@@ -13,21 +13,6 @@ export default function IssueLeaderboards({ data }: { data: PulseConversation[] 
   const [modalData, setModalData] = useState<PulseConversation[]>([]);
 
   const { bugs, features, other, totals } = useMemo(() => aggregateIssues(data), [data]);
-
-  const datasetContext = useMemo(() => {
-    if (data.length === 0) return null;
-    const sources = Array.from(new Set(data.map(c => c._sourceFilename || 'Unknown Source')));
-    const dates = data.map(c => c.created_at).sort((a, b) => a - b);
-    const dateRange = dates.length > 0
-      ? `${format(fromUnixTime(dates[0]), 'MMM d, yyyy')} - ${format(fromUnixTime(dates[dates.length - 1]), 'MMM d, yyyy')}`
-      : '';
-
-    return {
-      sources: sources.join(', '),
-      dateRange
-    };
-  }, [data]);
-
   const overallMidDate = useMemo(() => {
     if (data.length === 0) return 0;
     const dates = data.map(c => c.created_at).sort((a, b) => a - b);
@@ -110,22 +95,6 @@ export default function IssueLeaderboards({ data }: { data: PulseConversation[] 
 
   return (
     <>
-      {datasetContext && (
-        <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground bg-secondary/30 border border-border px-4 py-2 rounded-lg w-fit mb-4">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-chart-2 animate-pulse"></span>
-            Data from: {datasetContext.sources}
-          </div>
-          {datasetContext.dateRange && (
-            <>
-              <span className="text-border">|</span>
-              <div className="flex items-center gap-1.5">
-                Date Range: {datasetContext.dateRange}
-              </div>
-            </>
-          )}
-        </div>
-      )}
       {/* Summary Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
         <div className="bg-card border-2 border-border shadow-sm rounded-xl p-4 flex flex-col justify-center">

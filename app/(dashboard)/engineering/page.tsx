@@ -31,6 +31,20 @@ export default function EngineeringPage() {
     return filterAnalyzableConversations(data, excludeNoHuman).analyzable;
   }, [data, excludeNoHuman]);
 
+  const datasetContext = useMemo(() => {
+    if (!analyzableData || analyzableData.length === 0) return null;
+    const sources = Array.from(new Set(analyzableData.map(c => c._sourceFilename || 'Unknown Source')));
+    const dates = analyzableData.map(c => c.created_at).sort((a, b) => a - b);
+    const dateRange = dates.length > 0
+      ? `${format(fromUnixTime(dates[0]), 'MMM d, yyyy')} - ${format(fromUnixTime(dates[dates.length - 1]), 'MMM d, yyyy')}`
+      : '';
+
+    return {
+      sources: sources.join(', '),
+      dateRange
+    };
+  }, [analyzableData]);
+
   if (!analyzableData) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -44,9 +58,25 @@ export default function EngineeringPage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Engineering & Product</h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 mb-4">
             Actionable bug and feature leaderboards, impact analysis, and triage.
           </p>
+          {datasetContext && (
+            <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-muted-foreground bg-secondary/30 border border-border px-4 py-2 rounded-lg w-fit">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-chart-2 animate-pulse"></span>
+                Data from: {datasetContext.sources}
+              </div>
+              {datasetContext.dateRange && (
+                <>
+                  <span className="text-border">|</span>
+                  <div className="flex items-center gap-1.5">
+                    Date Range: {datasetContext.dateRange}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
         <div className="absolute top-6 right-24 z-50 flex items-center space-x-2 bg-card border-2 border-border shadow-sm px-4 py-2 rounded-md cursor-pointer h-10 group/toggle hover:bg-secondary transition-colors" onClick={() => setExcludeNoHuman(!excludeNoHuman)}>
           <input
