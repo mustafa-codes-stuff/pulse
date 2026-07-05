@@ -62,10 +62,13 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
 
     return {
       volume: total,
-      reopenRate: total > 0 ? ((reopened / total) * 100).toFixed(1) + '%' : '0%',
-      csat: csatCount > 0 ? `${(csatTotal / csatCount).toFixed(1)} (${csatCount})` : '--',
+      reopenRate: total > 0 ? `${((reopened / total) * 100).toFixed(1)}%` : '0%',
+      reopenSub: total > 0 ? `(${reopened}/${total})` : '',
+      csat: csatCount > 0 ? `${(csatTotal / csatCount).toFixed(1)}` : '--',
+      csatSub: csatCount > 0 ? `(${csatCount})` : '',
       p50Reply: formatTime(timeToAdminReply.p50),
-      frictionRate: total > 0 ? ((frictionCount / total) * 100).toFixed(1) + '%' : '0%',
+      frictionRate: total > 0 ? `${((frictionCount / total) * 100).toFixed(1)}%` : '0%',
+      frictionSub: total > 0 ? `(${frictionCount}/${total})` : '',
       frictionConvs: data.filter(c => {
         const risk = computeEscalationRisk(c, thresholds);
         const parts = c.conversation_parts?.conversation_parts || [];
@@ -85,9 +88,9 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
   const cards = [
     { title: 'Total Volume', value: metrics.volume.toLocaleString(), icon: Users, color: 'text-chart-1', tooltip: 'Total number of conversations loaded in the dataset.', sort: 'newest', filterFn: (d: PulseConversation[]) => d },
     { title: 'Median Reply Time', value: metrics.p50Reply, icon: Clock, color: 'text-chart-2', tooltip: 'Median time from ticket creation to the first admin reply.', sort: 'time_to_admin_reply_desc', filterFn: (d: PulseConversation[]) => d.filter(c => c.statistics?.time_to_admin_reply != null && c.statistics.time_to_admin_reply > 0) },
-    { title: 'Reopen Rate', value: metrics.reopenRate, icon: RefreshCw, color: 'text-chart-3', tooltip: 'Percentage of tickets that were closed and then reopened by the customer.', sort: 'reopens_desc', filterFn: (d: PulseConversation[]) => d.filter(c => c.statistics?.count_reopens > 0) },
-    { title: 'Friction Rate', value: metrics.frictionRate, icon: AlertTriangle, color: 'text-destructive', tooltip: 'Percentage of conversations with high escalation risk or frustration indicators.', sort: 'escalation_desc', filterFn: (d: PulseConversation[]) => metrics.frictionConvs },
-    { title: 'Avg CSAT', value: metrics.csat, icon: ThumbsUp, color: 'text-chart-4', tooltip: 'Average customer satisfaction score from all rated conversations.', sort: 'csat_asc', filterFn: (d: PulseConversation[]) => d.filter(c => c.conversation_rating?.rating != null) },
+    { title: 'Reopen Rate', value: metrics.reopenRate, subtext: metrics.reopenSub, icon: RefreshCw, color: 'text-chart-3', tooltip: 'Percentage of tickets that were closed and then reopened by the customer.', sort: 'reopens_desc', filterFn: (d: PulseConversation[]) => d.filter(c => c.statistics?.count_reopens > 0) },
+    { title: 'Friction Rate', value: metrics.frictionRate, subtext: metrics.frictionSub, icon: AlertTriangle, color: 'text-destructive', tooltip: 'Percentage of conversations with high escalation risk or frustration indicators.', sort: 'escalation_desc', filterFn: (d: PulseConversation[]) => metrics.frictionConvs },
+    { title: 'Avg CSAT', value: metrics.csat, subtext: metrics.csatSub, icon: ThumbsUp, color: 'text-chart-4', tooltip: 'Average customer satisfaction score from all rated conversations.', sort: 'csat_asc', filterFn: (d: PulseConversation[]) => d.filter(c => c.conversation_rating?.rating != null) },
   ];
 
   const datasetContext = useMemo(() => {
@@ -126,7 +129,7 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
         {cards.map((card) => (
         <div 
           key={card.title} 
-          className="p-6 bg-card border border-border rounded-xl flex items-center justify-between hover:scale-[1.02] hover:shadow-md transition-all group"
+          className="p-4 bg-card border-2 border-border shadow-sm rounded-xl flex items-center justify-between hover:scale-[1.02] hover:shadow-md transition-all group"
         >
           <div>
             <div className="flex items-center gap-2 relative">
@@ -136,13 +139,16 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
                   <div className="w-4 h-4 rounded-full border border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-[10px] font-bold cursor-help group-hover/tooltip:text-foreground group-hover/tooltip:border-foreground/50 transition-colors">
                     ?
                   </div>
-                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 border border-border shadow-md text-center">
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 border-2 border-border shadow-sm shadow-md text-center">
                     {card.tooltip}
                   </div>
                 </div>
               )}
             </div>
-            <p className="text-3xl font-bold mt-2">{card.value}</p>
+            <div className="flex items-baseline gap-1.5 mt-2 flex-wrap">
+              <p className="text-3xl font-bold">{card.value}</p>
+              {(card as any).subtext && <span className="text-sm font-semibold text-muted-foreground">{(card as any).subtext}</span>}
+            </div>
           </div>
           <div className={`p-4 bg-secondary rounded-full ${card.color}`}>
             <card.icon className="w-6 h-6" />

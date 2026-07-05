@@ -9,7 +9,7 @@ export default function VolumeChart({ data }: { data: PulseConversation[] }) {
   const chartData = useMemo(() => aggregateDailyVolume(data), [data]);
 
   return (
-    <div className="w-full h-full min-h-[400px] p-6 bg-card border border-border rounded-xl flex flex-col">
+    <div className="w-full h-full min-h-[320px] p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col">
       <div className="mb-6 shrink-0 flex items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold">Conversation Volume</h2>
@@ -19,7 +19,7 @@ export default function VolumeChart({ data }: { data: PulseConversation[] }) {
           {data.length.toLocaleString()} total
         </span>
       </div>
-      <div className="w-full h-[350px]">
+      <div className="flex-1 w-full min-h-0">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={chartData}

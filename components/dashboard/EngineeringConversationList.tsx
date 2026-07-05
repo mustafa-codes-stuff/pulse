@@ -19,7 +19,7 @@ export default function EngineeringConversationList({
 }) {
   const [search, setSearch] = useState('');
   const [classificationFilter, setClassificationFilter] = useState<string>(initialFilter?.classification || 'all');
-  const [sortFilter, setSortFilter] = useState<string>(initialFilter?.sort || 'newest');
+  const [sortFilter, setSortFilter] = useState<string>(initialFilter?.sort || 'escalation_desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedConversation, setSelectedConversation] = useState<PulseConversation | null>(null);
   const itemsPerPage = 10;
@@ -93,13 +93,13 @@ export default function EngineeringConversationList({
     } else if (featureCategories.includes(classification)) {
       return <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-chart-2/10 text-chart-2 border border-chart-2/20"><Lightbulb className="w-3 h-3" /> {label}</span>;
     } else {
-      return <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-muted text-muted-foreground border border-border"><CheckCircle2 className="w-3 h-3" /> {label}</span>;
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-muted text-muted-foreground border-2 border-border shadow-sm"><CheckCircle2 className="w-3 h-3" /> {label}</span>;
     }
   };
 
   return (
     <>
-      <div className={`w-full flex flex-col ${isModal ? '' : 'bg-card border border-border rounded-xl overflow-hidden'}`}>
+      <div className={`w-full flex flex-col ${isModal ? '' : 'bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden'}`}>
         <div className={`flex flex-col gap-4 md:flex-row md:items-center justify-between ${isModal ? 'pb-4' : 'p-6 border-b border-border'}`}>
           {!isModal && (
             <div>
@@ -119,11 +119,11 @@ export default function EngineeringConversationList({
                     placeholder="Search logs..." 
                     value={search}
                     onChange={(e) => handleFilterChange(setSearch, e.target.value)}
-                    className="w-[200px] h-9 pl-9 pr-3 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-shadow"
+                    className="w-[200px] h-9 pl-9 pr-3 rounded-md border-2 border-border shadow-sm bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-shadow"
                   />
                 </div>
                 
-                <div className="flex items-center gap-2 border border-border rounded-md bg-background p-1">
+                <div className="flex items-center gap-2 border-2 border-border shadow-sm rounded-md bg-background p-1">
                   <Filter className="w-4 h-4 text-muted-foreground ml-2" />
                   <select 
                     value={classificationFilter}
@@ -216,9 +216,10 @@ export default function EngineeringConversationList({
           ) : (
             paginatedData.map((conv, idx) => {
               const rawBody = conv.source.body ? conv.source.body.replace(/<[^>]*>?/gm, ' ').trim() : '';
+              const cleanSubject = conv.source.subject ? conv.source.subject.replace(/<[^>]*>?/gm, ' ').trim() : '';
               const fallbackTitle = rawBody.length > 60 ? rawBody.substring(0, 60) + '...' : rawBody;
               const displayTitle = conv.title || conv.custom_attributes?.['AI Title'] as string || fallbackTitle || 'Untitled Conversation';
-              const displaySubject = conv.source.subject || (rawBody.length > 80 ? rawBody.substring(0, 80) + '...' : rawBody) || 'No description provided.';
+              const displaySubject = cleanSubject || (rawBody.length > 80 ? rawBody.substring(0, 80) + '...' : rawBody) || 'No description provided.';
               
               return (
                 <div key={conv.id || idx} className="border-b border-border transition-colors">
@@ -256,9 +257,13 @@ export default function EngineeringConversationList({
                     </div>
 
                     <div className="w-24 shrink-0 hidden lg:flex items-center justify-end">
-                      <span className={`text-sm font-semibold ${(conv as any).escalationRisk >= 0.5 ? 'text-destructive' : 'text-foreground'}`}>
-                        {Math.round((conv as any).escalationRisk * 100)}%
-                      </span>
+                      {(conv as any).escalationRisk > 0 ? (
+                        <span className={`text-sm font-semibold ${(conv as any).escalationRisk >= 0.5 ? 'text-destructive' : 'text-foreground'}`}>
+                          {Math.round((conv as any).escalationRisk * 100)}%
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground/30">-</span>
+                      )}
                     </div>
                     
                     <div className="w-32 shrink-0 hidden md:flex items-center justify-end gap-2 text-sm text-muted-foreground mr-4">

@@ -51,7 +51,7 @@ export default function IssueLeaderboards({ data }: { data: PulseConversation[] 
   const renderLeaderboard = (title: string, Icon: React.ElementType, items: CategoryPainMetrics[], colorClass: string, bgClass: string) => {
     const emptyText = `No ${title.toLowerCase().replace('top ', '')} found.`;
     return (
-      <div className="flex-1 min-w-[300px] flex flex-col bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+      <div className="flex-1 min-w-[300px] flex flex-col bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden shadow-sm">
         <div className={`p-4 border-b border-border ${bgClass} flex items-center gap-2`}>
           {Icon && <Icon className={`w-5 h-5 ${colorClass}`} />}
           <h3 className="font-semibold">{title}</h3>
@@ -128,21 +128,21 @@ export default function IssueLeaderboards({ data }: { data: PulseConversation[] 
       )}
       {/* Summary Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-        <div className="bg-card border border-border rounded-xl p-6 flex flex-col justify-center">
+        <div className="bg-card border-2 border-border shadow-sm rounded-xl p-4 flex flex-col justify-center">
           <div className="flex items-center gap-2 mb-2 text-muted-foreground">
             <Bug className="w-5 h-5 text-destructive" />
             <h3 className="font-semibold text-sm">Total Bugs</h3>
           </div>
           <p className="text-3xl font-bold text-foreground">{totals.bugs}</p>
         </div>
-        <div className="bg-card border border-border rounded-xl p-6 flex flex-col justify-center">
+        <div className="bg-card border-2 border-border shadow-sm rounded-xl p-4 flex flex-col justify-center">
           <div className="flex items-center gap-2 mb-2 text-muted-foreground">
             <Lightbulb className="w-5 h-5 text-chart-2" />
             <h3 className="font-semibold text-sm">Total Feature Requests</h3>
           </div>
           <p className="text-3xl font-bold text-foreground">{totals.features}</p>
         </div>
-        <div className="bg-card border border-border rounded-xl p-6 flex flex-col justify-center">
+        <div className="bg-card border-2 border-border shadow-sm rounded-xl p-4 flex flex-col justify-center">
           <div className="flex items-center gap-2 mb-2 text-muted-foreground">
             <HelpCircle className="w-5 h-5 text-muted-foreground" />
             <h3 className="font-semibold text-sm">Other Inquiries</h3>

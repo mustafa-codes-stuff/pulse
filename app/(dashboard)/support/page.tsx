@@ -12,6 +12,9 @@ import AgentInsights from '@/components/dashboard/AgentInsights';
 import FlaggedMoments from '@/components/dashboard/FlaggedMoments';
 import SupportCategoryBreakdown from '@/components/dashboard/SupportCategoryBreakdown';
 import ResponseTimeByHour from '@/components/dashboard/ResponseTimeByHour';
+import Percentiles from '@/components/dashboard/Percentiles';
+import SnoozeAnalysis from '@/components/dashboard/SnoozeAnalysis';
+import AnomalyFeed from '@/components/dashboard/AnomalyFeed';
 import { filterAnalyzableConversations } from '@/lib/analytics/filters';
 
 export default function SupportOpsPage() {
@@ -73,9 +76,10 @@ export default function SupportOpsPage() {
       </div>
       
       {/* Row 2: Volume Timeline & Response Times */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
         <VolumeChart data={analyzableData} />
         <ResponseTimeByHour data={analyzableData} />
+        <Percentiles data={analyzableData} />
       </div>
 
       {/* Row 3: Agent Insights & Flagged Frustration */}
@@ -84,7 +88,13 @@ export default function SupportOpsPage() {
         <FlaggedMoments data={analyzableData} />
       </div>
 
-      {/* Row 5: Conversation List */}
+      {/* Row 4: Anomalies & Snooze Analysis */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-stretch">
+        <AnomalyFeed data={analyzableData} mode="support" />
+        <SnoozeAnalysis data={analyzableData} />
+      </div>
+
+      {/* Row 6: Conversation List */}
       <div>
         <ConversationList data={analyzableData} />
       </div>

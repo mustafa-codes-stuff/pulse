@@ -77,7 +77,7 @@ export default function AgentCoverageHeatmap({ data, isTab = false }: { data: Pu
   };
 
   return (
-    <div className={isTab ? "w-full h-full flex flex-col p-6 min-h-[400px]" : "w-full h-fit self-start p-6 bg-card border border-border rounded-xl flex flex-col"}>
+    <div className={isTab ? "w-full h-full flex flex-col p-6 min-h-[400px]" : "w-full h-fit self-start p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col"}>
       {!isTab ? (
         <div className="mb-6 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -145,7 +145,7 @@ export default function AgentCoverageHeatmap({ data, isTab = false }: { data: Pu
                         className={`flex-1 h-8 rounded-sm ${getColor(volume, heatmapData.maxVolume)} transition-all hover:ring-2 hover:ring-ring relative group/cell cursor-pointer`}
                       >
                         {volume > 0 && (
-                          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover/cell:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-sm border border-border">
+                          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover/cell:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-sm border-2 border-border shadow-sm">
                             {volume} replies at {String(hour).padStart(2, '0')}:00
                           </div>
                         )}

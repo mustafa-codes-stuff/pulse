@@ -25,7 +25,11 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
   const categories = useMemo(() => {
     if (data.length === 0) return [];
 
-    const supportCategories = ['refund_request', 'subscription_cancel', 'pre_sales_info', 'delivery_status'];
+    const supportCategories = [
+      'rendering_quality', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs',
+      'customization_request', 'core_feature_request',
+      'refund_request', 'subscription_cancel', 'pre_sales_info', 'delivery_status'
+    ];
     const groups: Record<string, PulseConversation[]> = {};
     supportCategories.forEach(cat => groups[cat] = []);
 
@@ -72,7 +76,7 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
   if (data.length === 0) return null;
 
   return (
-    <div className="bg-card border border-border rounded-xl flex flex-col h-full overflow-hidden">
+    <div className="bg-card border-2 border-border shadow-sm rounded-xl flex flex-col h-[400px] overflow-hidden">
       <div className="p-6 border-b border-border flex items-center justify-between shrink-0">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -83,10 +87,12 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto">
-        <table className="w-full text-left border-collapse text-sm">
-          <thead>
-            <tr className="bg-secondary/15 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      <div className="relative flex-1 min-h-0">
+        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent pointer-events-none z-20" />
+        <div className="h-full overflow-auto scrollbar-thin pb-8">
+          <table className="w-full text-left border-collapse text-sm relative">
+          <thead className="sticky top-0 z-10 shadow-sm">
+            <tr className="bg-secondary border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               <th className="p-4 pl-6">Inquiry Category</th>
               <th className="p-4">Volume Share</th>
               <th className="p-4 text-center">Avg CSAT</th>
@@ -147,6 +153,7 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       <ConversationModal

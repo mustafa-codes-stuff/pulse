@@ -3,6 +3,7 @@
 import { PulseConversation } from '@/lib/types';
 import { format, fromUnixTime } from 'date-fns';
 import { User, Bot, Shield, FileJson } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 export default function ConversationThread({ 
   conversation
@@ -109,7 +110,7 @@ export default function ConversationThread({
                   {part.body ? (
                     <div 
                       className="whitespace-pre-wrap break-words [&>p]:mb-2 last:[&>p]:mb-0 [&>div]:mb-2 last:[&>div]:mb-0 [&_*]:!bg-transparent [&_*]:!text-inherit"
-                      dangerouslySetInnerHTML={{ __html: part.body }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(part.body) }}
                     />
                   ) : (
                     <span className="italic opacity-70">Empty message</span>

@@ -28,7 +28,7 @@ export default function Percentiles({ data }: { data: PulseConversation[] }) {
   }, [data]);
 
   return (
-    <div className="w-full h-full min-h-[400px] p-6 bg-card border border-border rounded-xl flex flex-col">
+    <div className="w-full h-full min-h-[320px] p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col">
       <div className="mb-6 shrink-0 flex flex-col gap-3">
         <h2 className="text-base font-semibold">Response & Resolution Times</h2>
         <div className="flex flex-wrap items-center gap-3 text-xs font-medium">

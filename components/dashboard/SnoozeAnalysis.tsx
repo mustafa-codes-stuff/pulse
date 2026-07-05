@@ -37,7 +37,7 @@ export default function SnoozeAnalysis({ data }: { data: PulseConversation[] }) 
   }, [snoozedTickets, datasetMaxTime]);
 
   return (
-    <div className="w-full h-full p-6 bg-card border border-border rounded-xl flex flex-col">
+    <div className="w-full h-full p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col">
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h2 className="text-lg font-semibold text-chart-2 flex items-center gap-2">

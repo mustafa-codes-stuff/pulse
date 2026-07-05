@@ -24,7 +24,7 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
   };
 
   return (
-    <div className={isTab ? "w-full h-full flex flex-col min-h-[400px]" : "w-full h-fit self-start p-6 bg-card border border-border rounded-xl flex flex-col"}>
+    <div className={isTab ? "w-full h-full flex flex-col min-h-[400px] overflow-hidden" : "w-full h-fit self-start p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col overflow-hidden"}>
       {!isTab && (
         <div className="mb-6 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -38,7 +38,9 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
         </div>
       )}
 
-      <div className={`flex-1 overflow-y-auto scrollbar-thin ${isTab ? 'p-6' : 'pr-2'}`}>
+      <div className="relative flex-1 min-h-0">
+        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent pointer-events-none z-20" />
+        <div className={`h-full overflow-y-auto scrollbar-thin pb-12 ${isTab ? 'p-6' : 'pr-2'}`}>
         {agentMetrics.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground min-h-[200px]">
             <User className="w-8 h-8 mb-2 opacity-50" />
@@ -89,7 +91,7 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
                     <div className="flex flex-col items-end">
                       <span className="text-[10px] uppercase text-muted-foreground font-semibold">Friction</span>
                       <span className={`flex items-center gap-1 font-bold text-sm ${agent.frictionRate > 0.2 ? 'text-destructive' : 'text-chart-3'}`}>
-                        {(agent.frictionRate * 100).toFixed(0)}% <AlertTriangle className="w-3.5 h-3.5" />
+                        {(agent.frictionRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.frictionCount}/{agent.volume})</span> <AlertTriangle className="w-3.5 h-3.5" />
                       </span>
                     </div>
                   )}
@@ -98,7 +100,7 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
                     <div className="flex flex-col items-end">
                       <span className="text-[10px] uppercase text-muted-foreground font-semibold">Reopens</span>
                       <span className={`flex items-center gap-1 font-bold text-sm ${agent.reopenRate > 0.1 ? 'text-destructive' : 'text-chart-1'}`}>
-                        {(agent.reopenRate * 100).toFixed(0)}%
+                        {(agent.reopenRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.reopenCount}/{agent.volume})</span>
                       </span>
                     </div>
                   )}
@@ -107,6 +109,7 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
             ))}
           </div>
         )}
+        </div>
       </div>
 
       <ConversationModal 

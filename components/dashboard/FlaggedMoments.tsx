@@ -40,21 +40,23 @@ export default function FlaggedMoments({ data }: { data: PulseConversation[] }) 
   }, [data]);
 
   return (
-    <div className="w-full h-[450px] bg-card border border-border rounded-xl flex flex-col">
+    <div className="w-full h-[400px] bg-card border-2 border-border shadow-sm rounded-xl flex flex-col overflow-hidden">
       <div className="p-6 border-b border-border flex items-start sm:items-center justify-between gap-4 shrink-0">
         <div>
           <div className="flex items-center gap-2">
             <AlertOctagon className="w-5 h-5 text-destructive" />
-            <h2 className="text-lg font-semibold">Friction After Agent Reply</h2>
+            <h2 className="text-lg font-semibold">Continued Frustration After Reply</h2>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">Conversations where customers express frustration after an agent response</p>
+          <p className="text-sm text-muted-foreground mt-1">Unresolved customer sentiment following an agent's response.</p>
         </div>
         <div className="text-sm font-medium bg-secondary text-secondary-foreground px-3 py-1 rounded-full">
           {flaggedConversations.length} flagged
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-4 content-start scrollbar-thin min-h-[100px]">
+      <div className="relative flex-1 min-h-0">
+        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent pointer-events-none z-20" />
+        <div className="h-full overflow-y-auto p-4 pb-12 grid grid-cols-1 md:grid-cols-2 gap-4 content-start scrollbar-thin">
         {flaggedConversations.length === 0 ? (
           <div className="md:col-span-2 py-8 flex flex-col items-center justify-center text-muted-foreground text-sm h-full">
             <p>No post-reply frustration detected.</p>
@@ -62,8 +64,9 @@ export default function FlaggedMoments({ data }: { data: PulseConversation[] }) 
         ) : (
           flaggedConversations.map(conv => {
             const rawBody = conv.source.body ? conv.source.body.replace(/<[^>]*>?/gm, ' ').trim() : '';
+            const cleanSubject = conv.source.subject ? conv.source.subject.replace(/<[^>]*>?/gm, ' ').trim() : '';
             const displayTitle = conv.title || conv.custom_attributes?.['AI Title'] as string || 'Untitled Conversation';
-            const displaySubject = conv.source.subject || (rawBody.length > 80 ? rawBody.substring(0, 80) + '...' : rawBody) || 'No description provided.';
+            const displaySubject = cleanSubject || (rawBody.length > 80 ? rawBody.substring(0, 80) + '...' : rawBody) || 'No description provided.';
             
             return (
               <div 
@@ -93,6 +96,7 @@ export default function FlaggedMoments({ data }: { data: PulseConversation[] }) 
             );
           })
         )}
+        </div>
       </div>
 
       <ConversationModal

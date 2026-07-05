@@ -1,8 +1,9 @@
 import { 
-  aggregateAgentPerformance, 
-  calculateHighFrictionP90, 
-  isHighFriction,
-  aggregateIssues
+  aggregateCSAT,
+  aggregateAgentPerformance,
+  computeDatasetThresholds,
+  computeEscalationRisk,
+  aggregateIssues,
 } from '../../lib/analytics/aggregations';
 import { PulseConversation } from '../../lib/types';
 
@@ -59,64 +60,61 @@ describe('Aggregations & Heuristics', () => {
     });
   });
 
-  describe('High Friction Heuristics', () => {
-    it('returns a fallback of 24h for datasets < 50 items', () => {
+  describe('Escalation Risk Heuristics', () => {
+    it('returns a fallback of 86400 for datasets < 50 items', () => {
       const data = Array.from({ length: 10 }).map(() => ({} as PulseConversation));
-      expect(calculateHighFrictionP90(data)).toBe(86400);
+      expect(computeDatasetThresholds(data).handlingTimeP90).toBe(86400);
     });
 
-    it('calculates the p90 accurately for large datasets', () => {
+    it('calculates the thresholds accurately for large datasets', () => {
       const data = Array.from({ length: 100 }).map((_, i) => ({
         statistics: { handling_time: (i + 1) * 1000 } // 1000, 2000, ..., 100000
       })) as any as PulseConversation[];
       
-      const p90 = calculateHighFrictionP90(data);
-      expect(p90).toBe(90100); 
+      const thresholds = computeDatasetThresholds(data);
+      expect(thresholds.handlingTimeP90).toBe(90100); 
     });
 
-    it('flags high friction based on reopens or p90 time', () => {
-      const p90 = 50000;
+    it('computes escalation risk based on reopens and handling time', () => {
+      const thresholds = { handlingTimeP90: 50000, backAndForthP90: 15 };
       
       // Below threshold
-      expect(isHighFriction({
-        statistics: { count_reopens: 1, handling_time: 40000 }
-      } as any, p90)).toBe(false);
+      expect(computeEscalationRisk({
+        statistics: { count_reopens: 0, handling_time: 40000 }
+      } as any, thresholds) > 0.5).toBe(false);
 
       // Flagged by reopens
-      expect(isHighFriction({
+      expect(computeEscalationRisk({
         statistics: { count_reopens: 2, handling_time: 40000 }
-      } as any, p90)).toBe(true);
+      } as any, thresholds)).toBeGreaterThanOrEqual(0.4);
 
-      // Flagged by handling time
-      expect(isHighFriction({
-        statistics: { count_reopens: 0, handling_time: 60000 }
-      } as any, p90)).toBe(true);
+      // Flagged by handling time and reopens (combined > 0.5)
+      expect(computeEscalationRisk({
+        statistics: { count_reopens: 2, handling_time: 60000 }
+      } as any, thresholds)).toBeGreaterThanOrEqual(0.6);
     });
-
+  });
 
   describe('aggregateIssues', () => {
-    it('aggregates bugs and feature requests, returning top 5 counts for each', () => {
+    it('aggregates bugs and feature requests, returning counts for each category', () => {
       const dummyConversations = [
-        { title: 'App crashes on login', source: { body: 'When I click login it dies' }, custom_attributes: { 'AI Title': 'Login Crash' } },
-        { title: 'Crash at startup', source: { body: 'I get a stacktrace when opening' }, custom_attributes: { 'AI Title': 'Login Crash' } },
-        { title: 'Dark mode', source: { body: 'Please add a dark theme' }, custom_attributes: { 'AI Title': 'Dark Theme Request' } },
-        { title: 'Add a dark theme', source: { body: 'I would love a dark theme' }, custom_attributes: { 'AI Title': 'Dark Theme Request' } },
-        { title: 'Another feature', source: { body: 'Can you add offline support' }, custom_attributes: { 'AI Title': 'Offline Mode' } },
+        { title: 'App crashes on login', source: { body: 'When I click login it dies' }, statistics: {} },
+        { title: 'Crash at startup', source: { body: 'I get a stacktrace when opening' }, statistics: {} },
+        { title: 'Dark mode', source: { body: 'Please add a dark theme' }, statistics: {} },
+        { title: 'Add a dark theme', source: { body: 'I would love a dark theme' }, statistics: {} },
+        { title: 'Another feature', source: { body: 'Can you add offline support' }, statistics: {} },
       ] as any as PulseConversation[];
 
       const result = aggregateIssues(dummyConversations);
       
-      // Based on our simple NLP heuristics (which classify crash/dies as bugs, and please/add as feature_request)
-      expect(result.bugs.length).toBe(1);
-      expect(result.bugs[0].title).toBe('Login Crash');
-      expect(result.bugs[0].count).toBe(2);
+      // Based on our NLP heuristics: 
+      // 'App crashes on login' -> auth_access
+      // 'Crash at startup' -> other_bugs
+      expect(result.bugs.length).toBe(2); 
 
-      expect(result.features.length).toBe(2);
-      expect(result.features[0].title).toBe('Dark Theme Request');
-      expect(result.features[0].count).toBe(2);
-      expect(result.features[1].title).toBe('Offline Mode');
-      expect(result.features[1].count).toBe(1);
+      // 'Dark mode', 'Add a dark theme', 'Another feature' -> core_feature_request
+      expect(result.features.length).toBe(1);
+      expect(result.features[0].count).toBe(3);
     });
   });
-});
 });

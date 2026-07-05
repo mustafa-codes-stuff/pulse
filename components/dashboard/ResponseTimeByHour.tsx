@@ -44,7 +44,7 @@ export default function ResponseTimeByHour({ data }: { data: PulseConversation[]
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-popover border border-border p-3 rounded-lg shadow-md text-sm">
+        <div className="bg-popover border-2 border-border shadow-sm p-3 rounded-lg shadow-md text-sm">
           <p className="font-semibold text-foreground mb-1">{data.hourLabel} UTC</p>
           <p className="text-muted-foreground flex items-center justify-between gap-4">
             <span>Median Reply:</span>
@@ -61,7 +61,7 @@ export default function ResponseTimeByHour({ data }: { data: PulseConversation[]
   };
 
   return (
-    <div className="w-full h-full min-h-[400px] p-6 bg-card border border-border rounded-xl flex flex-col">
+    <div className="w-full h-full min-h-[320px] p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col">
       <div className="mb-6 shrink-0 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">

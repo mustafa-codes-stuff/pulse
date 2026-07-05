@@ -17,7 +17,7 @@ export default function ConversationList({
   isModal?: boolean
 }) {
   const [search, setSearch] = useState('');
-  const [sortFilter, setSortFilter] = useState<string>(initialFilter?.sort || 'newest');
+  const [sortFilter, setSortFilter] = useState<string>(initialFilter?.sort || 'escalation_desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedConversation, setSelectedConversation] = useState<PulseConversation | null>(null);
   const itemsPerPage = 10;
@@ -62,7 +62,7 @@ export default function ConversationList({
 
   if (data.length === 0) {
     return (
-      <div className="w-full h-[400px] flex items-center justify-center bg-card border border-border rounded-xl">
+      <div className="w-full h-[400px] flex items-center justify-center bg-card border-2 border-border shadow-sm rounded-xl">
         <p className="text-muted-foreground">No conversations found.</p>
       </div>
     );
@@ -70,7 +70,7 @@ export default function ConversationList({
 
   return (
     <>
-    <div className={`w-full flex flex-col ${isModal ? '' : 'bg-card border border-border rounded-xl overflow-hidden'}`}>
+    <div className={`w-full flex flex-col ${isModal ? '' : 'bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden'}`}>
       <div className={`flex flex-col gap-4 md:flex-row md:items-center justify-between ${isModal ? 'pb-4' : 'p-6 border-b border-border'}`}>
         {!isModal && (
           <div>
@@ -143,9 +143,10 @@ export default function ConversationList({
         ) : (
           paginatedData.map((conv, idx) => {
             const rawBody = conv.source.body ? conv.source.body.replace(/<[^>]*>?/gm, ' ').trim() : '';
+            const cleanSubject = conv.source.subject ? conv.source.subject.replace(/<[^>]*>?/gm, ' ').trim() : '';
             const fallbackTitle = rawBody.length > 60 ? rawBody.substring(0, 60) + '...' : rawBody;
             const displayTitle = conv.title || (conv.custom_attributes?.['AI Title'] as string) || fallbackTitle || 'Untitled Conversation';
-            const displaySubject = conv.source.subject || (rawBody.length > 80 ? rawBody.substring(0, 80) + '...' : rawBody) || 'No description provided.';
+            const displaySubject = cleanSubject || (rawBody.length > 80 ? rawBody.substring(0, 80) + '...' : rawBody) || 'No description provided.';
             
             
             return (
