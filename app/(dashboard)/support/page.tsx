@@ -54,7 +54,7 @@ export default function SupportOpsPage() {
             Operational health, response times, and agent load.
           </p>
         </div>
-        <div className="absolute top-6 right-24 z-50 flex items-center space-x-2 bg-card border border-border px-4 py-2 rounded-md cursor-pointer h-10 group/toggle" onClick={() => setExcludeNoHuman(!excludeNoHuman)}>
+        <div className="absolute top-6 right-24 z-50 flex items-center space-x-2 bg-card border-2 border-border shadow-sm px-4 py-2 rounded-md cursor-pointer h-10 group/toggle hover:bg-secondary transition-colors" onClick={() => setExcludeNoHuman(!excludeNoHuman)}>
           <input
             type="checkbox"
             id="exclude-human"
