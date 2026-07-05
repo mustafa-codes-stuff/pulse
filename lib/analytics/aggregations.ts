@@ -1,5 +1,6 @@
 import { PulseConversation, ConversationPart } from '../types';
-import { classifyConversation, generateFallbackTitle } from '../nlp/heuristics';
+import { classifyConversation } from '../nlp/heuristics';
+import { extractThemesWithMembership } from '../nlp/tfidf';
 import { calculatePercentile } from './stats';
 import { format, fromUnixTime } from 'date-fns';
 
@@ -84,29 +85,31 @@ export interface AgentMetrics {
   id: string;
   name: string;
   volume: number;
-  medianTimeToReply: number | null;
+  medianTimeToAdminReply: number | null;
   csatTotal: number;
   csatCount: number;
   csatAvg: number | null;
   frictionCount: number;
   frictionRate: number;
+  reopenCount: number;
+  reopenRate: number;
 }
 
 export function aggregateAgentPerformance(conversations: PulseConversation[]): AgentMetrics[] {
-  const map = new Map<string, { name: string; replies: number[]; volume: number; csatTotal: number; csatCount: number; frictionCount: number }>();
+  const map = new Map<string, { name: string; replies: number[]; volume: number; csatTotal: number; csatCount: number; frictionCount: number; reopenCount: number }>();
   
-  const p90 = calculateHighFrictionP90(conversations);
+  const thresholds = computeDatasetThresholds(conversations);
 
   for (const conv of conversations) {
     const adminParts = conv.conversation_parts?.conversation_parts?.filter(p => p.author?.type === 'admin') || [];
     if (adminParts.length === 0) continue;
     
-    const firstAdminPart = adminParts[0];
-    const agentName = firstAdminPart.author?.name || 'Unknown Agent';
-    const agentId = String(firstAdminPart.author?.id || 'unknown');
+    const lastAdminPart = adminParts[adminParts.length - 1];
+    const agentName = lastAdminPart.author?.name || 'Unknown Agent';
+    const agentId = String(lastAdminPart.author?.id || 'unknown');
 
     if (!map.has(agentId)) {
-      map.set(agentId, { name: agentName, replies: [], volume: 0, csatTotal: 0, csatCount: 0, frictionCount: 0 });
+      map.set(agentId, { name: agentName, replies: [], volume: 0, csatTotal: 0, csatCount: 0, frictionCount: 0, reopenCount: 0 });
     }
     const record = map.get(agentId)!;
     
@@ -120,8 +123,12 @@ export function aggregateAgentPerformance(conversations: PulseConversation[]): A
       record.csatCount += 1;
     }
     
-    if (isHighFriction(conv, p90)) {
+    if (computeEscalationRisk(conv, thresholds) > 0.5) {
       record.frictionCount += 1;
+    }
+    
+    if ((conv.statistics?.count_reopens || 0) > 0) {
+      record.reopenCount += 1;
     }
   }
 
@@ -133,110 +140,226 @@ export function aggregateAgentPerformance(conversations: PulseConversation[]): A
       id,
       name: record.name,
       volume: record.volume,
-      medianTimeToReply: median,
+      medianTimeToAdminReply: median,
       csatTotal: record.csatTotal,
       csatCount: record.csatCount,
       csatAvg: record.csatCount > 0 ? record.csatTotal / record.csatCount : null,
       frictionCount: record.frictionCount,
       frictionRate: record.volume > 0 ? record.frictionCount / record.volume : 0,
+      reopenCount: record.reopenCount,
+      reopenRate: record.volume > 0 ? record.reopenCount / record.volume : 0,
     });
   }
 
   return results.sort((a, b) => {
     if (b.volume !== a.volume) return b.volume - a.volume;
-    return (a.medianTimeToReply || 0) - (b.medianTimeToReply || 0);
+    return (a.medianTimeToAdminReply || 0) - (b.medianTimeToAdminReply || 0);
   });
 }
 
-/**
- * Calculates the High Friction heuristic P90 threshold dynamically based on the current dataset.
- * If the dataset is too small (< 50), it falls back to 24 hours (86400 seconds).
- */
-export function calculateHighFrictionP90(conversations: PulseConversation[]): number {
-  if (conversations.length < 50) return 86400; // 24 hours sanity fallback
-  
+export interface EscalationThresholds {
+  handlingTimeP90: number;
+  backAndForthP90: number;
+}
+
+export function computeDatasetThresholds(conversations: PulseConversation[]): EscalationThresholds {
   const handlingTimes = conversations
     .map(c => c.statistics?.handling_time)
     .filter((t): t is number => typeof t === 'number' && t !== null)
     .sort((a, b) => a - b);
-    
-  if (handlingTimes.length === 0) return 86400;
-  
-  return calculatePercentile(handlingTimes, 90) || 86400;
+  const handlingTimeP90 = handlingTimes.length > 0 ? (calculatePercentile(handlingTimes, 90) || 86400) : 86400;
+
+  const bnfCounts = conversations.map(c => {
+    const parts = c.conversation_parts?.conversation_parts || [];
+    return parts.filter(p => p.part_type === 'comment').length;
+  }).sort((a, b) => a - b);
+  const backAndForthP90 = bnfCounts.length > 0 ? (calculatePercentile(bnfCounts, 90) || 15) : 15;
+
+  return { handlingTimeP90, backAndForthP90 };
 }
 
-/**
- * A conversation is flagged High Friction if `count_reopens >= 2` OR `handling_time` exceeds the dataset's p90 handling time.
- */
-export function isHighFriction(conv: PulseConversation, p90HandlingTime: number): boolean {
-  const reopens = conv.statistics?.count_reopens || 0;
-  const handlingTime = conv.statistics?.handling_time || 0;
+export const FRUSTRATION_PATTERNS = [
+  /\bfrustrat/i, /\bdisappoint/i, /\bunacceptable/i, /\bridiculous/i,
+  /\bas i said/i, /\bstill not/i, /\bdidn't answer/i, /\balready told/i,
+  /\bnot (what|how) i/i, /\bwaste of/i
+];
+
+export function computeEscalationRisk(
+  conv: PulseConversation,
+  thresholds: EscalationThresholds
+): number {
+  let risk = 0;
   
-  return reopens >= 2 || handlingTime > p90HandlingTime;
+  // 1. Reopens (weight 2x) - strongest validated signal
+  const reopens = conv.statistics?.count_reopens || 0;
+  if (reopens >= 2) risk += 0.4;
+  else if (reopens === 1) risk += 0.2;
+
+  // 2. Handling Time
+  const handlingTime = conv.statistics?.handling_time || 0;
+  if (handlingTime > thresholds.handlingTimeP90) risk += 0.2;
+
+  // 3. Back-and-forth
+  const parts = conv.conversation_parts?.conversation_parts || [];
+  const comments = parts.filter(p => p.part_type === 'comment').length;
+  if (comments > thresholds.backAndForthP90) risk += 0.2;
+
+  // 4. Frustration (per conversation)
+  let hasFrustration = false;
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i].author?.type === 'admin') {
+      // Look at the immediately following customer reply
+      for (let j = i + 1; j < parts.length; j++) {
+        if (parts[j].author?.type === 'user' || parts[j].author?.type === 'lead') {
+          const body = (parts[j].body || '').replace(/<[^>]*>?/gm, ' ');
+          if (FRUSTRATION_PATTERNS.some(pat => pat.test(body))) {
+            hasFrustration = true;
+          }
+          break; // Stop looking after the first response
+        }
+      }
+    }
+    if (hasFrustration) break;
+  }
+  if (hasFrustration) risk += 0.2;
+
+  return Math.min(risk, 1.0);
 }
-export interface IssueStats {
+export const CATEGORY_FRIENDLY_NAMES: Record<string, string> = {
+  rendering_quality: 'Rendering & Image Quality',
+  auth_access: 'Login & Account Access',
+  upload_flow: 'Photo Upload Issues',
+  payment_checkout: 'Payment & Checkout Failures',
+  customization_request: 'Customization Requests',
+  core_feature_request: 'Core Features & Formats',
+  other_bugs: 'General Bugs & UI Issues',
+  refund_request: 'Refund Requests',
+  subscription_cancel: 'Subscriptions & Cancellations',
+  pre_sales_info: 'Pre-sales & Pricing Info',
+  delivery_status: 'Delivery Status & ETAs',
+  system_automated: 'Automated System Spam'
+};
+
+export interface CategoryPainMetrics {
   title: string;
+  category: string;
   count: number;
+  averageCsat: number | null;
+  reopenRate: number;
+  painIndex: number;
   conversations: PulseConversation[];
 }
 
-export function aggregateIssues(conversations: PulseConversation[]): { bugs: IssueStats[], features: IssueStats[], other: IssueStats[], totals: { bugs: number, features: number, other: number } } {
-  const bugMap = new Map<string, IssueStats>();
-  const featureMap = new Map<string, IssueStats>();
-  const otherMap = new Map<string, IssueStats>();
-  
-  const totals = { bugs: 0, features: 0, other: 0 };
+function calculateCategoryMetrics(
+  category: string, 
+  convs: PulseConversation[], 
+  thresholds: any
+): CategoryPainMetrics {
+  const count = convs.length;
+  if (count === 0) {
+    return {
+      title: CATEGORY_FRIENDLY_NAMES[category] || category,
+      category,
+      count: 0,
+      averageCsat: null,
+      reopenRate: 0,
+      painIndex: 0,
+      conversations: []
+    };
+  }
 
-  conversations.forEach(c => {
-    const classification = classifyConversation(c.title || '', c.source.body);
-    
-    const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, '').trim();
-    
-    let clusterTitle = c.custom_attributes?.['AI Title'] as string;
-    
-    if (!clusterTitle) {
-      const subject = c.source?.subject ? stripHtml(c.source.subject) : '';
-      const title = c.title ? stripHtml(c.title) : '';
+  // 1. Churn Exposure (Volume) - capped at 25 tickets representing max exposure
+  const churnExposure = Math.min(count / 25, 1.0);
 
-      if (subject.length > 0 && subject.toLowerCase() !== 'new conversation') {
-        clusterTitle = subject;
-      } else if (title.length > 0) {
-        clusterTitle = title;
-      } else {
-        if (classification === 'bug') clusterTitle = 'Uncategorized Bugs';
-        else if (classification === 'feature_request') clusterTitle = 'Uncategorized Features';
-        else clusterTitle = 'General Inquiries';
-      }
+  // 2. Support Burden (Escalation Risk) - average escalation risk
+  let totalEscalationRisk = 0;
+  let reopenedCount = 0;
+  let csatSum = 0;
+  let csatCount = 0;
+
+  convs.forEach(c => {
+    totalEscalationRisk += computeEscalationRisk(c, thresholds);
+    if (c.statistics?.count_reopens > 0) {
+      reopenedCount++;
     }
-
-    if (classification === 'bug') {
-      totals.bugs++;
-      if (!bugMap.has(clusterTitle)) bugMap.set(clusterTitle, { title: clusterTitle, count: 0, conversations: [] });
-      const stat = bugMap.get(clusterTitle)!;
-      stat.count += 1;
-      stat.conversations.push(c);
-    } else if (classification === 'feature_request') {
-      totals.features++;
-      if (!featureMap.has(clusterTitle)) featureMap.set(clusterTitle, { title: clusterTitle, count: 0, conversations: [] });
-      const stat = featureMap.get(clusterTitle)!;
-      stat.count += 1;
-      stat.conversations.push(c);
-    } else {
-      totals.other++;
-      if (!otherMap.has(clusterTitle)) otherMap.set(clusterTitle, { title: clusterTitle, count: 0, conversations: [] });
-      const stat = otherMap.get(clusterTitle)!;
-      stat.count += 1;
-      stat.conversations.push(c);
+    if (c.conversation_rating?.rating) {
+      csatSum += c.conversation_rating.rating;
+      csatCount++;
     }
   });
 
-  const sortAndSlice = (map: Map<string, IssueStats>) => 
-    Array.from(map.values()).sort((a, b) => b.count - a.count).slice(0, 5);
+  const supportBurden = totalEscalationRisk / count;
+
+  // 3. Sentiment Damage (CSAT) - scale 1-5 to 0-1 (low score is higher damage)
+  const averageCsat = csatCount > 0 ? csatSum / csatCount : null;
+  const sentimentDamage = averageCsat !== null ? (5 - averageCsat) / 4 : 0.2; // 0.2 is neutral/default
+
+  // 4. First-Fix Failure Rate (Reopens)
+  const firstFixFailureRate = reopenedCount / count;
+
+  // Compute Pain Index (0 - 100)
+  // Weights: Churn Exposure 30%, Support Burden 30%, Sentiment Damage 20%, First-Fix Failure Rate 20%
+  const score = (churnExposure * 0.3) + (supportBurden * 0.3) + (sentimentDamage * 0.2) + (firstFixFailureRate * 0.2);
+  const painIndex = Math.round(score * 100);
 
   return {
-    bugs: sortAndSlice(bugMap),
-    features: sortAndSlice(featureMap),
-    other: sortAndSlice(otherMap),
+    title: CATEGORY_FRIENDLY_NAMES[category] || category,
+    category,
+    count,
+    averageCsat,
+    reopenRate: firstFixFailureRate,
+    painIndex,
+    conversations: convs
+  };
+}
+
+export function aggregateIssues(conversations: PulseConversation[]): { 
+  bugs: CategoryPainMetrics[], 
+  features: CategoryPainMetrics[], 
+  other: CategoryPainMetrics[], 
+  totals: { bugs: number, features: number, other: number } 
+} {
+  const totals = { bugs: 0, features: 0, other: 0 };
+  const thresholds = computeDatasetThresholds(conversations);
+
+  const bugCategories = ['rendering_quality', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs'];
+  const featureCategories = ['customization_request', 'core_feature_request'];
+  const otherCategories = ['refund_request', 'subscription_cancel', 'pre_sales_info', 'delivery_status']; // Exclude system_automated from dashboard lists
+
+  // Initialize maps
+  const groups: Record<string, PulseConversation[]> = {};
+  const allCategories = [...bugCategories, ...featureCategories, ...otherCategories, 'system_automated'];
+  allCategories.forEach(cat => groups[cat] = []);
+
+  conversations.forEach(c => {
+    const classification = classifyConversation(c.title || '', c.source.body);
+    if (groups[classification]) {
+      groups[classification].push(c);
+    } else {
+      // Fallback in case of unexpected string
+      groups['pre_sales_info'].push(c);
+    }
+
+    if (bugCategories.includes(classification)) {
+      totals.bugs++;
+    } else if (featureCategories.includes(classification)) {
+      totals.features++;
+    } else if (classification !== 'system_automated') {
+      totals.other++;
+    }
+  });
+
+  const sortAndFilter = (cats: string[]) => {
+    return cats
+      .map(cat => calculateCategoryMetrics(cat, groups[cat] || [], thresholds))
+      .filter(metrics => metrics.count > 0)
+      .sort((a, b) => b.painIndex - a.painIndex);
+  };
+
+  return {
+    bugs: sortAndFilter(bugCategories),
+    features: sortAndFilter(featureCategories),
+    other: sortAndFilter(otherCategories),
     totals
   };
 }

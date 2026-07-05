@@ -16,22 +16,25 @@ export default function SnoozeAnalysis({ data }: { data: PulseConversation[] }) 
     return data.filter(c => c.state === 'snoozed');
   }, [data]);
 
+  const datasetMaxTime = useMemo(() => {
+    return Math.max(0, ...data.map(c => c.updated_at || c.created_at));
+  }, [data]);
+
   const metrics = useMemo(() => {
-    let withAttachments = 0;
+    let overdue = 0;
     
     snoozedTickets.forEach(c => {
-      // Check custom attribute for attachments (since array seems to be stripped or rare)
-      if (c.custom_attributes?.['Has attachments']) {
-        withAttachments++;
+      if (c.snoozed_until && c.snoozed_until < datasetMaxTime) {
+        overdue++;
       }
     });
 
     return {
       total: snoozedTickets.length,
-      withAttachments,
-      withoutAttachments: snoozedTickets.length - withAttachments
+      overdue,
+      pending: snoozedTickets.length - overdue
     };
-  }, [snoozedTickets]);
+  }, [snoozedTickets, datasetMaxTime]);
 
   return (
     <div className="w-full h-full p-6 bg-card border border-border rounded-xl flex flex-col">
@@ -47,34 +50,35 @@ export default function SnoozeAnalysis({ data }: { data: PulseConversation[] }) 
       </div>
       
       <div className="space-y-4">
-        {/* Attachment Split */}
+        {/* Overdue */}
         <div 
           onClick={() => {
-            setModalTitle("Snoozed (With Attachments)");
-            setModalData(snoozedTickets.filter(c => c.custom_attributes?.['Has attachments']));
+            setModalTitle("Overdue Snoozes");
+            setModalData(snoozedTickets.filter(c => c.snoozed_until && c.snoozed_until < datasetMaxTime));
             setInitialFilter({ status: 'snoozed' });
             setIsModalOpen(true);
           }}
-          className="group p-4 bg-secondary/50 rounded-xl border border-border/50 hover:bg-secondary transition-colors cursor-pointer"
+          className="group p-4 bg-destructive/10 rounded-xl border border-destructive/20 hover:bg-destructive/20 transition-colors cursor-pointer"
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Paperclip className="w-4 h-4 text-chart-4" />
-              <span className="text-sm font-medium">Awaiting Attachments</span>
+              <AlertTriangle className="w-4 h-4 text-destructive" />
+              <span className="text-sm font-medium text-destructive">Overdue Snoozes</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-semibold">{metrics.withAttachments}</span>
+              <span className="font-semibold text-destructive">{metrics.overdue}</span>
             </div>
           </div>
           <div className="text-xs text-muted-foreground">
-            These tickets have the "Has attachments" attribute set, indicating they might be waiting on user uploads or verifying documents.
+            Snoozes that have expired relative to the dataset's latest activity. Critical operational signal.
           </div>
         </div>
 
+        {/* Pending */}
         <div 
           onClick={() => {
-            setModalTitle("Snoozed (No Attachments)");
-            setModalData(snoozedTickets.filter(c => !c.custom_attributes?.['Has attachments']));
+            setModalTitle("Pending Snoozes");
+            setModalData(snoozedTickets.filter(c => !c.snoozed_until || c.snoozed_until >= datasetMaxTime));
             setInitialFilter({ status: 'snoozed' });
             setIsModalOpen(true);
           }}
@@ -82,15 +86,15 @@ export default function SnoozeAnalysis({ data }: { data: PulseConversation[] }) 
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-chart-3" />
-              <span className="text-sm font-medium">Standard Snoozed</span>
+              <Clock className="w-4 h-4 text-chart-4" />
+              <span className="text-sm font-medium">Pending Snoozes</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-semibold">{metrics.withoutAttachments}</span>
+              <span className="font-semibold">{metrics.pending}</span>
             </div>
           </div>
           <div className="text-xs text-muted-foreground">
-            Standard follow-ups lacking attachments.
+            Snoozes that are still waiting for their scheduled time.
           </div>
         </div>
       </div>

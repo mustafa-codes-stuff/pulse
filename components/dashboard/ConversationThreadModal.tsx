@@ -10,10 +10,9 @@ interface ConversationThreadModalProps {
   isOpen: boolean;
   onClose: () => void;
   conversation: PulseConversation | null;
-  onViewRawLog?: (conv: PulseConversation) => void;
 }
 
-export default function ConversationThreadModal({ isOpen, onClose, conversation, onViewRawLog }: ConversationThreadModalProps) {
+export default function ConversationThreadModal({ isOpen, onClose, conversation }: ConversationThreadModalProps) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -66,7 +65,6 @@ export default function ConversationThreadModal({ isOpen, onClose, conversation,
         <div className="flex-1 overflow-auto bg-muted/5 p-6">
           <ConversationThread 
             conversation={conversation} 
-            onViewRawLog={onViewRawLog ? () => onViewRawLog(conversation) : undefined}
           />
         </div>
       </div>

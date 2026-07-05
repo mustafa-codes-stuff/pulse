@@ -3,9 +3,9 @@
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
 import { format, fromUnixTime } from 'date-fns';
-import { AlertCircle, Search, Filter, ChevronLeft, ChevronRight, X, FileJson, Bug, Lightbulb, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, Search, Filter, ChevronLeft, ChevronRight, X, Bug, Lightbulb, CheckCircle2, MessageSquareWarning } from 'lucide-react';
 import { classifyConversation } from '@/lib/nlp/heuristics';
-import { calculateHighFrictionP90, isHighFriction } from '@/lib/analytics/aggregations';
+import { computeDatasetThresholds, computeEscalationRisk, CATEGORY_FRIENDLY_NAMES } from '@/lib/analytics/aggregations';
 import ConversationThreadModal from './ConversationThreadModal';
 
 export default function EngineeringConversationList({ 
@@ -22,28 +22,41 @@ export default function EngineeringConversationList({
   const [sortFilter, setSortFilter] = useState<string>(initialFilter?.sort || 'newest');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedConversation, setSelectedConversation] = useState<PulseConversation | null>(null);
-  const [rawLogModalData, setRawLogModalData] = useState<PulseConversation | null>(null);
-  const itemsPerPage = 50;
+  const itemsPerPage = 10;
 
   const handleFilterChange = (setter: any, value: any) => {
     setter(value);
     setCurrentPage(1);
   };
 
-  const p90HandlingTime = useMemo(() => calculateHighFrictionP90(data), [data]);
+  const thresholds = useMemo(() => computeDatasetThresholds(data), [data]);
 
   const processedData = useMemo(() => {
     return data.map(conv => {
       const classification = classifyConversation(conv.title || '', conv.source.body);
       const hasAttachments = !!conv.custom_attributes?.['Has attachments'] || (conv.source.attachments && conv.source.attachments.length > 0);
-      const highFriction = isHighFriction(conv, p90HandlingTime);
-      return { ...conv, classification, hasAttachments, highFriction };
+      const escalationRisk = computeEscalationRisk(conv, thresholds);
+      return { ...conv, classification, hasAttachments, escalationRisk };
     });
-  }, [data, p90HandlingTime]);
+  }, [data, thresholds]);
 
   const filteredData = useMemo(() => {
     return processedData.filter(conv => {
-      if (classificationFilter !== 'all' && conv.classification !== classificationFilter) return false;
+      if (classificationFilter !== 'all') {
+        const bugCategories = ['rendering_quality', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs'];
+        const featureCategories = ['customization_request', 'core_feature_request'];
+        const supportCategories = ['refund_request', 'subscription_cancel', 'pre_sales_info', 'delivery_status', 'system_automated'];
+
+        if (classificationFilter === 'group_bugs') {
+          if (!bugCategories.includes(conv.classification)) return false;
+        } else if (classificationFilter === 'group_features') {
+          if (!featureCategories.includes(conv.classification)) return false;
+        } else if (classificationFilter === 'group_support') {
+          if (!supportCategories.includes(conv.classification)) return false;
+        } else {
+          if (conv.classification !== classificationFilter) return false;
+        }
+      }
 
       if (search) {
         const searchLower = search.toLowerCase();
@@ -60,8 +73,8 @@ export default function EngineeringConversationList({
     }).sort((a, b) => {
       if (sortFilter === 'newest') return b.created_at - a.created_at;
       if (sortFilter === 'oldest') return a.created_at - b.created_at;
-      if (sortFilter === 'complexity_desc') return (b.statistics?.count_conversation_parts || 0) - (a.statistics?.count_conversation_parts || 0);
-      if (sortFilter === 'complexity_asc') return (a.statistics?.count_conversation_parts || 0) - (b.statistics?.count_conversation_parts || 0);
+      if (sortFilter === 'escalation_desc') return (b as any).escalationRisk - (a as any).escalationRisk;
+      if (sortFilter === 'escalation_asc') return (a as any).escalationRisk - (b as any).escalationRisk;
       return 0;
     });
   }, [processedData, search, classificationFilter, sortFilter]);
@@ -70,10 +83,17 @@ export default function EngineeringConversationList({
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const getClassificationBadge = (classification: string) => {
-    switch(classification) {
-      case 'bug': return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-destructive/10 text-destructive border border-destructive/20"><Bug className="w-3 h-3" /> Bug</span>;
-      case 'feature_request': return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-chart-2/10 text-chart-2 border border-chart-2/20"><Lightbulb className="w-3 h-3" /> Feature</span>;
-      default: return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground border border-border"><CheckCircle2 className="w-3 h-3" /> Standard</span>;
+    const bugCategories = ['rendering_quality', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs'];
+    const featureCategories = ['customization_request', 'core_feature_request'];
+    
+    const label = CATEGORY_FRIENDLY_NAMES[classification] || classification;
+    
+    if (bugCategories.includes(classification)) {
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-destructive/10 text-destructive border border-destructive/20"><Bug className="w-3 h-3" /> {label}</span>;
+    } else if (featureCategories.includes(classification)) {
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-chart-2/10 text-chart-2 border border-chart-2/20"><Lightbulb className="w-3 h-3" /> {label}</span>;
+    } else {
+      return <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-muted text-muted-foreground border border-border"><CheckCircle2 className="w-3 h-3" /> {label}</span>;
     }
   };
 
@@ -110,10 +130,28 @@ export default function EngineeringConversationList({
                     onChange={(e) => handleFilterChange(setClassificationFilter, e.target.value)}
                     className="h-7 bg-transparent text-sm focus:outline-none pr-2 text-muted-foreground"
                   >
-                    <option value="all">All Types</option>
-                    <option value="bug">Bugs</option>
-                    <option value="feature_request">Features</option>
-                    <option value="other">Standard</option>
+                    <option value="all">All Categories</option>
+                    <option value="group_bugs">All Bugs & Tech Issues</option>
+                    <option value="group_features">All Feature Requests</option>
+                    <option value="group_support">All Support Inquiries</option>
+                    <optgroup label="Bugs & Tech Issues">
+                      <option value="rendering_quality">Rendering & Image Quality</option>
+                      <option value="auth_access">Login & Account Access</option>
+                      <option value="upload_flow">Photo Upload Issues</option>
+                      <option value="payment_checkout">Payment & Checkout Failures</option>
+                      <option value="other_bugs">General Bugs & UI Issues</option>
+                    </optgroup>
+                    <optgroup label="Feature Requests">
+                      <option value="customization_request">Customization Requests</option>
+                      <option value="core_feature_request">Core Features & Formats</option>
+                    </optgroup>
+                    <optgroup label="Support Inquiries">
+                      <option value="refund_request">Refund Requests</option>
+                      <option value="subscription_cancel">Subscriptions & Cancellations</option>
+                      <option value="pre_sales_info">Pre-sales & Pricing Info</option>
+                      <option value="delivery_status">Delivery Status & ETAs</option>
+                      <option value="system_automated">Automated System Spam</option>
+                    </optgroup>
                   </select>
                 </div>
               </>
@@ -126,31 +164,31 @@ export default function EngineeringConversationList({
               >
                 <option value="newest">Newest</option>
                 <option value="oldest">Oldest</option>
-                <option value="complexity_desc">Most Complex</option>
-                <option value="complexity_asc">Least Complex</option>
+                <option value="escalation_desc">Highest Risk</option>
+                <option value="escalation_asc">Lowest Risk</option>
               </select>
             </div>
           </div>
         </div>
 
         {/* Table Headers */}
-        <div className="flex items-center px-6 py-2 bg-secondary/5 border-b border-border text-xs font-semibold uppercase text-muted-foreground">
+        <div className="flex items-center px-6 py-3 border-b border-border bg-secondary/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           <div className="flex-1 min-w-0 pr-4">Conversation</div>
-          <div className="w-28 shrink-0 hidden sm:block">Classification</div>
+          <div className="w-40 shrink-0 hidden sm:block">Classification</div>
           <div 
-            className="w-24 shrink-0 hidden lg:flex flex-col items-end cursor-pointer hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded px-1 -mr-1 transition-colors"
-            onClick={() => handleFilterChange(setSortFilter, sortFilter === 'complexity_desc' ? 'complexity_asc' : 'complexity_desc')}
+            className="w-24 shrink-0 hidden lg:flex items-end justify-end cursor-pointer hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded px-1 -mr-1 transition-colors"
+            onClick={() => handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc')}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                handleFilterChange(setSortFilter, sortFilter === 'complexity_desc' ? 'complexity_asc' : 'complexity_desc');
+                handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc');
               }
             }}
             tabIndex={0}
             role="columnheader"
-            aria-sort={sortFilter === 'complexity_desc' ? 'descending' : sortFilter === 'complexity_asc' ? 'ascending' : 'none'}
+            aria-sort={sortFilter === 'escalation_desc' ? 'descending' : sortFilter === 'escalation_asc' ? 'ascending' : 'none'}
           >
-            Complexity {sortFilter === 'complexity_desc' ? '↓' : sortFilter === 'complexity_asc' ? '↑' : ''}
+            Escalation {sortFilter === 'escalation_desc' ? '↓' : sortFilter === 'escalation_asc' ? '↑' : ''}
           </div>
           <div 
             className="w-32 shrink-0 hidden md:flex items-center justify-end mr-4 cursor-pointer hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded px-1 -mr-1 transition-colors"
@@ -167,7 +205,6 @@ export default function EngineeringConversationList({
           >
             Created At {sortFilter === 'newest' ? '↓' : sortFilter === 'oldest' ? '↑' : ''}
           </div>
-          <div className="w-8 shrink-0"></div>
         </div>
 
         {/* List Body */}
@@ -192,13 +229,21 @@ export default function EngineeringConversationList({
                     <div className="flex-1 min-w-0 pr-4 space-y-1">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold text-foreground line-clamp-1">{displayTitle}</p>
-                        {(conv as any).highFriction && (
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 mt-2">
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded border border-border">
+                        <MessageSquareWarning className="w-3 h-3" />
+                        {
+                          1 + (conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment' || p.part_type === 'note').length
+                        } messages
+                      </span>
+                      {(conv as any).escalationRisk >= 0.5 && (
                           <div className="group relative flex items-center">
                             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-destructive text-destructive-foreground">
-                              High Friction
+                              High Risk
                             </span>
                             <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-popover text-popover-foreground text-[10px] font-medium rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-border shadow-sm">
-                              Reopens &gt;= 2 OR Handling Time &gt; p90
+                              Elevated escalation risk score
                             </div>
                           </div>
                         )}
@@ -206,14 +251,13 @@ export default function EngineeringConversationList({
                       <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{displaySubject}</p>
                     </div>
                     
-                    <div className="w-28 shrink-0 hidden sm:block">
+                    <div className="w-40 shrink-0 hidden sm:block">
                       {getClassificationBadge(conv.classification)}
                     </div>
 
-                    <div className="w-24 shrink-0 hidden lg:flex flex-col items-end gap-1">
-                      <span className="text-xs text-muted-foreground uppercase font-medium">Complexity</span>
-                      <span className={`text-sm font-semibold ${conv.statistics?.count_conversation_parts > 5 ? 'text-chart-1' : 'text-foreground'}`}>
-                        {conv.statistics?.count_conversation_parts || 0} msgs
+                    <div className="w-24 shrink-0 hidden lg:flex items-center justify-end">
+                      <span className={`text-sm font-semibold ${(conv as any).escalationRisk >= 0.5 ? 'text-destructive' : 'text-foreground'}`}>
+                        {Math.round((conv as any).escalationRisk * 100)}%
                       </span>
                     </div>
                     
@@ -254,40 +298,11 @@ export default function EngineeringConversationList({
           </div>
         </div>
       </div>
-
-      {/* Raw JSON Modal */}
-      {rawLogModalData && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-4xl max-h-[80vh] flex flex-col rounded-xl shadow-lg border border-border animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <FileJson className="w-5 h-5 text-chart-1" /> Raw Log
-              </h2>
-              <button 
-                onClick={() => setRawLogModalData(null)}
-                className="p-2 rounded-full hover:bg-secondary transition-colors"
-              >
-                <X className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
-            
-            <div className="p-4 overflow-y-auto flex-1 min-h-0 bg-secondary/30">
-              <pre className="text-xs text-foreground/80 font-mono whitespace-pre-wrap break-words bg-background p-4 rounded-lg border border-border shadow-inner">
-                {JSON.stringify(rawLogModalData, null, 2)}
-              </pre>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Conversation Thread Modal */}
       <ConversationThreadModal 
         isOpen={!!selectedConversation}
         onClose={() => setSelectedConversation(null)}
         conversation={selectedConversation}
-        onViewRawLog={(conv) => {
-          setRawLogModalData(conv);
-        }}
       />
     </>
   );

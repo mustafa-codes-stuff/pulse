@@ -4,7 +4,8 @@ import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
 import { aggregateDailyVolume } from '@/lib/analytics/aggregations';
 import { detectSpikes } from '@/lib/analytics/anomalies';
-import { AlertTriangle, Activity } from 'lucide-react';
+import { extractThemesWithMembership } from '@/lib/nlp/tfidf';
+import { AlertTriangle, Activity, CheckCircle2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import ConversationModal from './ConversationModal';
 
@@ -45,6 +46,28 @@ export default function AnomalyFeed({ data }: { data: PulseConversation[] }) {
       });
     });
 
+    // 1.5 Theme-tied volume spikes
+    const topThemes = extractThemesWithMembership(data, 5);
+    topThemes.forEach(theme => {
+      const themeDailyVol = aggregateDailyVolume(theme.conversations);
+      const themeSeries = themeDailyVol.map(d => ({ date: d.date, value: d.total }));
+      const themeDetected = detectSpikes(themeSeries, 7, 1.5);
+      
+      themeDetected.filter(d => d.isAnomaly && d.value >= 3).forEach(anomaly => {
+        items.push({
+          id: `theme-spike-${theme.theme}-${anomaly.date}`,
+          type: 'spike',
+          date: anomaly.date,
+          title: `Theme Spike: "${theme.theme}"`,
+          description: `On ${format(parseISO(anomaly.date), 'MMMM d')}, "${theme.theme}" had ${anomaly.value} complaints (avg ${Math.round(anomaly.mean)}).`,
+          conversations: theme.conversations.filter(c => {
+            const dateStr = format(new Date(c.created_at * 1000), 'yyyy-MM-dd');
+            return dateStr === anomaly.date;
+          })
+        });
+      });
+    });
+
     // 2. High Re-opens
     const highReopens = data.filter(c => (c.statistics?.count_reopens || 0) >= 3);
     if (highReopens.length > 0) {
@@ -73,21 +96,25 @@ export default function AnomalyFeed({ data }: { data: PulseConversation[] }) {
   }, [data]);
 
   return (
-    <div className="w-full bg-card border border-border rounded-xl flex flex-col max-h-[600px]">
-      <div className="p-6 border-b border-border flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2">
-          <Activity className="w-5 h-5 text-chart-1" />
-          <h2 className="text-lg font-semibold">Anomaly Feed</h2>
+    <div className="w-full bg-card border border-border rounded-xl flex flex-col max-h-[360px]">
+      <div className="p-6 border-b border-border flex items-start sm:items-center justify-between shrink-0 gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <Activity className="w-5 h-5 text-chart-2" />
+            <h2 className="text-lg font-semibold">Anomaly Feed</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">Automated detection of volume spikes and unusual patterns</p>
         </div>
         <div className="text-sm font-medium bg-secondary text-secondary-foreground px-3 py-1 rounded-full">
           {anomalies.length} detected
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-4 content-start scrollbar-thin">
+      <div className="flex-1 overflow-y-auto p-0 flex flex-col content-start scrollbar-thin min-h-[100px] divide-y divide-border/50">
         {anomalies.length === 0 ? (
-          <div className="md:col-span-2 py-12 flex flex-col items-center justify-center text-muted-foreground text-sm">
-            <p>No significant anomalies detected in this dataset.</p>
+          <div className="py-12 flex flex-col items-center justify-center text-muted-foreground text-sm h-full">
+            <CheckCircle2 className="w-10 h-10 mb-3 text-chart-2/50" />
+            <p>No significant anomalies detected.</p>
           </div>
         ) : (
           anomalies.map(anomaly => (
@@ -98,16 +125,25 @@ export default function AnomalyFeed({ data }: { data: PulseConversation[] }) {
                 setModalData(anomaly.conversations);
                 setIsModalOpen(true);
               }}
-              className="p-4 rounded-lg bg-anomaly-bg border border-anomaly-border text-anomaly-text flex items-start gap-3 hover:scale-[1.02] hover:shadow-md transition-all cursor-pointer"
+              className="group p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-secondary/30 transition-colors cursor-pointer"
             >
-              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-destructive" />
-              <div>
-                <p className="text-sm font-bold">
-                  {anomaly.title}
-                </p>
-                <p className="text-sm mt-1 opacity-90">
-                  {anomaly.description}
-                </p>
+              <div className="flex items-start gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-destructive/10 shrink-0 border border-destructive/20 mt-0.5">
+                  <AlertTriangle className="w-4 h-4 text-destructive" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {anomaly.title}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                    {anomaly.description}
+                  </p>
+                </div>
+              </div>
+              <div className="shrink-0 flex items-center md:justify-end ml-11 md:ml-0">
+                 <div className="text-xs font-semibold bg-secondary/80 text-muted-foreground px-2.5 py-1 rounded-md border border-border/50">
+                   {anomaly.conversations.length} tickets
+                 </div>
               </div>
             </div>
           ))

@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { Users, Clock, ThumbsUp, RefreshCw } from 'lucide-react';
-import { calculateResponseTimePercentiles } from '@/lib/analytics/aggregations';
+import { Users, Clock, ThumbsUp, RefreshCw, AlertTriangle } from 'lucide-react';
+import { calculateResponseTimePercentiles, computeEscalationRisk, computeDatasetThresholds, FRUSTRATION_PATTERNS } from '@/lib/analytics/aggregations';
 import { format, fromUnixTime } from 'date-fns';
 import ConversationModal from './ConversationModal';
 
@@ -19,7 +19,9 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
     let reopened = 0;
     let csatTotal = 0;
     let csatCount = 0;
-    let aiHandled = 0;
+    let frictionCount = 0;
+
+    const thresholds = computeDatasetThresholds(data);
     
     for (const c of data) {
       if (c.statistics?.count_reopens > 0) reopened++;
@@ -27,7 +29,22 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
         csatTotal += c.conversation_rating.rating;
         csatCount++;
       }
-      if (c.ai_agent_participated) aiHandled++;
+
+      // Calculate friction: high escalation risk OR frustration language
+      const risk = computeEscalationRisk(c, thresholds);
+      const parts = c.conversation_parts?.conversation_parts || [];
+      let hasFrustration = false;
+      for (const part of parts) {
+        const body = (part.body || '').replace(/<[^>]*>?/gm, ' ');
+        if (FRUSTRATION_PATTERNS.some(pat => pat.test(body))) {
+          hasFrustration = true;
+          break;
+        }
+      }
+
+      if (risk > 0.5 || hasFrustration) {
+        frictionCount++;
+      }
     }
 
     const { timeToAdminReply } = calculateResponseTimePercentiles(data);
@@ -46,9 +63,22 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
     return {
       volume: total,
       reopenRate: total > 0 ? ((reopened / total) * 100).toFixed(1) + '%' : '0%',
-      csat: csatCount > 0 ? (csatTotal / csatCount).toFixed(1) : '--',
+      csat: csatCount > 0 ? `${(csatTotal / csatCount).toFixed(1)} (${csatCount})` : '--',
       p50Reply: formatTime(timeToAdminReply.p50),
-      aiRate: total > 0 ? ((aiHandled / total) * 100).toFixed(1) + '%' : '0%'
+      frictionRate: total > 0 ? ((frictionCount / total) * 100).toFixed(1) + '%' : '0%',
+      frictionConvs: data.filter(c => {
+        const risk = computeEscalationRisk(c, thresholds);
+        const parts = c.conversation_parts?.conversation_parts || [];
+        let hasFrustration = false;
+        for (const part of parts) {
+          const body = (part.body || '').replace(/<[^>]*>?/gm, ' ');
+          if (FRUSTRATION_PATTERNS.some(pat => pat.test(body))) {
+            hasFrustration = true;
+            break;
+          }
+        }
+        return risk > 0.5 || hasFrustration;
+      })
     };
   }, [data]);
 
@@ -56,6 +86,7 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
     { title: 'Total Volume', value: metrics.volume.toLocaleString(), icon: Users, color: 'text-chart-1', tooltip: 'Total number of conversations loaded in the dataset.', sort: 'newest', filterFn: (d: PulseConversation[]) => d },
     { title: 'Median Reply Time', value: metrics.p50Reply, icon: Clock, color: 'text-chart-2', tooltip: 'Median time from ticket creation to the first admin reply.', sort: 'time_to_admin_reply_desc', filterFn: (d: PulseConversation[]) => d.filter(c => c.statistics?.time_to_admin_reply != null && c.statistics.time_to_admin_reply > 0) },
     { title: 'Reopen Rate', value: metrics.reopenRate, icon: RefreshCw, color: 'text-chart-3', tooltip: 'Percentage of tickets that were closed and then reopened by the customer.', sort: 'reopens_desc', filterFn: (d: PulseConversation[]) => d.filter(c => c.statistics?.count_reopens > 0) },
+    { title: 'Friction Rate', value: metrics.frictionRate, icon: AlertTriangle, color: 'text-destructive', tooltip: 'Percentage of conversations with high escalation risk or frustration indicators.', sort: 'escalation_desc', filterFn: (d: PulseConversation[]) => metrics.frictionConvs },
     { title: 'Avg CSAT', value: metrics.csat, icon: ThumbsUp, color: 'text-chart-4', tooltip: 'Average customer satisfaction score from all rated conversations.', sort: 'csat_asc', filterFn: (d: PulseConversation[]) => d.filter(c => c.conversation_rating?.rating != null) },
   ];
 
@@ -91,17 +122,11 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
           )}
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         {cards.map((card) => (
         <div 
           key={card.title} 
-          onClick={() => {
-            setModalTitle(`Conversations: ${card.title}`);
-            setModalData(card.filterFn(data));
-            setModalInitialFilter({ sort: card.sort });
-            setIsModalOpen(true);
-          }}
-          className="p-6 bg-card border border-border rounded-xl flex items-center justify-between hover:scale-[1.02] hover:shadow-md transition-all cursor-pointer group"
+          className="p-6 bg-card border border-border rounded-xl flex items-center justify-between hover:scale-[1.02] hover:shadow-md transition-all group"
         >
           <div>
             <div className="flex items-center gap-2 relative">

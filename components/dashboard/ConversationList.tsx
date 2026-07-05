@@ -3,8 +3,9 @@
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
 import { format, fromUnixTime, isAfter, subDays } from 'date-fns';
-import { AlertCircle, Search, ChevronLeft, ChevronRight, X, FileJson, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertCircle, Search, ChevronLeft, ChevronRight, MessageSquareWarning } from 'lucide-react';
 import ConversationThreadModal from './ConversationThreadModal';
+import { computeDatasetThresholds, computeEscalationRisk } from '@/lib/analytics/aggregations';
 
 export default function ConversationList({ 
   data, 
@@ -19,14 +20,15 @@ export default function ConversationList({
   const [sortFilter, setSortFilter] = useState<string>(initialFilter?.sort || 'newest');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedConversation, setSelectedConversation] = useState<PulseConversation | null>(null);
-  const [rawLogModalData, setRawLogModalData] = useState<PulseConversation | null>(null);
-  const itemsPerPage = 50;
+  const itemsPerPage = 10;
 
   // Reset page when filters change
   const handleFilterChange = (setter: any, value: any) => {
     setter(value);
     setCurrentPage(1);
   };
+
+  const thresholds = useMemo(() => computeDatasetThresholds(data), [data]);
 
   const filteredData = useMemo(() => {
     return data.filter(conv => {
@@ -49,9 +51,11 @@ export default function ConversationList({
       if (sortFilter === 'time_to_admin_reply_desc') return (b.statistics?.time_to_admin_reply || 0) - (a.statistics?.time_to_admin_reply || 0);
       if (sortFilter === 'reopens_desc') return (b.statistics?.count_reopens || 0) - (a.statistics?.count_reopens || 0);
       if (sortFilter === 'csat_asc') return (a.conversation_rating?.rating || 6) - (b.conversation_rating?.rating || 6); // 6 puts unrated at bottom
+      if (sortFilter === 'escalation_desc') return computeEscalationRisk(b, thresholds) - computeEscalationRisk(a, thresholds);
+      if (sortFilter === 'back_and_forth_desc') return (b.statistics?.count_conversation_parts || 0) - (a.statistics?.count_conversation_parts || 0);
       return 0;
     });
-  }, [data, search, sortFilter]);
+  }, [data, search, sortFilter, thresholds]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -89,6 +93,23 @@ export default function ConversationList({
               />
             </div>
           )}
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Sort:</span>
+            <select 
+              value={sortFilter}
+              onChange={(e) => handleFilterChange(setSortFilter, e.target.value)}
+              className="text-sm bg-background border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 w-full sm:w-auto"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="escalation_desc">Highest Risk</option>
+              <option value="time_to_admin_reply_desc">Longest Reply Time</option>
+              <option value="reopens_desc">Most Reopens</option>
+              <option value="back_and_forth_desc">Most Back-and-Forth</option>
+              <option value="csat_asc">Lowest CSAT</option>
+            </select>
+          </div>
         </div>
       </div>
       
@@ -138,6 +159,21 @@ export default function ConversationList({
                       {displayTitle}
                     </p>
                     <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{displaySubject}</p>
+                    
+                    <div className="flex flex-wrap items-center gap-3 mt-2">
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded border border-border">
+                        <MessageSquareWarning className="w-3 h-3" />
+                        {
+                          1 + (conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment' || p.part_type === 'note').length
+                        } messages
+                      </span>
+                      {computeEscalationRisk(conv, thresholds) > 0.5 && (
+                        <span className="text-[10px] text-destructive font-semibold flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded border border-destructive/20">
+                          <AlertCircle className="w-3 h-3" />
+                          High Risk
+                        </span>
+                      )}
+                    </div>
                     
                     {/* Mobile only Status/Date */}
                     <div className="flex sm:hidden items-center gap-3 mt-2">
@@ -211,41 +247,11 @@ export default function ConversationList({
         </div>
       </div>
     </div>
-
-      {/* Raw JSON Modal */}
-      {rawLogModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-4xl max-h-[80vh] flex flex-col rounded-xl shadow-lg border border-border animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <FileJson className="w-5 h-5 text-chart-1" /> Raw Log
-              </h2>
-              <button 
-                onClick={() => setRawLogModalData(null)}
-                className="p-2 rounded-full hover:bg-secondary transition-colors"
-              >
-                <X className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
-            
-            <div className="p-4 overflow-y-auto flex-1 min-h-0 bg-secondary/30">
-              <pre className="text-xs text-foreground/80 font-mono whitespace-pre-wrap break-words bg-background p-4 rounded-lg border border-border shadow-inner">
-                {JSON.stringify(rawLogModalData, null, 2)}
-              </pre>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Conversation Thread Modal */}
       <ConversationThreadModal 
         isOpen={!!selectedConversation}
         onClose={() => setSelectedConversation(null)}
         conversation={selectedConversation}
-        onViewRawLog={(conv) => {
-          setRawLogModalData(conv);
-          // Keep the thread modal open, raw log modal will just stack above it due to z-index.
-        }}
       />
     </>
   );

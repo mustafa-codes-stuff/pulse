@@ -10,13 +10,16 @@ export default function VolumeChart({ data }: { data: PulseConversation[] }) {
 
   return (
     <div className="w-full h-full min-h-[400px] p-6 bg-card border border-border rounded-xl flex flex-col">
-      <div className="mb-6 shrink-0 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Conversation Volume</h2>
+      <div className="mb-6 shrink-0 flex items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold">Conversation Volume</h2>
+          <p className="text-sm text-muted-foreground mt-1">Daily trend of incoming support requests</p>
+        </div>
         <span className="text-sm font-medium bg-secondary text-secondary-foreground px-3 py-1 rounded-full">
           {data.length.toLocaleString()} total
         </span>
       </div>
-      <div className="flex-1 w-full min-h-0">
+      <div className="w-full h-[350px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={chartData}

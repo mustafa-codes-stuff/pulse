@@ -5,11 +5,9 @@ import { format, fromUnixTime } from 'date-fns';
 import { User, Bot, Shield, FileJson } from 'lucide-react';
 
 export default function ConversationThread({ 
-  conversation,
-  onViewRawLog 
+  conversation
 }: { 
   conversation: PulseConversation;
-  onViewRawLog?: () => void;
 }) {
   // Combine initial message and subsequent parts
   const allParts = [
@@ -55,14 +53,6 @@ export default function ConversationThread({
         <div className="flex items-center gap-3">
           {Boolean(conversation.custom_attributes?.['Has attachments']) && (
             <span className="text-xs font-medium text-chart-4 bg-chart-4/10 px-2 py-1 rounded">Has Attachments</span>
-          )}
-          {onViewRawLog && (
-            <button 
-              onClick={onViewRawLog}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 rounded-md transition-colors cursor-pointer"
-            >
-              <FileJson className="w-4 h-4" /> View Raw Log
-            </button>
           )}
         </div>
       </div>
