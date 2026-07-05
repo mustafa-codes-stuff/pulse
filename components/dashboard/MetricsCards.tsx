@@ -127,7 +127,7 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
           return (
           <div 
             key={card.title} 
-            className="p-4 bg-card border-2 border-border shadow-sm rounded-xl flex items-center justify-between hover:scale-[1.02] hover:shadow-md transition-all group"
+            className="px-4 py-3 bg-card border-2 border-border shadow-sm rounded-xl flex items-center justify-between hover:scale-[1.02] hover:shadow-md transition-all group"
           >
             <div>
               <div className="flex items-center gap-2 relative">
@@ -143,7 +143,7 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
                   </div>
                 )}
               </div>
-              <div className="flex items-baseline gap-1.5 mt-2 flex-wrap">
+              <div className="flex items-baseline gap-1.5 mt-1.5 flex-wrap">
                 <p className="text-3xl font-bold">{card.value}</p>
                 {(card as any).subtext && <span className="text-sm font-semibold text-muted-foreground">{(card as any).subtext}</span>}
                 {TrendIcon && (
@@ -154,7 +154,7 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
                 )}
               </div>
             </div>
-            <div className={`p-4 bg-secondary rounded-full ${card.color}`}>
+            <div className={`p-3 bg-secondary rounded-full ${card.color}`}>
               <card.icon className="w-6 h-6" />
             </div>
           </div>
