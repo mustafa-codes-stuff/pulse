@@ -47,22 +47,25 @@ export default function EngineeringPage() {
             Actionable bug and feature leaderboards, impact analysis, and triage.
           </p>
         </div>
-        <div className="absolute top-6 right-24 z-50 flex items-center space-x-2 bg-card border border-border px-4 py-2 rounded-md cursor-pointer h-10" onClick={() => setExcludeNoHuman(!excludeNoHuman)}>
-          <input 
+        <div className="absolute top-6 right-24 z-50 flex items-center space-x-2 bg-card border border-border px-4 py-2 rounded-md cursor-pointer h-10 group/toggle" onClick={() => setExcludeNoHuman(!excludeNoHuman)}>
+          <input
             type="checkbox"
-            id="exclude-human-eng" 
-            checked={excludeNoHuman} 
-            onChange={(e) => setExcludeNoHuman(e.target.checked)} 
+            id="exclude-human-eng"
+            checked={excludeNoHuman}
+            onChange={(e) => setExcludeNoHuman(e.target.checked)}
             className="w-4 h-4 cursor-pointer"
           />
           <label htmlFor="exclude-human-eng" className="text-sm font-medium cursor-pointer select-none">
-            Hide Bot-Only Chats
+            Human Conversations Only
           </label>
+          <div className="absolute top-full mt-2 right-0 w-56 p-2.5 bg-popover text-popover-foreground text-xs font-medium rounded-lg opacity-0 group-hover/toggle:opacity-100 transition-opacity pointer-events-none z-50 border border-border shadow-md leading-relaxed">
+            Excludes tickets where no customer or lead ever replied; such as automated sequences and unanswered outbound messages.
+          </div>
         </div>
       </div>
-      
+
       <IssueLeaderboards data={analyzableData} />
-      
+
       <div>
         <AnomalyFeed data={analyzableData} />
       </div>
