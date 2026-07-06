@@ -2,17 +2,26 @@
 
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
-import ConversationModal from './ConversationModal';
-import { Bug, Lightbulb, Users, MessageSquare, HelpCircle, ArrowUpRight, ArrowDownRight, Minus, AlertCircle } from 'lucide-react';
+import { Bug, Lightbulb, HelpCircle, ArrowUpRight, ArrowDownRight, Minus, MessageSquare, Layers } from 'lucide-react';
 import { aggregateIssues, CategoryPainMetrics } from '@/lib/analytics/aggregations';
-import { format, fromUnixTime } from 'date-fns';
 
-export default function IssueLeaderboards({ data }: { data: PulseConversation[] }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState('');
-  const [modalData, setModalData] = useState<PulseConversation[]>([]);
+export default function IssueLeaderboards({ 
+  data, 
+  activeCategory, 
+  onCategorySelect 
+}: { 
+  data: PulseConversation[], 
+  activeCategory: string | null, 
+  onCategorySelect: (category: string | null) => void 
+}) {
+  const [activeTab, setActiveTab] = useState<'all' | 'bugs' | 'features' | 'other'>('all');
 
   const { bugs, features, other, totals } = useMemo(() => aggregateIssues(data), [data]);
+  
+  const allSignals = useMemo(() => {
+    return [...bugs, ...features, ...other].sort((a, b) => b.painIndex - a.painIndex);
+  }, [bugs, features, other]);
+
   const overallMidDate = useMemo(() => {
     if (data.length === 0) return 0;
     const dates = data.map(c => c.created_at).sort((a, b) => a - b);
@@ -33,106 +42,104 @@ export default function IssueLeaderboards({ data }: { data: PulseConversation[] 
     return { icon: Minus, color: 'text-muted-foreground', label: 'steady' };
   };
 
-  const renderLeaderboard = (title: string, Icon: React.ElementType, items: CategoryPainMetrics[], colorClass: string, bgClass: string) => {
-    const emptyText = `No ${title.toLowerCase().replace('top ', '')} found.`;
-    return (
-      <div className="flex-1 min-w-[300px] flex flex-col bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden shadow-sm">
-        <div className={`p-4 border-b border-border ${bgClass} flex items-center gap-2`}>
-          {Icon && <Icon className={`w-5 h-5 ${colorClass}`} />}
-          <h3 className="font-semibold">{title}</h3>
-        </div>
-        <div className="p-0">
-          {items.length === 0 ? (
-            <div className="p-6 text-center text-muted-foreground text-sm">{emptyText}</div>
-          ) : (
-            items.map((item, index) => {
-              const trend = getTrend(item.conversations);
-              return (
-                <div
-                  key={index}
-                  onClick={() => {
-                    setModalTitle(`Category: ${item.title}`);
-                    setModalData(item.conversations);
-                    setIsModalOpen(true);
-                  }}
-                  className="flex items-center justify-between p-4 border-b border-border/50 hover:bg-secondary/20 transition-colors cursor-pointer last:border-0 group"
-                >
-                  <div className="flex items-center gap-3 min-w-0 pr-4">
-                    <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${bgClass} ${colorClass}`}>
-                      {index + 1}
-                    </div>
-                    <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{item.title}</p>
+  const tabs = [
+    { id: 'all', label: 'All signals', icon: Layers, count: totals.bugs + totals.features + totals.other },
+    { id: 'bugs', label: 'Bugs', icon: Bug, count: totals.bugs },
+    { id: 'features', label: 'Feature Requests', icon: Lightbulb, count: totals.features },
+    { id: 'other', label: 'Other', icon: HelpCircle, count: totals.other },
+  ];
+
+  let displayItems: CategoryPainMetrics[] = [];
+  if (activeTab === 'all') displayItems = allSignals;
+  else if (activeTab === 'bugs') displayItems = bugs;
+  else if (activeTab === 'features') displayItems = features;
+  else if (activeTab === 'other') displayItems = other;
+
+  return (
+    <div className="flex flex-col bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden">
+      {/* Tabs Header */}
+      <div className="flex items-center overflow-x-auto border-b border-border hide-scrollbar bg-secondary/5">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
+              activeTab === tab.id 
+                ? 'border-primary text-primary bg-background' 
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/20'
+            }`}
+          >
+            <tab.icon className="w-4 h-4" />
+            {tab.label}
+            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+              activeTab === tab.id ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
+            }`}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Leaderboard List */}
+      <div className="max-h-[400px] overflow-y-auto scrollbar-thin">
+        {displayItems.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground text-sm">
+            No signals found for this category.
+          </div>
+        ) : (
+          displayItems.map((item, index) => {
+            const trend = getTrend(item.conversations);
+            const isActive = activeCategory === item.category;
+            
+            return (
+              <div
+                key={item.category}
+                onClick={() => onCategorySelect(isActive ? null : item.category)}
+                className={`flex items-center justify-between p-4 border-b border-border/50 cursor-pointer transition-colors group ${
+                  isActive ? 'bg-primary/5 border-l-4 border-l-primary' : 'hover:bg-secondary/20 border-l-4 border-l-transparent'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0 pr-4">
+                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+                    isActive ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary transition-colors'
+                  }`}>
+                    {index + 1}
                   </div>
-                  <div className="flex items-center gap-2.5 shrink-0">
-                    <div className={`flex items-center justify-center ${trend.color}`} title={`Trend: ${trend.label}`}>
-                      <trend.icon className="w-4 h-4" />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                          item.painIndex > 60 ? 'bg-destructive/10 text-destructive border-destructive/20' :
-                          item.painIndex > 30 ? 'bg-chart-2/10 text-chart-2 border-chart-2/20' :
-                          'bg-muted text-muted-foreground border-border'
-                        }`}
-                        title="Customer Pain Index (Volume + Sentiment + Reopens)"
-                      >
-                        Pain: {item.painIndex}%
+                  <p className={`text-sm font-medium truncate transition-colors ${isActive ? 'text-primary' : 'text-foreground group-hover:text-primary'}`}>
+                    {item.title}
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-2.5 shrink-0">
+                  <div className={`flex items-center justify-center ${trend.color}`} title={`Trend: ${trend.label}`}>
+                    <trend.icon className="w-4 h-4" />
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="group/tooltip relative flex items-center">
+                      <div className="flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 text-primary rounded border border-primary/20 text-[10px] font-bold cursor-help">
+                        Friction: {item.painIndex}%
                       </div>
-                      <div className="flex items-center gap-1 px-1.5 py-0.5 bg-secondary/50 rounded border border-border/50 text-[10px] text-muted-foreground" title={item.lowConfidenceCount > 0 ? `${item.lowConfidenceCount} tickets have uncertain classification` : ''}>
+                      <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 border border-border shadow-md text-center">
+                        Percentage of tickets in this category showing customer frustration or risk.
+                      </div>
+                    </div>
+                    
+                    <div className="group/tooltip relative flex items-center">
+                      <div className="flex items-center gap-1 px-1.5 py-0.5 bg-secondary/50 rounded border border-border/50 text-[10px] text-muted-foreground cursor-help">
                         <MessageSquare className="w-3 h-3" />
-                        {item.count} {item.lowConfidenceCount > 0 && `· ${item.lowConfidenceCount} uncertain`}
+                        {item.count} {item.lowConfidenceCount > 0 && `· ${item.lowConfidenceCount} low confidence`}
+                      </div>
+                      <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 border border-border shadow-md text-center">
+                        Total tickets (and how many the tool was not highly confident in categorizing).
                       </div>
                     </div>
                   </div>
                 </div>
-              );
-            })
-          )}
-        </div>
+              </div>
+            );
+          })
+        )}
       </div>
-    );
-  };
-
-  return (
-    <>
-      {/* Summary Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-        <div className="bg-card border-2 border-border shadow-sm rounded-xl p-4 flex flex-col justify-center">
-          <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-            <Bug className="w-5 h-5 text-destructive" />
-            <h3 className="font-semibold text-sm">Total Bugs</h3>
-          </div>
-          <p className="text-3xl font-bold text-foreground">{totals.bugs}</p>
-        </div>
-        <div className="bg-card border-2 border-border shadow-sm rounded-xl p-4 flex flex-col justify-center">
-          <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-            <Lightbulb className="w-5 h-5 text-chart-2" />
-            <h3 className="font-semibold text-sm">Total Feature Requests</h3>
-          </div>
-          <p className="text-3xl font-bold text-foreground">{totals.features}</p>
-        </div>
-        <div className="bg-card border-2 border-border shadow-sm rounded-xl p-4 flex flex-col justify-center">
-          <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-            <HelpCircle className="w-5 h-5 text-muted-foreground" />
-            <h3 className="font-semibold text-sm">Other Inquiries</h3>
-          </div>
-          <p className="text-3xl font-bold text-foreground">{totals.other}</p>
-        </div>
-      </div>
-
-      <div className="w-full flex flex-col lg:flex-row gap-6">
-        {renderLeaderboard('Top Bugs', Bug, bugs, 'text-destructive', 'bg-destructive/10')}
-        {renderLeaderboard('Top Feature Requests', Lightbulb, features, 'text-chart-2', 'bg-chart-2/10')}
-        {renderLeaderboard('Top Other Inquiries', HelpCircle, other, 'text-muted-foreground', 'bg-muted')}
-      </div>
-
-      <ConversationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={modalTitle}
-        conversations={modalData}
-        type="engineering"
-      />
-    </>
+    </div>
   );
 }

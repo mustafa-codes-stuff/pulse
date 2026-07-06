@@ -10,17 +10,8 @@ export default function AgentInsights({ data }: { data: PulseConversation[] }) {
   const [activeTab, setActiveTab] = useState<'performance' | 'coverage'>('performance');
 
   return (
-    <div className="w-full h-[400px] bg-card border-2 border-border shadow-sm rounded-xl flex flex-col overflow-hidden">
-      <div className="p-6 pb-0">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Users className="w-5 h-5 text-chart-2" />
-          Agent Intelligence
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Monitor individual agent performance and coverage schedules.
-        </p>
-      </div>
-      <div className="border-b border-border flex items-center px-6 mt-6">
+    <div className="flex flex-col overflow-hidden h-full">
+      <div className="border-b border-border/40 flex items-center px-2">
         <button 
           onClick={() => setActiveTab('performance')}
           className={`px-1 py-3 mr-6 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'performance' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}

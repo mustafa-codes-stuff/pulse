@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { AlertCircle, Search, Filter, ChevronLeft, ChevronRight, Bug, Lightbulb, CheckCircle2, MessageSquareWarning } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Bug, Lightbulb, CheckCircle2, MessageSquareWarning } from 'lucide-react';
 import { classifyConversation } from '@/lib/nlp/heuristics';
 import { computeDatasetThresholds, computeEscalationRisk, CATEGORY_FRIENDLY_NAMES } from '@/lib/analytics/aggregations';
 import ConversationThread from './ConversationThread';
@@ -10,19 +10,24 @@ import { formatPT } from '@/lib/utils/timezone';
 
 export default function EngineeringConversationList({ 
   data, 
-  initialFilter,
+  activeCategory = 'all',
   isModal = false
 }: { 
   data: PulseConversation[],
-  initialFilter?: { classification?: string, attachment?: string, sort?: string },
+  activeCategory?: string,
   isModal?: boolean
 }) {
   const [search, setSearch] = useState('');
-  const [classificationFilter, setClassificationFilter] = useState<string>(initialFilter?.classification || 'all');
-  const [sortFilter, setSortFilter] = useState<string>(initialFilter?.sort || 'escalation_desc');
+  const [sortFilter, setSortFilter] = useState<string>('escalation_desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedConvId, setExpandedConvId] = useState<string | null>(null);
   const itemsPerPage = 10;
+
+  // Reset pagination when category changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setExpandedConvId(null);
+  }, [activeCategory]);
 
   const handleFilterChange = (setter: any, value: any) => {
     setter(value);
@@ -43,20 +48,8 @@ export default function EngineeringConversationList({
 
   const filteredData = useMemo(() => {
     return processedData.filter(conv => {
-      if (classificationFilter !== 'all') {
-        const bugCategories = ['image_quality_technical', 'generation_accuracy', 'attribute_mismatch', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs'];
-        const featureCategories = ['customization_request', 'core_feature_request'];
-        const supportCategories = ['refund_request', 'subscription_cancel', 'pre_sales_info', 'delivery_status', 'system_automated'];
-
-        if (classificationFilter === 'group_bugs') {
-          if (!bugCategories.includes(conv.classification)) return false;
-        } else if (classificationFilter === 'group_features') {
-          if (!featureCategories.includes(conv.classification)) return false;
-        } else if (classificationFilter === 'group_support') {
-          if (!supportCategories.includes(conv.classification)) return false;
-        } else {
-          if (conv.classification !== classificationFilter) return false;
-        }
+      if (activeCategory !== 'all') {
+        if (conv.classification !== activeCategory) return false;
       }
 
       if (search) {
@@ -78,7 +71,7 @@ export default function EngineeringConversationList({
       if (sortFilter === 'escalation_asc') return (a as any).escalationRisk - (b as any).escalationRisk;
       return 0;
     });
-  }, [processedData, search, classificationFilter, sortFilter]);
+  }, [processedData, search, activeCategory, sortFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -124,66 +117,32 @@ export default function EngineeringConversationList({
     );
   };
 
+  const panelTitle = activeCategory === 'all' 
+    ? 'All Signals' 
+    : CATEGORY_FRIENDLY_NAMES[activeCategory] || activeCategory;
+
   return (
     <div className={`w-full flex flex-col ${isModal ? '' : 'bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden'}`}>
       <div className={`flex flex-col gap-4 md:flex-row md:items-center justify-between ${isModal ? 'pb-4' : 'p-6 border-b border-border'}`}>
         {!isModal && (
           <div>
-            <h2 className="text-lg font-semibold flex items-center gap-2">Engineering Triage List</h2>
-            <p className="text-sm text-muted-foreground mt-1">Filter technical issues, bugs, and complex tickets</p>
+            <h2 className="text-lg font-semibold flex items-center gap-2">Evidence Panel: {panelTitle}</h2>
+            <p className="text-sm text-muted-foreground mt-1">Showing {filteredData.length} matching conversations</p>
           </div>
         )}
         
-        {/* Filters */}
         <div className={`flex flex-wrap items-center gap-3 ${isModal ? 'w-full justify-end' : ''}`}>
-          {!isModal && (
-            <>
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input 
-                  type="text" 
-                  placeholder="Search logs..." 
-                  value={search}
-                  onChange={(e) => handleFilterChange(setSearch, e.target.value)}
-                  className="w-[200px] h-9 pl-9 pr-3 rounded-md border-2 border-border shadow-sm bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-shadow"
-                />
-              </div>
-              
-              <div className="flex items-center gap-2 border-2 border-border shadow-sm rounded-md bg-background p-1">
-                <Filter className="w-4 h-4 text-muted-foreground ml-2" />
-                <select 
-                  value={classificationFilter}
-                  onChange={(e) => handleFilterChange(setClassificationFilter, e.target.value)}
-                  className="h-7 bg-transparent text-sm focus:outline-none pr-2 text-muted-foreground"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="group_bugs">All Bugs & Tech Issues</option>
-                  <option value="group_features">All Feature Requests</option>
-                  <option value="group_support">All Support Inquiries</option>
-                  <optgroup label="Bugs & Tech Issues">
-                    <option value="image_quality_technical">Image Quality (Technical)</option>
-                    <option value="generation_accuracy">AI Generation Accuracy</option>
-                    <option value="attribute_mismatch">Styling & Attribute Mismatch</option>
-                    <option value="auth_access">Login & Account Access</option>
-                    <option value="upload_flow">Photo Upload Issues</option>
-                    <option value="payment_checkout">Payment & Checkout Failures</option>
-                    <option value="other_bugs">General Bugs & UI Issues</option>
-                  </optgroup>
-                  <optgroup label="Feature Requests">
-                    <option value="customization_request">Customization Requests</option>
-                    <option value="core_feature_request">Core Features & Formats</option>
-                  </optgroup>
-                  <optgroup label="Support Inquiries">
-                    <option value="refund_request">Refund Requests</option>
-                    <option value="subscription_cancel">Subscriptions & Cancellations</option>
-                    <option value="pre_sales_info">Pre-sales & Pricing Info</option>
-                    <option value="delivery_status">Delivery Status & ETAs</option>
-                    <option value="system_automated">Automated System Spam</option>
-                  </optgroup>
-                </select>
-              </div>
-            </>
-          )}
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input 
+              type="text" 
+              placeholder="Search logs..." 
+              value={search}
+              onChange={(e) => handleFilterChange(setSearch, e.target.value)}
+              className="w-[200px] h-9 pl-9 pr-3 rounded-md border-2 border-border shadow-sm bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-shadow"
+            />
+          </div>
+          
           <div className="flex items-center gap-2 border border-border rounded-md bg-background p-1">
             <select 
               value={sortFilter}
@@ -204,19 +163,25 @@ export default function EngineeringConversationList({
         <div className="flex-1 min-w-0 pr-4">Conversation</div>
         <div className="w-40 shrink-0 hidden sm:block">Classification</div>
         <div 
-          className="w-24 shrink-0 hidden lg:flex items-end justify-end cursor-pointer hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded px-1 -ml-1 transition-colors"
-          onClick={() => handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc');
-            }
-          }}
-          tabIndex={0}
-          role="columnheader"
-          aria-sort={sortFilter === 'escalation_desc' ? 'descending' : sortFilter === 'escalation_asc' ? 'ascending' : 'none'}
+          className="w-24 shrink-0 hidden lg:flex items-center justify-end font-semibold text-muted-foreground select-none relative group/tooltip"
         >
-          Escalation {sortFilter === 'escalation_desc' ? '↓' : sortFilter === 'escalation_asc' ? '↑' : ''}
+          <div
+            className="flex items-center gap-1 hover:text-foreground cursor-pointer transition-colors"
+            onClick={() => handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc');
+              }
+            }}
+            tabIndex={0}
+            role="button"
+            aria-sort={sortFilter === 'escalation_desc' ? 'descending' : sortFilter === 'escalation_asc' ? 'ascending' : 'none'}
+          >
+            Risk Level {sortFilter === 'escalation_desc' ? '↓' : sortFilter === 'escalation_asc' ? '↑' : ''}
+          </div>
+          <div className="absolute top-full mt-2 right-0 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 border border-border shadow-md text-center">
+            A computed score based on customer sentiment and urgency.
+          </div>
         </div>
         <div 
           className="w-32 shrink-0 hidden md:flex items-center justify-end mr-4 cursor-pointer hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded px-1 -ml-1 transition-colors"

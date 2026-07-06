@@ -76,7 +76,7 @@ export default function AgentCoverageHeatmap({ data, isTab = false }: { data: Pu
   };
 
   return (
-    <div className={isTab ? "w-full h-full flex flex-col p-6 min-h-[400px]" : "w-full h-fit self-start p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col"}>
+    <div className={isTab ? "w-full flex flex-col p-6" : "w-full h-fit self-start p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col"}>
       {!isTab ? (
         <div className="mb-6 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>

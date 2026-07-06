@@ -4,16 +4,16 @@ import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
 import { computeDatasetThresholds, computeEscalationRisk, extractFrustrationPairs, aggregateDailyVolume } from '@/lib/analytics/aggregations';
 import { detectSpikes } from '@/lib/analytics/anomalies';
-import { extractThemesWithMembership } from '@/lib/nlp/tfidf';
-import { AlertCircle, Clock, MessageSquareWarning, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import ConversationModal from './ConversationModal';
 
 export default function AttentionCallouts({ data, mode = 'support' }: { data: PulseConversation[], mode?: 'support' | 'engineering' }) {
+// I will not replace the whole chunk if it's too long, let's just do targeted replace for the top part and then another for the render.
+// Wait, actually I can just specify StartLine and EndLine to be the exact lines I want to change.
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [modalData, setModalData] = useState<PulseConversation[]>([]);
-  const [isPassedExpanded, setIsPassedExpanded] = useState(false);
 
   const formatTime = (secs: number) => {
     if (secs < 60) return `${Math.floor(secs)}s`;
@@ -24,427 +24,196 @@ export default function AttentionCallouts({ data, mode = 'support' }: { data: Pu
     return remainingMins > 0 ? `${hrs}h ${remainingMins}m` : `${hrs}h`;
   };
 
-  const callouts = useMemo(() => {
-    if (data.length === 0) return [];
-    
-    const items = [];
+  const { items, healthyCount, healthyLabels } = useMemo(() => {
+    const activeItems = [];
+    let hCount = 0;
+    const hLabels: string[] = [];
+
+    if (data.length === 0) return { items: [], healthyCount: 0, healthyLabels: [] };
     const thresholds = computeDatasetThresholds(data);
     const datasetMaxTime = Math.max(0, ...data.map(c => c.updated_at || c.created_at));
 
     if (mode === 'support') {
-      // 1. Critical Escalation Risk
-      const openData = data.filter(c => c.state === 'open');
-      let foundRisk = false;
-      if (openData.length > 0) {
-        const highestRisk = openData.reduce((prev, current) => {
-          return computeEscalationRisk(current, thresholds) > computeEscalationRisk(prev, thresholds) ? current : prev;
-        });
-        if (computeEscalationRisk(highestRisk, thresholds) > 0.5) {
-          foundRisk = true;
-          items.push({
-            id: 'risk',
-            title: 'Critical Escalation Risk',
-            description: highestRisk.title || 'Untitled Conversation',
-            icon: AlertCircle,
-            color: 'text-destructive',
-            bg: 'bg-destructive/10',
-            border: 'border-destructive/20',
-            badge: '1 ticket',
-            conversations: [highestRisk]
-          });
-        }
-      }
-      if (!foundRisk) {
-        items.push({
-          id: 'risk-clear',
-          title: 'No Escalation Risks',
-          description: 'No open conversations with high escalation risk.',
-          icon: CheckCircle2,
-          color: 'text-muted-foreground',
-          bg: 'bg-secondary/50',
-          border: 'border-border/50',
-          conversations: []
+      // 1. Slow first replies
+      const extremeResponse = data.filter(c => (c.statistics?.time_to_admin_reply || 0) > thresholds.responseTimeP90);
+      if (extremeResponse.length > 0) {
+        activeItems.push({
+          id: 'extreme-response',
+          title: 'Slow first replies',
+          description: `${extremeResponse.length} conversations exceeded the reply-time target (${formatTime(thresholds.responseTimeP90)}).`,
+          conversations: extremeResponse,
+          severity: 1
         });
       }
 
-      // 2. Unhandled Frustration
+      // 2. Unresolved frustration
       const frustrationPairs = extractFrustrationPairs(data);
       const openFrustration = frustrationPairs.filter(p => p.conversation.state === 'open');
       if (openFrustration.length > 0) {
-        const latest = openFrustration[0];
-        items.push({
+        activeItems.push({
           id: 'frustration',
-          title: 'Unhandled Frustration',
-          description: `Customer expressed frustration after ${latest.agentName}'s reply`,
-          icon: MessageSquareWarning,
-          color: 'text-chart-4',
-          bg: 'bg-chart-4/10',
-          border: 'border-chart-4/20',
-          badge: '1 ticket',
-          conversations: [latest.conversation]
+          title: 'Unresolved frustration',
+          description: `${openFrustration.length} conversation${openFrustration.length > 1 ? 's show' : ' shows'} frustration after an agent reply.`,
+          conversations: openFrustration.map(p => p.conversation),
+          severity: 2
         });
       } else {
-        items.push({
-          id: 'frustration-clear',
-          title: 'No Unhandled Frustration',
-          description: 'All post-reply customer frustration has been addressed.',
-          icon: CheckCircle2,
-          color: 'text-muted-foreground',
-          bg: 'bg-secondary/50',
-          border: 'border-border/50',
-          conversations: []
-        });
+        hCount++;
+        hLabels.push('unresolved frustration');
       }
 
-      // 3. Snooze Breaches
+      // 3. Overdue follow-ups
       const overdueSnoozes = data.filter(c => c.state === 'snoozed' && c.snoozed_until && c.snoozed_until < datasetMaxTime);
       if (overdueSnoozes.length > 0) {
         const overdueSecs = overdueSnoozes.map(c => datasetMaxTime - (c.snoozed_until || datasetMaxTime)).sort((a,b)=>a-b);
         const medianOverdueSecs = overdueSecs[Math.floor(overdueSecs.length/2)];
         const medianDaysOverdue = medianOverdueSecs / (24 * 3600);
         
-        let color = 'text-chart-2';
-        let bg = 'bg-chart-2/10';
-        let border = 'border-chart-2/20';
-
-        if (medianDaysOverdue >= 7) {
-           color = 'text-destructive';
-           bg = 'bg-destructive/10';
-           border = 'border-destructive/20';
-        } else if (medianDaysOverdue >= 2) {
-           color = 'text-chart-4';
-           bg = 'bg-chart-4/10';
-           border = 'border-chart-4/20';
-        }
-        
-        items.push({
+        activeItems.push({
           id: 'snooze',
-          title: `${overdueSnoozes.length} overdue snoozes`,
-          description: `median ${medianDaysOverdue.toFixed(1)} days overdue`,
-          icon: Clock,
-          color,
-          bg,
-          border,
-          badge: `${overdueSnoozes.length} tickets`,
-          conversations: overdueSnoozes
-        });
-      } else {
-        items.push({
-          id: 'snooze-clear',
-          title: 'No overdue snoozes',
-          description: 'All snoozed conversations are currently pending.',
-          icon: CheckCircle2,
-          color: 'text-muted-foreground',
-          bg: 'bg-secondary/50',
-          border: 'border-border/50',
-          conversations: []
+          title: 'Overdue follow-ups',
+          description: `${overdueSnoozes.length} conversations are overdue, a median of ${medianDaysOverdue.toFixed(1)} days late.`,
+          conversations: overdueSnoozes,
+          severity: 3
         });
       }
 
-      // 4. Reopen Spikes
+      // Escalation Risk
+      const openData = data.filter(c => c.state === 'open');
+      let foundRisk = false;
+      if (openData.length > 0) {
+        const highestRisk = openData.reduce((prev, current) => computeEscalationRisk(current, thresholds) > computeEscalationRisk(prev, thresholds) ? current : prev);
+        if (computeEscalationRisk(highestRisk, thresholds) > 0.5) {
+          foundRisk = true;
+          activeItems.push({
+            id: 'risk',
+            title: 'Critical escalation risk',
+            description: `1 conversation has a high risk of escalation.`,
+            conversations: [highestRisk],
+            severity: 0 // Most severe
+          });
+        }
+      }
+      if (!foundRisk) {
+        hCount++;
+        hLabels.push('escalation risk');
+      }
+
+      // Reopen Spikes
       const dailyReopens = aggregateDailyVolume(data.filter(c => (c.statistics?.count_reopens || 0) > 0));
       const reopenSeries = dailyReopens.map(d => ({ date: d.date, value: d.total }));
       const reopenDetected = detectSpikes(reopenSeries, 7, 1.5).filter(d => d.isAnomaly && d.value > 0);
-      
       if (reopenDetected.length > 0) {
-        reopenDetected.forEach(anomaly => {
-          const convs = data.filter(c => {
-             const dateStr = format(new Date(c.created_at * 1000), 'yyyy-MM-dd');
-             return dateStr === anomaly.date && (c.statistics?.count_reopens || 0) > 0;
-          });
-          items.push({
-            id: `reopen-spike-${anomaly.date}`,
-            title: `Reopen Spike on ${format(parseISO(anomaly.date), 'MMM d')}`,
-            description: `${anomaly.value} conversations were reopened.`,
-            icon: AlertTriangle,
-            color: 'text-destructive',
-            bg: 'bg-destructive/10',
-            border: 'border-destructive/20',
-            badge: `${convs.length} tickets`,
-            conversations: convs
-          });
+        reopenDetected.sort((a, b) => b.value - a.value);
+        const anomaly = reopenDetected[0];
+        const convs = data.filter(c => {
+            const dateStr = format(new Date(c.created_at * 1000), 'yyyy-MM-dd');
+            return dateStr === anomaly.date && (c.statistics?.count_reopens || 0) > 0;
+        });
+        activeItems.push({
+          id: 'reopen-spike',
+          title: 'Reopen spike detected',
+          description: `${anomaly.value} conversations were reopened on ${format(parseISO(anomaly.date), 'MMM d')}.`,
+          conversations: convs,
+          severity: 1.5
         });
       } else {
-        items.push({
-          id: 'reopen-clear',
-          title: 'No Reopen Spikes',
-          description: 'Reopen rates are stable and within normal bounds.',
-          icon: CheckCircle2,
-          color: 'text-muted-foreground',
-          bg: 'bg-secondary/50',
-          border: 'border-border/50',
-          conversations: []
-        });
+        hCount++;
+        hLabels.push('reopen spike');
       }
 
-      // 5. Extreme Response Times (Dataset relative P90)
-      const extremeResponse = data.filter(c => (c.statistics?.time_to_admin_reply || 0) > thresholds.responseTimeP90);
-      if (extremeResponse.length > 0) {
-        items.push({
-          id: 'extreme-response',
-          title: 'Extreme Response Times',
-          description: `Initial replies exceeding the dataset P90 threshold (${formatTime(thresholds.responseTimeP90)}).`,
-          icon: AlertTriangle,
-          color: 'text-chart-4',
-          bg: 'bg-chart-4/10',
-          border: 'border-chart-4/20',
-          badge: `${extremeResponse.length} tickets`,
-          conversations: extremeResponse
-        });
-      } else {
-        items.push({
-          id: 'extreme-response-clear',
-          title: 'No Extreme Response Times',
-          description: 'All initial replies occurred within the dataset threshold.',
-          icon: CheckCircle2,
-          color: 'text-muted-foreground',
-          bg: 'bg-secondary/50',
-          border: 'border-border/50',
-          conversations: []
-        });
-      }
+      // Sort by severity (0 is most severe)
+      activeItems.sort((a, b) => a.severity - b.severity);
 
     } else {
-      // ENGINEERING MODE
-      
-      // 1. Detect volume spikes
+      // ENGINEERING MODE (Option A: Volume spikes)
       const dailyVol = aggregateDailyVolume(data);
       const series = dailyVol.map(d => ({ date: d.date, value: d.total }));
       const detected = detectSpikes(series, 7, 1.5).filter(d => d.isAnomaly);
       
       if (detected.length > 0) {
-        detected.forEach(anomaly => {
+        // Sort by value (largest spike first)
+        detected.sort((a, b) => b.value - a.value);
+        detected.slice(0, 3).forEach((anomaly, index) => {
           const convs = data.filter(c => format(new Date(c.created_at * 1000), 'yyyy-MM-dd') === anomaly.date);
-          items.push({
+          let desc = `${anomaly.value.toLocaleString()} conversations created.`;
+          if (index === 0) {
+             desc = `${anomaly.value.toLocaleString()} conversations created — the largest spike this period.`;
+          }
+          activeItems.push({
             id: `spike-${anomaly.date}`,
-            title: `Volume Spike on ${format(parseISO(anomaly.date), 'MMM d')}`,
-            description: `${anomaly.value.toLocaleString()} conversations created.`,
-            icon: AlertTriangle,
-            color: 'text-destructive',
-            bg: 'bg-destructive/10',
-            border: 'border-destructive/20',
-            badge: `${convs.length} tickets`,
+            title: `Volume spike on ${format(parseISO(anomaly.date), 'MMM d')}`,
+            description: desc,
             conversations: convs
           });
-        });
-      } else {
-        items.push({
-          id: 'spike-clear',
-          title: 'No Volume Spikes',
-          description: 'Conversation volume is stable and within normal bounds.',
-          icon: CheckCircle2,
-          color: 'text-muted-foreground',
-          bg: 'bg-secondary/50',
-          border: 'border-border/50',
-          conversations: []
-        });
-      }
-
-      // 1.5 Theme-tied volume spikes (capped at top 3 + N more)
-      const topThemes = extractThemesWithMembership(data, 5);
-      const themeSpikeItems: any[] = [];
-      topThemes.forEach(theme => {
-        const themeDailyVol = aggregateDailyVolume(theme.conversations);
-        const themeSeries = themeDailyVol.map(d => ({ date: d.date, value: d.total }));
-        const themeDetected = detectSpikes(themeSeries, 7, 1.5);
-        
-        themeDetected.filter(d => d.isAnomaly && d.value >= 3).forEach(anomaly => {
-          const convs = theme.conversations.filter(c => format(new Date(c.created_at * 1000), 'yyyy-MM-dd') === anomaly.date);
-          themeSpikeItems.push({
-            id: `theme-spike-${theme.theme}-${anomaly.date}`,
-            title: `Theme Spike: "${theme.theme}"`,
-            description: `Had ${anomaly.value} complaints on ${format(parseISO(anomaly.date), 'MMM d')}.`,
-            icon: AlertTriangle,
-            color: 'text-destructive',
-            bg: 'bg-destructive/10',
-            border: 'border-destructive/20',
-            badge: `${convs.length} tickets`,
-            conversations: convs,
-            value: anomaly.value // for sorting
-          });
-        });
-      });
-
-      themeSpikeItems.sort((a, b) => b.value - a.value);
-
-      if (themeSpikeItems.length > 3) {
-        const top3 = themeSpikeItems.slice(0, 3);
-        const remaining = themeSpikeItems.slice(3);
-        const allRemainingConvs = remaining.flatMap(item => item.conversations);
-        
-        items.push(...top3);
-        items.push({
-          id: 'theme-spikes-more',
-          title: `+${remaining.length} other theme spikes`,
-          description: `Spikes in topics like: ${remaining.map(item => item.title.replace('Theme Spike: ', '')).join(', ')}`,
-          icon: AlertTriangle,
-          color: 'text-destructive',
-          bg: 'bg-destructive/10',
-          border: 'border-destructive/20',
-          badge: `${allRemainingConvs.length} tickets`,
-          conversations: allRemainingConvs
-        });
-      } else {
-        items.push(...themeSpikeItems);
-      }
-
-      if (themeSpikeItems.length === 0) {
-        items.push({
-          id: 'theme-spike-clear',
-          title: 'No Theme Spikes',
-          description: 'No unusual volume detected for specific themes.',
-          icon: CheckCircle2,
-          color: 'text-muted-foreground',
-          bg: 'bg-secondary/50',
-          border: 'border-border/50',
-          conversations: []
-        });
-      }
-
-      // 2. High Re-opens
-      const highReopens = data.filter(c => (c.statistics?.count_reopens || 0) >= 3);
-      if (highReopens.length > 0) {
-        items.push({
-          id: 'high-reopens',
-          title: 'High Re-open Rate',
-          description: `Re-opened 3 or more times.`,
-          icon: AlertTriangle,
-          color: 'text-chart-4',
-          bg: 'bg-chart-4/10',
-          border: 'border-chart-4/20',
-          badge: `${highReopens.length} tickets`,
-          conversations: highReopens
-        });
-      } else {
-        items.push({
-          id: 'high-reopens-clear',
-          title: 'No Extreme Re-opens',
-          description: 'No conversations have been re-opened 3 or more times.',
-          icon: CheckCircle2,
-          color: 'text-muted-foreground',
-          bg: 'bg-secondary/50',
-          border: 'border-border/50',
-          conversations: []
-        });
-      }
-
-      // 3. Extreme Handling Time (Dataset relative P90)
-      const extremeHandling = data.filter(c => (c.statistics?.handling_time || 0) > thresholds.handlingTimeP90);
-      if (extremeHandling.length > 0) {
-        items.push({
-          id: 'extreme-handling',
-          title: 'Extreme Handling Times',
-          description: `Active handling times exceeding the dataset P90 threshold (${formatTime(thresholds.handlingTimeP90)}).`,
-          icon: AlertTriangle,
-          color: 'text-chart-4',
-          bg: 'bg-chart-4/10',
-          border: 'border-chart-4/20',
-          badge: `${extremeHandling.length} tickets`,
-          conversations: extremeHandling
-        });
-      } else {
-        items.push({
-          id: 'extreme-handling-clear',
-          title: 'No Extreme Handling Times',
-          description: 'No conversations exceeded the dataset threshold.',
-          icon: CheckCircle2,
-          color: 'text-muted-foreground',
-          bg: 'bg-secondary/50',
-          border: 'border-border/50',
-          conversations: []
         });
       }
     }
 
-    return items;
+    return { items: activeItems, healthyCount: hCount, healthyLabels: hLabels };
   }, [data, mode]);
 
-  if (callouts.length === 0) return null;
-
-  const alertCallouts = callouts.filter(c => c.conversations.length > 0);
-  const passedCallouts = callouts.filter(c => c.conversations.length === 0);
-
-  const renderCalloutRow = (callout: any, isPassedRow = false) => (
-    <div
-      key={callout.id}
-      onClick={() => {
-        if (callout.conversations.length > 0) {
-          setModalTitle(callout.title);
-          setModalData(callout.conversations);
-          setIsModalOpen(true);
-        }
-      }}
-      className={`flex items-center justify-between px-4 py-3 sm:px-6 transition-colors ${callout.conversations.length > 0 ? 'cursor-pointer hover:bg-secondary/30' : 'bg-card/30'
-        } ${isPassedRow ? 'bg-secondary/10' : ''}`}
-    >
-      <div className="flex items-center gap-4 min-w-0">
-        <div className={`flex items-center justify-center w-8 h-8 rounded-full shrink-0 border ${callout.bg} ${callout.border} ${callout.color}`}>
-          <callout.icon className="w-4 h-4" />
-        </div>
-        <div className="min-w-0 pr-4 flex flex-col sm:flex-row sm:items-center sm:gap-2">
-          <p className={`text-sm font-semibold truncate ${callout.conversations.length === 0 ? 'text-muted-foreground' : 'text-foreground'}`}>
-            {callout.title}
-          </p>
-          <p className="text-sm text-muted-foreground truncate hidden sm:block">
-            <span className="mr-2 opacity-50">-</span>
-            {callout.description}
-          </p>
-        </div>
-      </div>
-      {callout.badge && (
-        <div className="shrink-0 ml-4">
-          <div className="text-xs font-semibold bg-secondary/80 text-muted-foreground px-2.5 py-1 rounded-md border border-border/50 whitespace-nowrap">
-            {callout.badge}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  if (items.length === 0 && healthyCount === 0) return null;
 
   return (
-    <div className="mb-4">
-      <div className="bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden flex flex-col">
-        <div className="px-6 py-4 border-b border-border bg-secondary/10 flex items-center gap-2 shrink-0">
-          <CheckCircle2 className="w-5 h-5 text-chart-2" />
-          <h2 className="text-base font-semibold">Pulse Check</h2>
-        </div>
-        <div className="divide-y divide-border/50 max-h-[260px] overflow-y-auto scrollbar-thin">
-          {alertCallouts.map(callout => renderCalloutRow(callout))}
-
-          {passedCallouts.length > 0 && (
-            <>
-              <div
-                onClick={() => setIsPassedExpanded(!isPassedExpanded)}
-                className="flex items-center justify-between px-4 py-3 sm:px-6 bg-card/30 cursor-pointer hover:bg-secondary/30 transition-colors"
+    <div className="h-full flex flex-col">
+      <h2 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
+        <AlertCircle className="w-5 h-5 text-chart-4" />
+        {mode === 'support' ? (
+           <span>Needs attention</span>
+        ) : (
+           <span>Product signals needing review</span>
+        )}
+      </h2>
+      <div className="flex-1 bg-card border border-border/60 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+        {items.length === 0 ? (
+          <div className="text-sm text-muted-foreground p-5">
+             No items needing immediate review.
+          </div>
+        ) : (
+          items.map((item, index) => {
+            let severityBadge = null;
+            if (mode === 'support') {
+              if (item.severity === 0 || item.severity === 2) {
+                severityBadge = (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold bg-destructive/10 text-destructive border border-destructive/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-destructive mr-1.5 animate-pulse" />
+                    Critical
+                  </span>
+                );
+              } else {
+                severityBadge = (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold bg-chart-4/10 text-chart-4 border border-chart-4/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-chart-4 mr-1.5" />
+                    Warning
+                  </span>
+                );
+              }
+            }
+            
+            return (
+              <div 
+                key={item.id} 
+                onClick={() => {
+                  setModalTitle(item.title);
+                  setModalData(item.conversations);
+                  setIsModalOpen(true);
+                }}
+                className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 ${index !== 0 ? 'border-t border-border/40' : ''} hover:bg-secondary/40 transition-colors gap-4 cursor-pointer group`}
               >
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 border bg-chart-2/10 border-chart-2/20 text-chart-2">
-                    <CheckCircle2 className="w-4 h-4" />
+                <div className="flex flex-col gap-1.5 group-hover:translate-x-1 transition-transform duration-300">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-foreground">{item.title}</h3>
+                    {severityBadge}
                   </div>
-                  <div className="min-w-0 pr-4 flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                    <p className="text-sm font-semibold truncate text-muted-foreground">
-                      {passedCallouts.length} other checks passed
-                    </p>
-                    <p className="text-sm text-muted-foreground truncate hidden sm:block">
-                      <span className="mr-2 opacity-50">-</span>
-                      no {passedCallouts.map(c => c.title.replace(/^No /i, '').toLowerCase()).join(', no ')}
-                    </p>
-                  </div>
-                </div>
-                <div className="shrink-0 ml-4 text-muted-foreground">
-                  {isPassedExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  <p className="text-sm text-muted-foreground">{item.description}</p>
                 </div>
               </div>
-
-              {isPassedExpanded && (
-                <div className="divide-y divide-border/50 bg-secondary/5">
-                  {passedCallouts.map(callout => renderCalloutRow(callout, true))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+            );
+          })
+        )}
       </div>
+      
       <ConversationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

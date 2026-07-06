@@ -6,9 +6,10 @@ import { calculateResponseTimePercentiles, computeEscalationRisk, computeDataset
 import { Users, Clock, ThumbsUp, RefreshCw, AlertTriangle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import ConversationModal from './ConversationModal';
 
-export default function MetricsCards({ data }: { data: PulseConversation[] }) {
+export default function MetricsCards({ data, mode = 'primary' }: { data: PulseConversation[], mode?: 'primary' | 'secondary' | 'secondary_rows' }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
+// ... replacing just the top line and then I'll add the new block lower down. Wait, I should replace exactly what I need.
   const [modalData, setModalData] = useState<PulseConversation[]>([]);
   const [modalInitialFilter, setModalInitialFilter] = useState<any>(undefined);
 
@@ -32,7 +33,6 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
         repliedCount++;
       }
 
-      // Calculate friction: high escalation risk OR frustration language
       const risk = computeEscalationRisk(c, thresholds);
       const parts = c.conversation_parts?.conversation_parts || [];
       let hasFrustration = false;
@@ -51,7 +51,6 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
 
     const { timeToAdminReply } = calculateResponseTimePercentiles(data);
     
-    // Convert seconds to a readable string (e.g., 2h 15m or 45m)
     const formatTime = (secs: number | null) => {
       if (secs === null) return '--';
       if (secs < 60) return `${Math.floor(secs)}s`;
@@ -103,7 +102,7 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
     return null;
   }, [data, metrics.frictionConvs]);
 
-  const cards = [
+  const allCards = [
     { title: 'Total Volume', value: metrics.volume.toLocaleString(), subtext: '', icon: Users, color: 'text-chart-1', tooltip: 'Total number of conversations loaded in the dataset.', sort: 'newest', filterFn: (d: PulseConversation[]) => d },
     { title: 'Median Reply Time', value: metrics.p50Reply, subtext: metrics.replySub, icon: Clock, color: 'text-chart-2', tooltip: 'Median time from ticket creation to the first admin reply.', sort: 'time_to_admin_reply_desc', filterFn: (d: PulseConversation[]) => d.filter(c => c.statistics?.time_to_admin_reply != null && c.statistics.time_to_admin_reply > 0) },
     { title: 'Reopen Rate', value: metrics.reopenRate, subtext: metrics.reopenSub, icon: RefreshCw, color: 'text-chart-3', tooltip: 'Percentage of tickets that were closed and then reopened by the customer.', sort: 'reopens_desc', filterFn: (d: PulseConversation[]) => d.filter(c => c.statistics?.count_reopens > 0) },
@@ -111,10 +110,17 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
     { title: 'Avg CSAT', value: metrics.csat, subtext: metrics.csatSub, icon: ThumbsUp, color: 'text-chart-4', tooltip: 'Average customer satisfaction score from all rated conversations.', sort: 'csat_asc', filterFn: (d: PulseConversation[]) => d.filter(c => c.conversation_rating?.rating != null) },
   ];
 
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-        {cards.map((card) => {
+  let displayedCards = allCards;
+  if (mode === 'primary') {
+    displayedCards = allCards.filter(c => ['Total Volume', 'Median Reply Time', 'Reopen Rate'].includes(c.title));
+  } else if (mode === 'secondary' || mode === 'secondary_rows') {
+    displayedCards = allCards.filter(c => ['Friction Rate', 'Avg CSAT'].includes(c.title));
+  }
+
+  if (mode === 'secondary_rows') {
+    return (
+      <div className="flex flex-col">
+        {displayedCards.map((card, idx) => {
           const TrendIcon = (card as any).trend?.icon;
           return (
             <div 
@@ -125,7 +131,120 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
                 setModalInitialFilter({ sort: card.sort });
                 setIsModalOpen(true);
               }}
-              className="px-4 py-3 bg-card border-2 border-border shadow-sm rounded-xl flex items-center justify-between hover:scale-[1.02] hover:shadow-md transition-all group cursor-pointer"
+              className="flex items-center justify-between py-4 px-2 hover:bg-secondary/40 transition-colors border-b border-border/40 last:border-0 rounded-lg cursor-pointer group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center text-xs font-bold shrink-0">
+                  {idx + 1}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <card.icon className={`w-4 h-4 ${card.color}`} />
+                    {card.title}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{card.tooltip}</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4 text-right shrink-0 ml-4">
+                <div className="flex flex-col items-end">
+                  <div className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-1">
+                    Value
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className={`text-base font-bold ${card.color}`}>{card.value}</span>
+                    {card.subtext && <span className="text-[10px] text-muted-foreground">{card.subtext}</span>}
+                  </div>
+                </div>
+                {TrendIcon && (
+                   <div className="flex flex-col items-end w-16">
+                     <div className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-1">
+                       Trend
+                     </div>
+                     <div className={`flex items-center text-xs font-bold ${(card as any).trend.color}`}>
+                       <TrendIcon className="w-3 h-3 mr-0.5" />
+                       {(card as any).trend.label}
+                     </div>
+                   </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        <ConversationModal 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title={modalTitle}
+          conversations={modalData}
+          initialFilter={modalInitialFilter}
+        />
+      </div>
+    );
+  }
+
+  if (mode === 'secondary') {
+    return (
+      <div className="flex flex-wrap gap-4 mb-2">
+        {displayedCards.map((card) => {
+          const TrendIcon = (card as any).trend?.icon;
+          return (
+            <div 
+              key={card.title} 
+              onClick={() => {
+                setModalTitle(card.title);
+                setModalData(card.filterFn(data));
+                setModalInitialFilter({ sort: card.sort });
+                setIsModalOpen(true);
+              }}
+              className="flex items-center gap-3 px-4 py-2 bg-background border border-border/50 shadow-sm hover:shadow hover:-translate-y-0.5 rounded-xl cursor-pointer transition-all duration-300"
+            >
+              <div className={`p-1.5 rounded-md bg-secondary/50 border border-border/50 ${card.color}`}>
+                <card.icon className="w-4 h-4" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold text-muted-foreground">{card.title}</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-sm font-bold text-foreground">{card.value}</span>
+                  {card.subtext && <span className="text-[10px] text-muted-foreground">{card.subtext}</span>}
+                  {TrendIcon && (
+                    <div className={`flex items-center text-[10px] font-bold ${(card as any).trend.color}`}>
+                      <TrendIcon className="w-3 h-3" />
+                      {(card as any).trend.label}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <ConversationModal 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title={modalTitle}
+          conversations={modalData}
+          initialFilter={modalInitialFilter}
+        />
+      </div>
+    );
+  }
+
+  const gridClass = 'lg:grid-cols-3';
+
+  return (
+    <div className="space-y-4">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${gridClass} gap-6`}>
+        {displayedCards.map((card) => {
+          const TrendIcon = (card as any).trend?.icon;
+          return (
+            <div 
+              key={card.title} 
+              onClick={() => {
+                setModalTitle(card.title);
+                setModalData(card.filterFn(data));
+                setModalInitialFilter({ sort: card.sort });
+                setIsModalOpen(true);
+              }}
+              className="px-6 py-4 bg-card border border-border/60 shadow-sm rounded-2xl flex items-center justify-between hover:-translate-y-1 hover:shadow-lg hover:border-border transition-all duration-300 group cursor-pointer"
             >
               <div>
                 <div className="flex items-center gap-2 relative">
@@ -141,9 +260,9 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
                     </div>
                   )}
                 </div>
-                <div className="flex items-baseline gap-1.5 mt-1.5 flex-wrap">
-                  <p className="text-3xl font-bold">{card.value}</p>
-                  {card.subtext && <span className="text-xs font-semibold text-muted-foreground">{card.subtext}</span>}
+                <div className="flex items-baseline gap-2 mt-2 flex-wrap">
+                  <p className="text-4xl font-bold tracking-tight text-foreground">{card.value}</p>
+                  {card.subtext && <span className="text-xs font-medium text-muted-foreground">{card.subtext}</span>}
                   {TrendIcon && (
                     <div className={`flex items-center text-xs font-bold ml-1 ${(card as any).trend.color}`}>
                       <TrendIcon className="w-4 h-4 mr-0.5" />
@@ -152,7 +271,7 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
                   )}
                 </div>
               </div>
-              <div className={`p-3 bg-secondary rounded-full ${card.color}`}>
+              <div className={`p-3.5 bg-secondary/50 border border-border/50 rounded-xl ${card.color} group-hover:scale-110 transition-transform duration-300`}>
                 <card.icon className="w-6 h-6" />
               </div>
             </div>

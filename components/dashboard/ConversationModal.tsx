@@ -61,7 +61,7 @@ export default function ConversationModal({ isOpen, onClose, title, conversation
         {/* Content */}
         <div className="flex-1 overflow-auto bg-muted/10 p-6">
           {type === 'engineering' ? (
-            <EngineeringConversationList data={conversations} initialFilter={initialFilter} isModal={true} />
+            <EngineeringConversationList data={conversations} activeCategory={initialFilter?.classification || 'all'} isModal={true} />
           ) : (
             <ConversationList data={conversations} initialFilter={initialFilter} isModal={true} />
           )}

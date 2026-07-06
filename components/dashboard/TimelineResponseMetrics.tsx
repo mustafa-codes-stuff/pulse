@@ -90,41 +90,36 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
   };
 
   return (
-    <div className="w-full h-full min-h-[400px] p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col">
-      <div className="mb-6 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            Timeline & Response Metrics
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">Volume and responsiveness over time</p>
-        </div>
-        
-        <div className="flex bg-secondary/50 p-1 rounded-lg border border-border">
+    <div className="h-full flex flex-col">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Clock className="w-5 h-5 text-chart-2" />
+          Response times
+        </h2>
+      </div>
+      
+      <div className="flex-1 min-h-[300px] bg-card border border-border/60 shadow-sm rounded-2xl flex flex-col overflow-hidden">
+        <div className="border-b border-border/40 flex items-center px-2 shrink-0">
           <button 
             onClick={() => setActiveTab('hour')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${activeTab === 'hour' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'hour' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
           >
-            <Clock className="w-3.5 h-3.5" />
             By Hour
           </button>
           <button 
             onClick={() => setActiveTab('percentiles')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${activeTab === 'percentiles' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'percentiles' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
           >
-            <BarChart2 className="w-3.5 h-3.5" />
             Percentiles
           </button>
           <button 
             onClick={() => setActiveTab('volume')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${activeTab === 'volume' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'volume' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
           >
-            <Activity className="w-3.5 h-3.5" />
             Volume Trend
           </button>
         </div>
-      </div>
-      
-      <div className="w-full h-[300px]">
+        <div className="w-full flex-1 p-6">
         {activeTab === 'hour' && (
           data.length === 0 ? (
             <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
@@ -139,7 +134,7 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
                 <Tooltip content={<CustomTooltipHour />} />
                 <Bar dataKey="median" radius={[4, 4, 0, 0]}>
                   {hourData.data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.median > hourData.dailyMedian * 2 && entry.count >= 3 ? 'var(--color-destructive)' : '#3b82f6'} />
+                    <Cell key={`cell-${index}`} fill={entry.median > hourData.dailyMedian * 2 && entry.count >= 3 ? 'var(--color-destructive)' : 'var(--color-chart-1)'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -184,10 +179,11 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
               <XAxis dataKey="date" tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} tickFormatter={(val) => val.substring(5)} />
               <YAxis tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ backgroundColor: 'var(--color-popover)', borderColor: 'var(--color-border)', borderRadius: '8px' }} itemStyle={{ color: 'var(--color-popover-foreground)' }} />
-              <Area type="monotone" dataKey="total" name="Total" stroke="#2563eb" fill="#3b82f6" fillOpacity={0.2} />
+              <Area type="monotone" dataKey="total" name="Total" stroke="var(--color-chart-1)" fill="var(--color-chart-1)" fillOpacity={0.2} />
             </AreaChart>
           </ResponsiveContainer>
         )}
+        </div>
       </div>
     </div>
   );

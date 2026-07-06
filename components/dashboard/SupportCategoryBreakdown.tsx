@@ -2,9 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { ThumbsUp, RefreshCw, MessageSquare } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { classifyConversation } from '@/lib/nlp/heuristics';
-import { computeDatasetThresholds, CATEGORY_FRIENDLY_NAMES } from '@/lib/analytics/aggregations';
+import { CATEGORY_FRIENDLY_NAMES } from '@/lib/analytics/aggregations';
 import ConversationModal from './ConversationModal';
 
 interface SupportCategoryMetrics {
@@ -22,10 +22,11 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
   const [modalTitle, setModalTitle] = useState('');
   const [modalData, setModalData] = useState<PulseConversation[]>([]);
 
-  const categories = useMemo(() => {
+  const topCategories = useMemo(() => {
     if (data.length === 0) return [];
 
     const supportCategories = [
+      // Make sure missing category "image_quality_technical" is covered
       'image_quality_technical', 'generation_accuracy', 'attribute_mismatch',
       'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs',
       'customization_request', 'core_feature_request',
@@ -68,93 +69,81 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
         reopenRate: count > 0 ? reopenedCount / count : 0,
         conversations: convs
       };
+    }).filter(c => c.count > 0);
+
+    // Sort by count descending to get the top 3
+    list.sort((a, b) => b.count - a.count);
+    const top3 = list.slice(0, 3);
+
+    // Helper to determine the most extreme signal for the supporting copy
+    return top3.map((item, index) => {
+      let signalLabel = '';
+      
+      // Calculate ranks across the entire list (1-indexed)
+      const countRank = [...list].sort((a,b) => b.count - a.count).findIndex(c => c.category === item.category) + 1;
+      const reopenRank = [...list].sort((a,b) => b.reopenRate - a.reopenRate).findIndex(c => c.category === item.category) + 1;
+      
+      // For CSAT, we only want to rank items that actually have a CSAT score, lowest is #1
+      const withCsat = list.filter(c => c.averageCsat !== null);
+      const csatRank = item.averageCsat !== null 
+        ? [...withCsat].sort((a,b) => a.averageCsat! - b.averageCsat!).findIndex(c => c.category === item.category) + 1 
+        : 999;
+
+      // Find best rank (lowest number is best)
+      const bestRank = Math.min(countRank, reopenRank, csatRank);
+
+      if (bestRank === countRank && countRank <= 3) {
+        signalLabel = countRank === 1 ? 'highest volume' : `high volume`;
+      } else if (bestRank === reopenRank && reopenRank <= 3) {
+        signalLabel = reopenRank === 1 ? `highest reopen rate (${(item.reopenRate * 100).toFixed(1)}%)` : `high reopen rate (${(item.reopenRate * 100).toFixed(1)}%)`;
+      } else if (bestRank === csatRank && csatRank <= 3) {
+        signalLabel = csatRank === 1 ? `lowest CSAT (${item.averageCsat?.toFixed(1)})` : `low CSAT (${item.averageCsat?.toFixed(1)})`;
+      } else {
+        // Fallback to volume if nothing is notably extreme
+        signalLabel = `${item.percentage.toFixed(0)}% of volume`;
+      }
+
+      // Special overrides for absolute #1s if they are in the top 3, to guarantee diversity if possible
+      // This matches the user's specific request behavior where Pre-sales is volume, Refund is reopen, Image is CSAT
+      if (countRank === 1) signalLabel = 'highest volume';
+      else if (reopenRank === 1) signalLabel = `highest reopen rate (${(item.reopenRate * 100).toFixed(1)}%)`;
+      else if (csatRank === 1) signalLabel = `lowest CSAT (${item.averageCsat?.toFixed(1)})`;
+
+      return {
+        ...item,
+        signalLabel
+      };
     });
 
-    // Sort by count descending
-    return list.sort((a, b) => b.count - a.count);
   }, [data]);
 
-  if (data.length === 0) return null;
+  if (data.length === 0 || topCategories.length === 0) return null;
 
   return (
-    <div className="bg-card border-2 border-border shadow-sm rounded-xl flex flex-col h-[400px] overflow-hidden">
-      <div className="p-6 border-b border-border flex items-center justify-between shrink-0">
-        <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-chart-1" />
-            Customer Pain Drivers
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">Operational inquiries ranked by volume, satisfaction, and friction</p>
-        </div>
-      </div>
-
-      <div className="relative flex-1 min-h-0">
-        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent pointer-events-none z-20" />
-        <div className="h-full overflow-auto scrollbar-thin pb-8">
-          <table className="w-full text-left border-collapse text-sm relative">
-            <thead className="sticky top-0 z-10 shadow-sm">
-              <tr className="bg-secondary border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                <th className="p-4 pl-6">Inquiry Category</th>
-                <th className="p-4">Volume Share</th>
-                <th className="p-4 text-center">Avg CSAT</th>
-                <th className="p-4 text-center">Reopen Rate</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {categories.map((item) => (
-                <tr 
-                  key={item.category}
-                  onClick={() => {
-                    setModalTitle(`Category: ${item.title}`);
-                    setModalData(item.conversations);
-                    setIsModalOpen(true);
-                  }}
-                  className="hover:bg-secondary/15 transition-colors cursor-pointer group"
-                >
-                  {/* Category Name */}
-                  <td className="p-4 pl-6 font-medium text-foreground group-hover:text-primary transition-colors">
-                    {item.title}
-                  </td>
-                  
-                  {/* Volume bar & percentage */}
-                  <td className="p-4 min-w-[200px]">
-                    <div className="flex items-center gap-3">
-                      <span className="w-10 shrink-0 font-semibold text-foreground/80">
-                        {item.count} ({item.percentage.toFixed(0)}%)
-                      </span>
-                      <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-chart-1 rounded-full group-hover:bg-primary transition-colors"
-                          style={{ width: `${item.percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Avg CSAT */}
-                  <td className="p-4 text-center">
-                    {item.averageCsat !== null ? (
-                      <div className="inline-flex items-center gap-1 font-semibold text-foreground">
-                        <ThumbsUp className="w-3.5 h-3.5 text-chart-4 shrink-0" />
-                        {item.averageCsat.toFixed(1)}
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">--</span>
-                    )}
-                  </td>
-
-                  {/* Reopen Rate */}
-                  <td className="p-4 text-center">
-                    <div className={`inline-flex items-center gap-1 font-semibold ${item.reopenRate > 0.3 ? 'text-destructive' : 'text-foreground'}`}>
-                      <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${item.reopenRate > 0.3 ? 'text-destructive' : 'text-muted-foreground'}`} />
-                      {(item.reopenRate * 100).toFixed(1)}%
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+    <div className="h-full flex flex-col">
+      <h2 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
+        <MessageSquare className="w-5 h-5 text-chart-1" />
+        Top customer issues
+      </h2>
+      <div className="flex-1 bg-card border border-border/60 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+        {topCategories.map((item, index) => (
+          <div 
+            key={item.category} 
+            onClick={() => {
+              setModalTitle(`Category: ${item.title}`);
+              setModalData(item.conversations);
+              setIsModalOpen(true);
+            }}
+            className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 ${index !== 0 ? 'border-t border-border/40' : ''} hover:bg-secondary/40 transition-colors gap-4 cursor-pointer group`}
+          >
+            <div className="flex flex-col gap-1 group-hover:translate-x-1 transition-transform duration-300">
+              <h3 className="text-sm font-bold text-foreground transition-colors">{item.title}</h3>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground/80">{item.count}</span> conversations &middot; {item.signalLabel}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
 
       <ConversationModal

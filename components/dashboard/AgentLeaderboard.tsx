@@ -43,7 +43,7 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
   }, [agentMetrics]);
 
   return (
-    <div className={isTab ? "w-full h-full flex flex-col min-h-[400px] overflow-hidden" : "w-full h-fit self-start p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col overflow-hidden"}>
+    <div className={isTab ? "w-full flex flex-col overflow-hidden" : "w-full h-fit self-start p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col overflow-hidden"}>
       {!isTab && (
         <div className="mb-6 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
