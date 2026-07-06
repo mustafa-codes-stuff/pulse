@@ -2,9 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { format, fromUnixTime, isAfter, subDays } from 'date-fns';
 import { AlertCircle, Search, ChevronLeft, ChevronRight, MessageSquareWarning } from 'lucide-react';
-import ConversationThreadModal from './ConversationThreadModal';
+import ConversationThread from './ConversationThread';
+import { formatPT } from '@/lib/utils/timezone';
 import { computeDatasetThresholds, computeEscalationRisk } from '@/lib/analytics/aggregations';
 
 export default function ConversationList({ 
@@ -19,13 +19,14 @@ export default function ConversationList({
   const [search, setSearch] = useState('');
   const [sortFilter, setSortFilter] = useState<string>(initialFilter?.sort || 'escalation_desc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedConversation, setSelectedConversation] = useState<PulseConversation | null>(null);
+  const [expandedConvId, setExpandedConvId] = useState<string | null>(null);
   const itemsPerPage = 10;
 
   // Reset page when filters change
   const handleFilterChange = (setter: any, value: any) => {
     setter(value);
     setCurrentPage(1);
+    setExpandedConvId(null);
   };
 
   const thresholds = useMemo(() => computeDatasetThresholds(data), [data]);
@@ -60,6 +61,12 @@ export default function ConversationList({
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  const getRiskDetails = (risk: number) => {
+    if (risk >= 0.5) return { text: 'High Risk', color: 'bg-destructive/10 text-destructive border-destructive/20' };
+    if (risk >= 0.3) return { text: 'Medium Risk', color: 'bg-chart-4/10 text-chart-4 border-chart-4/20' };
+    return { text: 'Low Risk', color: 'bg-secondary/80 text-muted-foreground border-border/50' };
+  };
+
   if (data.length === 0) {
     return (
       <div className="w-full h-[400px] flex items-center justify-center bg-card border-2 border-border shadow-sm rounded-xl">
@@ -69,7 +76,6 @@ export default function ConversationList({
   }
 
   return (
-    <>
     <div className={`w-full flex flex-col ${isModal ? '' : 'bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden'}`}>
       <div className={`flex flex-col gap-4 md:flex-row md:items-center justify-between ${isModal ? 'pb-4' : 'p-6 border-b border-border'}`}>
         {!isModal && (
@@ -114,7 +120,7 @@ export default function ConversationList({
       </div>
       
       {/* Table Header */}
-      <div className="flex items-center px-6 py-3 bg-secondary/50 border-b border-border text-xs font-medium text-muted-foreground uppercase tracking-wider">
+      <div className="flex items-center px-6 py-3 bg-secondary/50 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         <div className="flex-1 min-w-0 pr-4">Subject & Details</div>
         <div className="w-32 shrink-0 hidden sm:block">Status</div>
         <div 
@@ -135,7 +141,7 @@ export default function ConversationList({
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto max-h-[600px] scrollbar-thin">
+      <div className="flex-1 overflow-y-auto max-h-[600px] scrollbar-thin divide-y divide-border/50">
         {paginatedData.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground text-sm">
             No conversations match the current filters.
@@ -148,32 +154,34 @@ export default function ConversationList({
             const displayTitle = conv.title || (conv.custom_attributes?.['AI Title'] as string) || fallbackTitle || 'Untitled Conversation';
             const displaySubject = cleanSubject || (rawBody.length > 80 ? rawBody.substring(0, 80) + '...' : rawBody) || 'No description provided.';
             
+            const isExpanded = expandedConvId === conv.id;
+            const risk = computeEscalationRisk(conv, thresholds);
+            const riskBadge = getRiskDetails(risk);
             
             return (
-              <div key={conv.id || idx} className="border-b border-border transition-colors">
+              <div key={conv.id || idx} className="flex flex-col">
                 <div 
-                  onClick={() => setSelectedConversation(conv)}
-                  className={`flex items-center px-6 py-4 transition-colors hover:bg-secondary/20 cursor-pointer`}
+                  onClick={() => setExpandedConvId(isExpanded ? null : conv.id)}
+                  className={`flex items-center px-6 py-4 transition-colors hover:bg-secondary/20 cursor-pointer ${isExpanded ? 'bg-secondary/10' : ''}`}
                 >
                   <div className="flex-1 min-w-0 pr-4 space-y-1">
                     <p className="text-sm font-semibold text-foreground line-clamp-1">
                       {displayTitle}
                     </p>
-                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{displaySubject}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed">{displaySubject}</p>
                     
-                    <div className="flex flex-wrap items-center gap-3 mt-2">
+                    <div className="flex flex-wrap items-center gap-3 mt-2 min-h-[22px]">
                       <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded border border-border">
                         <MessageSquareWarning className="w-3 h-3" />
-                        {
-                          (conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment').length
-                        } turns
+                        {(conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment').length} turns
                       </span>
-                      {computeEscalationRisk(conv, thresholds) > 0.5 && (
-                        <span className="text-[10px] text-destructive font-semibold flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded border border-destructive/20">
-                          <AlertCircle className="w-3 h-3" />
-                          High Risk
-                        </span>
-                      )}
+                      <span 
+                        className={`text-[10px] font-semibold flex items-center gap-1 px-2 py-0.5 rounded border ${riskBadge.color}`}
+                        title="Composite score from reopens, handling time, back-and-forth count, and detected customer frustration — capped at 100%. Not a probability."
+                      >
+                        <AlertCircle className="w-3 h-3" />
+                        {riskBadge.text} ({Math.round(risk * 100)}%)
+                      </span>
                     </div>
                     
                     {/* Mobile only Status/Date */}
@@ -186,7 +194,7 @@ export default function ConversationList({
                         {conv.state}
                       </span>
                       <span className="text-[10px] text-muted-foreground">
-                        {format(fromUnixTime(conv.created_at), 'MMM d, yyyy')}
+                        {formatPT(conv.created_at, "MMM d, yyyy 'PST'")}
                       </span>
                     </div>
                   </div>
@@ -201,7 +209,7 @@ export default function ConversationList({
                     </span>
                   </div>
                   
-                  <div className="w-48 shrink-0 hidden md:flex items-center gap-2 relative">
+                  <div className="w-48 shrink-0 hidden md:flex items-center gap-2">
                     {conv.statistics?.count_reopens > 0 && (
                       <div className="group relative flex items-center">
                         <AlertCircle className="w-4 h-4 text-destructive" />
@@ -210,11 +218,16 @@ export default function ConversationList({
                         </div>
                       </div>
                     )}
-                    <span className="text-sm text-muted-foreground mr-4">
-                      {format(fromUnixTime(conv.created_at), 'MMM d, yyyy HH:mm')}
+                    <span className="text-sm text-muted-foreground">
+                      {formatPT(conv.created_at, "MMM d, yyyy HH:mm 'PST'")}
                     </span>
                   </div>
                 </div>
+                {isExpanded && (
+                  <div className="p-6 bg-muted/15 border-t border-b border-border/50 shrink-0">
+                    <ConversationThread conversation={conv} />
+                  </div>
+                )}
               </div>
             );
           })
@@ -222,7 +235,7 @@ export default function ConversationList({
       </div>
 
       {/* Pagination Footer */}
-      <div className="p-4 border-t border-border flex items-center justify-between bg-secondary/10">
+      <div className="p-4 border-t border-border flex items-center justify-between bg-secondary/10 shrink-0">
         <p className="text-sm text-muted-foreground">
           Showing <span className="font-medium text-foreground">{Math.min(1 + (currentPage - 1) * itemsPerPage, filteredData.length)}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * itemsPerPage, filteredData.length)}</span> of <span className="font-medium text-foreground">{filteredData.length}</span> entries
         </p>
@@ -248,12 +261,5 @@ export default function ConversationList({
         </div>
       </div>
     </div>
-      {/* Conversation Thread Modal */}
-      <ConversationThreadModal 
-        isOpen={!!selectedConversation}
-        onClose={() => setSelectedConversation(null)}
-        conversation={selectedConversation}
-      />
-    </>
   );
 }

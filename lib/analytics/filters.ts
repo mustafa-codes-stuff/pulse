@@ -9,17 +9,26 @@ const SYSTEM_SUBJECTS = [
   "data erasure request"
 ];
 
+export function isBotOnlyConversation(conv: PulseConversation): boolean {
+  const parts = conv.conversation_parts?.conversation_parts || [];
+  const hadBotPart = parts.some(p => p.author?.type === 'bot');
+  const hadHumanAgent = parts.some(p => p.author?.type === 'admin');
+  return hadBotPart && !hadHumanAgent;
+}
+
 export function filterAnalyzableConversations(
   conversations: PulseConversation[],
   excludeNoHumanParts?: boolean
 ): {
   analyzable: PulseConversation[];
   excludedSystem: PulseConversation[];
-  excludedNoHuman: PulseConversation[];
+  excludedNoReply: PulseConversation[];
+  excludedBotOnly: PulseConversation[];
 } {
   const analyzable: PulseConversation[] = [];
   const excludedSystem: PulseConversation[] = [];
-  const excludedNoHuman: PulseConversation[] = [];
+  const excludedNoReply: PulseConversation[] = [];
+  const excludedBotOnly: PulseConversation[] = [];
 
   for (const conv of conversations) {
     const subject = (conv.source.subject || '').toLowerCase();
@@ -31,20 +40,28 @@ export function filterAnalyzableConversations(
       continue;
     }
     
-    // Check if it has no human parts (real leads that haven't received responses)
+    // Check if it has no customer/lead messages (meaning customer never replied/sent anything)
     const parts = conv.conversation_parts?.conversation_parts || [];
-    const humanParts = parts.filter(p => p.author?.type === 'user' || p.author?.type === 'lead');
-    const isNoHuman = humanParts.length === 0;
+    const customerParts = parts.filter(p => p.author?.type === 'user' || p.author?.type === 'lead');
+    const isNoReply = customerParts.length === 0;
 
-    if (isNoHuman) {
-      excludedNoHuman.push(conv);
-      if (excludeNoHumanParts) {
-        continue;
-      }
+    // Check if it's handled only by bot
+    const isBotOnly = isBotOnlyConversation(conv);
+
+    if (isNoReply) {
+      excludedNoReply.push(conv);
+    }
+    
+    if (isBotOnly) {
+      excludedBotOnly.push(conv);
+    }
+
+    if (excludeNoHumanParts && (isNoReply || isBotOnly)) {
+      continue;
     }
 
     analyzable.push(conv);
   }
 
-  return { analyzable, excludedSystem, excludedNoHuman };
+  return { analyzable, excludedSystem, excludedNoReply, excludedBotOnly };
 }

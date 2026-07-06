@@ -12,19 +12,27 @@ export default function SourceChannel({ data }: { data: PulseConversation[] }) {
   const [initialFilter, setInitialFilter] = useState<any>({});
 
   const channelData = useMemo(() => {
-    let email = 0, conversation = 0;
+    let email = 0, conversation = 0, other = 0;
     data.forEach(c => {
       if (c.source?.type === 'email') email++;
       else if (c.source?.type === 'conversation') conversation++;
+      else other++;
     });
-    return [
-      { name: 'Chat', value: conversation, color: 'var(--color-chart-1)' },
-      { name: 'Email', value: email, color: 'var(--color-muted-foreground)' },
+    
+    const result = [
+      { name: `Chat (${conversation})`, value: conversation, typeKey: 'conversation', color: 'var(--color-chart-1)' },
+      { name: `Email (${email})`, value: email, typeKey: 'email', color: 'var(--color-muted-foreground)' },
     ];
+
+    if (other > 0) {
+      result.push({ name: `Other (${other})`, value: other, typeKey: 'other', color: 'var(--color-chart-2)' });
+    }
+
+    return result;
   }, [data]);
 
   return (
-    <div className="w-full p-6 bg-card border border-border rounded-xl flex flex-col h-full">
+    <div className="w-full p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col h-full">
       <h2 className="text-lg font-semibold mb-2 shrink-0">Source Channel</h2>
       <p className="text-sm text-muted-foreground mb-6 shrink-0">Distribution of inbound sources.</p>
       
@@ -41,9 +49,14 @@ export default function SourceChannel({ data }: { data: PulseConversation[] }) {
               dataKey="value"
               onClick={(entry: any) => {
                 if (!entry.name) return;
-                const val = entry.name === 'Chat' ? 'conversation' : 'email';
-                setModalTitle(`Channel: ${entry.name}`);
-                setModalData(data.filter(c => c.source?.type === val));
+                const val = entry.typeKey;
+                setModalTitle(`Channel: ${entry.name.split(' (')[0]}`);
+                setModalData(data.filter(c => {
+                  if (val === 'other') {
+                    return c.source?.type !== 'email' && c.source?.type !== 'conversation';
+                  }
+                  return c.source?.type === val;
+                }));
                 setInitialFilter({});
                 setIsModalOpen(true);
               }}

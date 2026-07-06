@@ -31,7 +31,7 @@ export default function AgentInsights({ data }: { data: PulseConversation[] }) {
           onClick={() => setActiveTab('coverage')}
           className={`px-1 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'coverage' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
-          Coverage Heatmap (UTC)
+          Coverage Heatmap (PST)
         </button>
       </div>
       <div className="flex-1">

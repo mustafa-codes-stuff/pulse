@@ -2,9 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { ThumbsUp, RefreshCw, MessageSquare, AlertCircle } from 'lucide-react';
+import { ThumbsUp, RefreshCw, MessageSquare } from 'lucide-react';
 import { classifyConversation } from '@/lib/nlp/heuristics';
-import { computeDatasetThresholds, computeEscalationRisk, CATEGORY_FRIENDLY_NAMES } from '@/lib/analytics/aggregations';
+import { computeDatasetThresholds, CATEGORY_FRIENDLY_NAMES } from '@/lib/analytics/aggregations';
 import ConversationModal from './ConversationModal';
 
 interface SupportCategoryMetrics {
@@ -26,7 +26,8 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
     if (data.length === 0) return [];
 
     const supportCategories = [
-      'rendering_quality', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs',
+      'image_quality_technical', 'generation_accuracy', 'attribute_mismatch',
+      'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs',
       'customization_request', 'core_feature_request',
       'refund_request', 'subscription_cancel', 'pre_sales_info', 'delivery_status'
     ];
@@ -91,68 +92,68 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
         <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent pointer-events-none z-20" />
         <div className="h-full overflow-auto scrollbar-thin pb-8">
           <table className="w-full text-left border-collapse text-sm relative">
-          <thead className="sticky top-0 z-10 shadow-sm">
-            <tr className="bg-secondary border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              <th className="p-4 pl-6">Inquiry Category</th>
-              <th className="p-4">Volume Share</th>
-              <th className="p-4 text-center">Avg CSAT</th>
-              <th className="p-4 text-center">Reopen Rate</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/50">
-            {categories.map((item) => (
-              <tr 
-                key={item.category}
-                onClick={() => {
-                  setModalTitle(`Category: ${item.title}`);
-                  setModalData(item.conversations);
-                  setIsModalOpen(true);
-                }}
-                className="hover:bg-secondary/15 transition-colors cursor-pointer group"
-              >
-                {/* Category Name */}
-                <td className="p-4 pl-6 font-medium text-foreground group-hover:text-primary transition-colors">
-                  {item.title}
-                </td>
-                
-                {/* Volume bar & percentage */}
-                <td className="p-4 min-w-[200px]">
-                  <div className="flex items-center gap-3">
-                    <span className="w-10 shrink-0 font-semibold text-foreground/80">
-                      {item.count} ({item.percentage.toFixed(0)}%)
-                    </span>
-                    <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-chart-1 rounded-full group-hover:bg-primary transition-colors"
-                        style={{ width: `${item.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                </td>
-
-                {/* Avg CSAT */}
-                <td className="p-4 text-center">
-                  {item.averageCsat !== null ? (
-                    <div className="inline-flex items-center gap-1 font-semibold text-foreground">
-                      <ThumbsUp className="w-3.5 h-3.5 text-chart-4 shrink-0" />
-                      {item.averageCsat.toFixed(1)}
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">--</span>
-                  )}
-                </td>
-
-                {/* Reopen Rate */}
-                <td className="p-4 text-center">
-                  <div className={`inline-flex items-center gap-1 font-semibold ${item.reopenRate > 0.3 ? 'text-destructive' : 'text-foreground'}`}>
-                    <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${item.reopenRate > 0.3 ? 'text-destructive' : 'text-muted-foreground'}`} />
-                    {(item.reopenRate * 100).toFixed(0)}%
-                  </div>
-                </td>
+            <thead className="sticky top-0 z-10 shadow-sm">
+              <tr className="bg-secondary border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <th className="p-4 pl-6">Inquiry Category</th>
+                <th className="p-4">Volume Share</th>
+                <th className="p-4 text-center">Avg CSAT</th>
+                <th className="p-4 text-center">Reopen Rate</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {categories.map((item) => (
+                <tr 
+                  key={item.category}
+                  onClick={() => {
+                    setModalTitle(`Category: ${item.title}`);
+                    setModalData(item.conversations);
+                    setIsModalOpen(true);
+                  }}
+                  className="hover:bg-secondary/15 transition-colors cursor-pointer group"
+                >
+                  {/* Category Name */}
+                  <td className="p-4 pl-6 font-medium text-foreground group-hover:text-primary transition-colors">
+                    {item.title}
+                  </td>
+                  
+                  {/* Volume bar & percentage */}
+                  <td className="p-4 min-w-[200px]">
+                    <div className="flex items-center gap-3">
+                      <span className="w-10 shrink-0 font-semibold text-foreground/80">
+                        {item.count} ({item.percentage.toFixed(0)}%)
+                      </span>
+                      <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-chart-1 rounded-full group-hover:bg-primary transition-colors"
+                          style={{ width: `${item.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Avg CSAT */}
+                  <td className="p-4 text-center">
+                    {item.averageCsat !== null ? (
+                      <div className="inline-flex items-center gap-1 font-semibold text-foreground">
+                        <ThumbsUp className="w-3.5 h-3.5 text-chart-4 shrink-0" />
+                        {item.averageCsat.toFixed(1)}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">--</span>
+                    )}
+                  </td>
+
+                  {/* Reopen Rate */}
+                  <td className="p-4 text-center">
+                    <div className={`inline-flex items-center gap-1 font-semibold ${item.reopenRate > 0.3 ? 'text-destructive' : 'text-foreground'}`}>
+                      <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${item.reopenRate > 0.3 ? 'text-destructive' : 'text-muted-foreground'}`} />
+                      {(item.reopenRate * 100).toFixed(1)}%
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 

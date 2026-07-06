@@ -5,7 +5,7 @@ import { getConversations } from '@/lib/storage';
 import { PulseConversation } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { format, fromUnixTime } from 'date-fns';
+import { formatPT } from '@/lib/utils/timezone';
 import IssueLeaderboards from '@/components/dashboard/IssueLeaderboards';
 import EngineeringConversationList from '@/components/dashboard/EngineeringConversationList';
 import AttentionCallouts from '@/components/dashboard/AttentionCallouts';
@@ -36,7 +36,7 @@ export default function EngineeringPage() {
     const sources = Array.from(new Set(analyzableData.map(c => c._sourceFilename || 'Unknown Source')));
     const dates = analyzableData.map(c => c.created_at).sort((a, b) => a - b);
     const dateRange = dates.length > 0
-      ? `${format(fromUnixTime(dates[0]), 'MMM d, yyyy')} - ${format(fromUnixTime(dates[dates.length - 1]), 'MMM d, yyyy')}`
+      ? `${formatPT(dates[0], 'MMM d, yyyy')} - ${formatPT(dates[dates.length - 1], 'MMM d, yyyy')}`
       : '';
 
     return {
@@ -78,7 +78,7 @@ export default function EngineeringPage() {
             </div>
           )}
         </div>
-        <div className="absolute top-6 right-24 z-50 flex items-center space-x-2 bg-card border-2 border-border shadow-sm px-4 py-2 rounded-md cursor-pointer h-10 group/toggle hover:bg-secondary transition-colors" onClick={() => setExcludeNoHuman(!excludeNoHuman)}>
+        <div className="absolute top-6 right-[84px] z-50 flex items-center space-x-2 bg-card border-2 border-border shadow-sm px-4 py-2 rounded-md cursor-pointer h-[44px] group/toggle hover:bg-secondary transition-colors" onClick={() => setExcludeNoHuman(!excludeNoHuman)}>
           <input
             type="checkbox"
             id="exclude-human-eng"
@@ -87,19 +87,18 @@ export default function EngineeringPage() {
             className="w-4 h-4 cursor-pointer"
           />
           <label htmlFor="exclude-human-eng" className="text-sm font-medium cursor-pointer select-none">
-            Human Conversations Only
+            Hide no-reply conversations
           </label>
           <div className="absolute top-full mt-2 right-0 w-56 p-2.5 bg-popover text-popover-foreground text-xs font-medium rounded-lg opacity-0 group-hover/toggle:opacity-100 transition-opacity pointer-events-none z-50 border border-border shadow-md leading-relaxed">
-            Excludes tickets where no customer or lead ever replied; such as automated sequences and unanswered outbound messages.
+            Excludes conversations where the customer never replied, including ignored automated messages and outbound sequences.
           </div>
         </div>
       </div>
 
       <AttentionCallouts data={analyzableData} mode="engineering" />
 
-      <IssueLeaderboards data={analyzableData} />
-
-      <div>
+      <div className="grid grid-cols-1 gap-6">
+        <IssueLeaderboards data={analyzableData} />
         <EngineeringConversationList data={analyzableData} />
       </div>
     </div>

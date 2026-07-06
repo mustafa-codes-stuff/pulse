@@ -6,6 +6,7 @@ import { PulseConversation } from '@/lib/types';
 import { calculatePercentile } from '@/lib/analytics/stats';
 import { calculateResponseTimePercentiles, aggregateDailyVolume } from '@/lib/analytics/aggregations';
 import { Clock, BarChart2, Activity } from 'lucide-react';
+import { formatPT } from '@/lib/utils/timezone';
 
 export default function TimelineResponseMetrics({ data }: { data: PulseConversation[] }) {
   const [activeTab, setActiveTab] = useState<'hour' | 'percentiles' | 'volume'>('hour');
@@ -17,7 +18,7 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
 
     data.forEach(c => {
       if (c.statistics?.time_to_admin_reply != null) {
-        const hour = new Date(c.created_at * 1000).getUTCHours();
+        const hour = parseInt(formatPT(c.created_at, 'H'), 10);
         hours[hour].push(c.statistics.time_to_admin_reply);
       }
     });
@@ -73,7 +74,7 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
       const data = payload[0].payload;
       return (
         <div className="bg-popover border-2 border-border shadow-sm p-3 rounded-lg shadow-md text-sm">
-          <p className="font-semibold text-foreground mb-1">{data.hourLabel} UTC</p>
+          <p className="font-semibold text-foreground mb-1">{data.hourLabel} PST</p>
           <p className="text-muted-foreground flex items-center justify-between gap-4">
             <span>Median Reply:</span>
             <span className="font-bold text-foreground">{data.median} min</span>

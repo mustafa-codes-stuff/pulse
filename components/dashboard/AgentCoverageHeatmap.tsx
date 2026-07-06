@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
 import { Users } from 'lucide-react';
+import { formatPT } from '@/lib/utils/timezone';
 
 export default function AgentCoverageHeatmap({ data, isTab = false }: { data: PulseConversation[], isTab?: boolean }) {
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
@@ -13,8 +14,7 @@ export default function AgentCoverageHeatmap({ data, isTab = false }: { data: Pu
       const parts = conv.conversation_parts?.conversation_parts || [];
       for (const p of parts) {
         if (p.author?.type === 'admin' && p.part_type === 'comment') {
-          const date = new Date(p.created_at * 1000);
-          months.add(`${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`);
+          months.add(formatPT(p.created_at, 'yyyy-MM'));
         }
       }
     }
@@ -35,9 +35,8 @@ export default function AgentCoverageHeatmap({ data, isTab = false }: { data: Pu
       const parts = conv.conversation_parts?.conversation_parts || [];
       for (const p of parts) {
         if (p.author?.type === 'admin' && p.part_type === 'comment') {
-          const pDate = new Date(p.created_at * 1000);
           if (selectedMonth !== 'all') {
-            const m = `${pDate.getUTCFullYear()}-${String(pDate.getUTCMonth() + 1).padStart(2, '0')}`;
+            const m = formatPT(p.created_at, 'yyyy-MM');
             if (m !== selectedMonth) continue;
           }
 
@@ -45,7 +44,7 @@ export default function AgentCoverageHeatmap({ data, isTab = false }: { data: Pu
           if (!agents[name]) {
             agents[name] = { total: 0, hours: Array(24).fill(0) };
           }
-          const hour = pDate.getUTCHours();
+          const hour = parseInt(formatPT(p.created_at, 'H'), 10);
           agents[name].hours[hour]++;
           agents[name].total++;
         }
@@ -82,7 +81,7 @@ export default function AgentCoverageHeatmap({ data, isTab = false }: { data: Pu
         <div className="mb-6 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold flex items-center gap-2">
-              Agent Coverage Heatmap (UTC)
+              Agent Coverage Heatmap (PST)
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               Hourly ticket handling volume per agent.

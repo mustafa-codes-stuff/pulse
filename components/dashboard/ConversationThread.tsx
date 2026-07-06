@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { format, fromUnixTime } from 'date-fns';
+import { formatPT } from '@/lib/utils/timezone';
 import { User, Bot, Shield, AlertTriangle } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { hasFrustrationPattern } from '@/lib/analytics/aggregations';
@@ -105,9 +105,9 @@ export default function ConversationThread({
           return (
             <div key={part.id} className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`} ref={part.id === firstFlaggedId ? scrollRef : null}>
               <div 
-                className={`flex flex-col max-w-[85%] ${isUser ? 'items-end' : 'items-start'}`}
+                className="flex flex-col max-w-[85%] ${isUser ? 'items-end' : 'items-start'}"
                 role="article"
-                aria-label={`${label} from ${part.author?.name || 'Unknown'} at ${format(fromUnixTime(part.created_at), 'MMM d, h:mm a')}`}
+                aria-label={`${label} from ${part.author?.name || 'Unknown'} at ${formatPT(part.created_at, "MMM d, h:mm a 'PST'")}`}
               >
                 
                 {/* Author & Timestamp */}
@@ -121,7 +121,7 @@ export default function ConversationThread({
                     {part.author?.name || 'Unknown'}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    {format(fromUnixTime(part.created_at), 'MMM d, h:mm a')}
+                    {formatPT(part.created_at, "MMM d, h:mm a 'PST'")}
                   </span>
                   {isNote && (
                     <span className="text-[10px] font-bold text-chart-3 bg-chart-3/10 px-1.5 py-0.5 rounded uppercase">Internal Note</span>

@@ -2,6 +2,7 @@ import { PulseConversation, ConversationPart } from '../types';
 import { classifyConversation } from '../nlp/heuristics';
 import { extractThemesWithMembership } from '../nlp/tfidf';
 import { calculatePercentile } from './stats';
+import { formatPT } from '../utils/timezone';
 import { format, fromUnixTime } from 'date-fns';
 
 export interface DailyVolume {
@@ -16,7 +17,7 @@ export function aggregateDailyVolume(conversations: PulseConversation[]): DailyV
   const map = new Map<string, DailyVolume>();
   
   for (const conv of conversations) {
-    const dateStr = format(fromUnixTime(conv.created_at), 'yyyy-MM-dd');
+    const dateStr = formatPT(conv.created_at, 'yyyy-MM-dd');
     if (!map.has(dateStr)) {
       map.set(dateStr, { date: dateStr, total: 0, open: 0, closed: 0, snoozed: 0 });
     }
@@ -166,6 +167,7 @@ export function aggregateAgentPerformance(conversations: PulseConversation[]): A
 export interface EscalationThresholds {
   handlingTimeP90: number;
   backAndForthP90: number;
+  responseTimeP90: number;
 }
 
 export function computeDatasetThresholds(conversations: PulseConversation[]): EscalationThresholds {
@@ -181,7 +183,13 @@ export function computeDatasetThresholds(conversations: PulseConversation[]): Es
   }).sort((a, b) => a - b);
   const backAndForthP90 = bnfCounts.length > 0 ? (calculatePercentile(bnfCounts, 90) || 15) : 15;
 
-  return { handlingTimeP90, backAndForthP90 };
+  const responseTimes = conversations
+    .map(c => c.statistics?.time_to_admin_reply)
+    .filter((t): t is number => typeof t === 'number' && t !== null)
+    .sort((a, b) => a - b);
+  const responseTimeP90 = responseTimes.length > 0 ? (calculatePercentile(responseTimes, 90) || 14400) : 14400;
+
+  return { handlingTimeP90, backAndForthP90, responseTimeP90 };
 }
 
 export const FRUSTRATION_PATTERNS_DIRECT = [
@@ -305,7 +313,9 @@ export function extractFrustrationPairs(conversations: PulseConversation[]): Fru
   return pairs.sort((a, b) => b.conversation.created_at - a.conversation.created_at);
 }
 export const CATEGORY_FRIENDLY_NAMES: Record<string, string> = {
-  rendering_quality: 'Rendering & Image Quality',
+  image_quality_technical: 'Image Quality (Technical)',
+  generation_accuracy: 'AI Generation Accuracy',
+  attribute_mismatch: 'Styling & Attribute Mismatch',
   auth_access: 'Login & Account Access',
   upload_flow: 'Photo Upload Issues',
   payment_checkout: 'Payment & Checkout Failures',
@@ -323,6 +333,7 @@ export interface CategoryPainMetrics {
   title: string;
   category: string;
   count: number;
+  uniqueCustomers: number;
   averageCsat: number | null;
   reopenRate: number;
   painIndex: number;
@@ -333,14 +344,18 @@ export interface CategoryPainMetrics {
 function calculateCategoryMetrics(
   category: string, 
   convs: PulseConversation[], 
-  thresholds: any
+  thresholds: EscalationThresholds
 ): CategoryPainMetrics {
   const count = convs.length;
+  const emails = convs.map(c => c.source?.author?.email || c.source?.author?.name || c.id);
+  const uniqueCustomers = new Set(emails).size;
+
   if (count === 0) {
     return {
       title: CATEGORY_FRIENDLY_NAMES[category] || category,
       category,
       count: 0,
+      uniqueCustomers: 0,
       averageCsat: null,
       reopenRate: 0,
       painIndex: 0,
@@ -349,8 +364,8 @@ function calculateCategoryMetrics(
     };
   }
 
-  // 1. Churn Exposure (Volume) - capped at 25 tickets representing max exposure
-  const churnExposure = Math.min(count / 25, 1.0);
+  // 1. Churn Exposure (Volume) - capped at 25 unique customers representing max exposure
+  const churnExposure = Math.min(uniqueCustomers / 25, 1.0);
 
   // 2. Support Burden (Escalation Risk) - average escalation risk
   let totalEscalationRisk = 0;
@@ -391,6 +406,7 @@ function calculateCategoryMetrics(
     title: CATEGORY_FRIENDLY_NAMES[category] || category,
     category,
     count,
+    uniqueCustomers,
     averageCsat,
     reopenRate: firstFixFailureRate,
     painIndex,
@@ -408,7 +424,8 @@ export function aggregateIssues(conversations: PulseConversation[]): {
   const totals = { bugs: 0, features: 0, other: 0 };
   const thresholds = computeDatasetThresholds(conversations);
 
-  const bugCategories = ['rendering_quality', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs'];
+  // Split rendering quality category
+  const bugCategories = ['image_quality_technical', 'generation_accuracy', 'attribute_mismatch', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs'];
   const featureCategories = ['customization_request', 'core_feature_request'];
   const otherCategories = ['refund_request', 'subscription_cancel', 'pre_sales_info', 'delivery_status']; // Exclude system_automated from dashboard lists
 

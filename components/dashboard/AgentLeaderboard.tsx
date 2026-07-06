@@ -13,8 +13,6 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
 
   const agentMetrics = useMemo(() => aggregateAgentPerformance(data), [data]);
 
-  const toHours = (secs: number | null) => secs ? Number((secs / 3600).toFixed(2)) : 0;
-
   // Filter conversations for a specific agent
   const getConversationsForAgent = (agentId: string) => {
     return data.filter(conv => {
@@ -22,6 +20,27 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
       return parts.some(p => p.author?.type === 'admin' && String(p.author?.id) === agentId);
     });
   };
+
+  // Convert seconds to a readable string (e.g., 2h 15m or 45m)
+  const formatTime = (secs: number | null) => {
+    if (secs === null) return '--';
+    if (secs < 60) return `${Math.floor(secs)}s`;
+    const mins = Math.floor(secs / 60);
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    const remainingMins = mins % 60;
+    return remainingMins > 0 ? `${hrs}h ${remainingMins}m` : `${hrs}h`;
+  };
+
+  // Calculate turns percentiles outside the loop
+  const { p50, p75, p90 } = useMemo(() => {
+    const allAvgTurns = agentMetrics.map(a => a.avgTurns).filter((t): t is number => t !== null).sort((a, b) => a - b);
+    return {
+      p50: allAvgTurns.length > 0 ? allAvgTurns[Math.floor(allAvgTurns.length * 0.5)] : 0,
+      p75: allAvgTurns.length > 0 ? allAvgTurns[Math.floor(allAvgTurns.length * 0.75)] : 0,
+      p90: allAvgTurns.length > 0 ? allAvgTurns[Math.floor(allAvgTurns.length * 0.90)] : 0,
+    };
+  }, [agentMetrics]);
 
   return (
     <div className={isTab ? "w-full h-full flex flex-col min-h-[400px] overflow-hidden" : "w-full h-fit self-start p-6 bg-card border-2 border-border shadow-sm rounded-xl flex flex-col overflow-hidden"}>
@@ -49,11 +68,6 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
         ) : (
           <div className="space-y-4">
             {agentMetrics.slice(0, 10).map((agent, index) => {
-              const allAvgTurns = agentMetrics.map(a => a.avgTurns).filter((t): t is number => t !== null).sort((a, b) => a - b);
-              const p50 = allAvgTurns.length > 0 ? allAvgTurns[Math.floor(allAvgTurns.length * 0.5)] : 0;
-              const p75 = allAvgTurns.length > 0 ? allAvgTurns[Math.floor(allAvgTurns.length * 0.75)] : 0;
-              const p90 = allAvgTurns.length > 0 ? allAvgTurns[Math.floor(allAvgTurns.length * 0.90)] : 0;
-              
               let turnColor = 'text-foreground';
               if (agent.avgTurns !== null) {
                 if (agent.avgTurns > p90) turnColor = 'text-destructive';
@@ -62,73 +76,74 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
               }
 
               return (
-              <div 
-                key={agent.id} 
-                onClick={() => {
-                  setModalTitle(`Conversations: ${agent.name}`);
-                  setModalData(getConversationsForAgent(agent.id));
-                  setIsModalOpen(true);
-                }}
-                className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-secondary/10 hover:bg-secondary/20 transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-xs shrink-0">
-                    {index + 1}
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="text-sm font-semibold text-foreground truncate">{agent.name}</h4>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[11px] text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <MessageSquare className="w-3 h-3" />
-                        {agent.volume} replies
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {toHours(agent.medianTimeToAdminReply)} hrs median
-                      </span>
+                <div 
+                  key={agent.id} 
+                  onClick={() => {
+                    setModalTitle(`Conversations: ${agent.name}`);
+                    setModalData(getConversationsForAgent(agent.id));
+                    setIsModalOpen(true);
+                  }}
+                  className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-secondary/10 hover:bg-secondary/20 transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-xs shrink-0">
+                      {index + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-semibold text-foreground truncate">{agent.name}</h4>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="w-3 h-3" />
+                          {agent.volume} tickets
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatTime(agent.medianTimeToAdminReply)} median
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="flex items-center gap-3 shrink-0">
-                  {agent.avgTurns !== null && (
-                    <div className="flex flex-col items-end">
-                      <span className="text-[10px] uppercase text-muted-foreground font-semibold">Turns</span>
-                      <span className={`flex items-center gap-1 font-bold text-sm ${turnColor}`}>
-                        ~{agent.avgTurns.toFixed(1)} avg
-                      </span>
-                    </div>
-                  )}
-
-                  {agent.csatAvg !== null && (
-                    <div className={`flex flex-col items-end`}>
-                      <span className="text-[10px] uppercase text-muted-foreground font-semibold">CSAT</span>
-                      <span className={`flex items-center gap-1 font-bold text-sm ${agent.csatAvg >= 4.5 ? 'text-chart-2' : agent.csatAvg >= 4.0 ? 'text-chart-4' : 'text-destructive'}`}>
-                        {agent.csatAvg.toFixed(1)} <Star className="w-3.5 h-3.5 fill-current" />
-                      </span>
-                    </div>
-                  )}
                   
-                  {agent.frictionRate > 0 && (
-                    <div className="flex flex-col items-end">
-                      <span className="text-[10px] uppercase text-muted-foreground font-semibold">Friction</span>
-                      <span className={`flex items-center gap-1 font-bold text-sm ${agent.frictionRate > 0.2 ? 'text-destructive' : 'text-chart-3'}`}>
-                        {(agent.frictionRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.frictionCount}/{agent.volume})</span> <AlertTriangle className="w-3.5 h-3.5" />
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-3 shrink-0">
+                    {agent.avgTurns !== null && (
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] uppercase text-muted-foreground font-semibold">Turns</span>
+                        <span className={`flex items-center gap-1 font-bold text-sm ${turnColor}`}>
+                          ~{agent.avgTurns.toFixed(1)} avg
+                        </span>
+                      </div>
+                    )}
 
-                  {agent.reopenRate > 0 && (
-                    <div className="flex flex-col items-end">
-                      <span className="text-[10px] uppercase text-muted-foreground font-semibold">Reopens</span>
-                      <span className={`flex items-center gap-1 font-bold text-sm ${agent.reopenRate > 0.1 ? 'text-destructive' : 'text-chart-1'}`}>
-                        {(agent.reopenRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.reopenCount}/{agent.volume})</span>
-                      </span>
-                    </div>
-                  )}
+                    {agent.csatAvg !== null && (
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] uppercase text-muted-foreground font-semibold">CSAT</span>
+                        <span className={`flex items-center gap-1 font-bold text-sm ${agent.csatAvg >= 4.5 ? 'text-chart-2' : agent.csatAvg >= 4.0 ? 'text-chart-4' : 'text-destructive'}`}>
+                          {agent.csatAvg.toFixed(1)} <Star className="w-3.5 h-3.5 fill-current" />
+                        </span>
+                      </div>
+                    )}
+                    
+                    {agent.frictionRate > 0 && (
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] uppercase text-muted-foreground font-semibold">Friction</span>
+                        <span className={`flex items-center gap-1 font-bold text-sm ${agent.frictionRate > 0.2 ? 'text-destructive' : 'text-chart-3'}`}>
+                          {(agent.frictionRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.frictionCount}/{agent.volume})</span> <AlertTriangle className="w-3.5 h-3.5" />
+                        </span>
+                      </div>
+                    )}
+
+                    {agent.reopenRate > 0 && (
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] uppercase text-muted-foreground font-semibold">Reopens</span>
+                        <span className={`flex items-center gap-1 font-bold text-sm ${agent.reopenRate > 0.1 ? 'text-destructive' : 'text-chart-1'}`}>
+                          {(agent.reopenRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.reopenCount}/{agent.volume})</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )})}
+              );
+            })}
           </div>
         )}
         </div>

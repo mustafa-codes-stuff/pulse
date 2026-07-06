@@ -3,15 +3,13 @@
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
 import { calculateResponseTimePercentiles, computeEscalationRisk, computeDatasetThresholds, hasFrustrationPattern } from '@/lib/analytics/aggregations';
-import { format, fromUnixTime } from 'date-fns';
-import { Users, Clock, ThumbsUp, RefreshCw, AlertTriangle, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { Users, Clock, ThumbsUp, RefreshCw, AlertTriangle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import ConversationModal from './ConversationModal';
 
 export default function MetricsCards({ data }: { data: PulseConversation[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [modalData, setModalData] = useState<PulseConversation[]>([]);
-
   const [modalInitialFilter, setModalInitialFilter] = useState<any>(undefined);
 
   const metrics = useMemo(() => {
@@ -19,7 +17,8 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
     let reopened = 0;
     let csatTotal = 0;
     let csatCount = 0;
-    let frictionCount = 0;
+    let repliedCount = 0;
+    const frictionConvs: PulseConversation[] = [];
 
     const thresholds = computeDatasetThresholds(data);
     
@@ -28,6 +27,9 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
       if (c.conversation_rating?.rating) {
         csatTotal += c.conversation_rating.rating;
         csatCount++;
+      }
+      if (c.statistics?.time_to_admin_reply != null && c.statistics.time_to_admin_reply > 0) {
+        repliedCount++;
       }
 
       // Calculate friction: high escalation risk OR frustration language
@@ -43,7 +45,7 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
       }
 
       if (risk > 0.5 || hasFrustration) {
-        frictionCount++;
+        frictionConvs.push(c);
       }
     }
 
@@ -67,21 +69,10 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
       csat: csatCount > 0 ? `${(csatTotal / csatCount).toFixed(1)}` : '--',
       csatSub: csatCount > 0 ? `(${csatCount})` : '',
       p50Reply: formatTime(timeToAdminReply.p50),
-      frictionRate: total > 0 ? `${((frictionCount / total) * 100).toFixed(1)}%` : '0%',
-      frictionSub: total > 0 ? `(${frictionCount}/${total})` : '',
-      frictionConvs: data.filter(c => {
-        const risk = computeEscalationRisk(c, thresholds);
-        const parts = c.conversation_parts?.conversation_parts || [];
-        let hasFrustration = false;
-        for (const part of parts) {
-          const body = (part.body || '').replace(/<[^>]*>?/gm, ' ');
-          if (hasFrustrationPattern(body).hasFrustration) {
-            hasFrustration = true;
-            break;
-          }
-        }
-        return risk > 0.5 || hasFrustration;
-      })
+      replySub: total > 0 ? `(${repliedCount} replied)` : '',
+      frictionRate: total > 0 ? `${((frictionConvs.length / total) * 100).toFixed(1)}%` : '0%',
+      frictionSub: total > 0 ? `(${frictionConvs.length}/${total})` : '',
+      frictionConvs
     };
   }, [data]);
 
@@ -106,59 +97,67 @@ export default function MetricsCards({ data }: { data: PulseConversation[] }) {
       if (rate2 > rate1 * 1.2) {
          return { icon: ArrowUpRight, color: 'text-destructive', label: `+${deltaPct}%` };
       } else if (rate2 < rate1 * 0.8) {
-         return { icon: ArrowDownRight, color: 'text-chart-2', label: `${deltaPct}%` }; // Delta is negative already
+         return { icon: ArrowDownRight, color: 'text-chart-2', label: `${deltaPct}%` };
       }
     }
     return null;
   }, [data, metrics.frictionConvs]);
 
   const cards = [
-    { title: 'Total Volume', value: metrics.volume.toLocaleString(), icon: Users, color: 'text-chart-1', tooltip: 'Total number of conversations loaded in the dataset.', sort: 'newest', filterFn: (d: PulseConversation[]) => d },
-    { title: 'Median Reply Time', value: metrics.p50Reply, icon: Clock, color: 'text-chart-2', tooltip: 'Median time from ticket creation to the first admin reply.', sort: 'time_to_admin_reply_desc', filterFn: (d: PulseConversation[]) => d.filter(c => c.statistics?.time_to_admin_reply != null && c.statistics.time_to_admin_reply > 0) },
+    { title: 'Total Volume', value: metrics.volume.toLocaleString(), subtext: '', icon: Users, color: 'text-chart-1', tooltip: 'Total number of conversations loaded in the dataset.', sort: 'newest', filterFn: (d: PulseConversation[]) => d },
+    { title: 'Median Reply Time', value: metrics.p50Reply, subtext: metrics.replySub, icon: Clock, color: 'text-chart-2', tooltip: 'Median time from ticket creation to the first admin reply.', sort: 'time_to_admin_reply_desc', filterFn: (d: PulseConversation[]) => d.filter(c => c.statistics?.time_to_admin_reply != null && c.statistics.time_to_admin_reply > 0) },
     { title: 'Reopen Rate', value: metrics.reopenRate, subtext: metrics.reopenSub, icon: RefreshCw, color: 'text-chart-3', tooltip: 'Percentage of tickets that were closed and then reopened by the customer.', sort: 'reopens_desc', filterFn: (d: PulseConversation[]) => d.filter(c => c.statistics?.count_reopens > 0) },
     { title: 'Friction Rate', value: metrics.frictionRate, subtext: metrics.frictionSub, icon: AlertTriangle, color: 'text-destructive', tooltip: 'Percentage of conversations with high escalation risk or frustration indicators.', sort: 'escalation_desc', filterFn: (d: PulseConversation[]) => metrics.frictionConvs, trend: frictionTrend },
     { title: 'Avg CSAT', value: metrics.csat, subtext: metrics.csatSub, icon: ThumbsUp, color: 'text-chart-4', tooltip: 'Average customer satisfaction score from all rated conversations.', sort: 'csat_asc', filterFn: (d: PulseConversation[]) => d.filter(c => c.conversation_rating?.rating != null) },
   ];
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         {cards.map((card) => {
           const TrendIcon = (card as any).trend?.icon;
           return (
-          <div 
-            key={card.title} 
-            className="px-4 py-3 bg-card border-2 border-border shadow-sm rounded-xl flex items-center justify-between hover:scale-[1.02] hover:shadow-md transition-all group"
-          >
-            <div>
-              <div className="flex items-center gap-2 relative">
-                <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{card.title}</p>
-                {card.tooltip && (
-                  <div className="group/tooltip relative flex items-center">
-                    <div className="w-4 h-4 rounded-full border border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-[10px] font-bold cursor-help group-hover/tooltip:text-foreground group-hover/tooltip:border-foreground/50 transition-colors">
-                      ?
+            <div 
+              key={card.title} 
+              onClick={() => {
+                setModalTitle(card.title);
+                setModalData(card.filterFn(data));
+                setModalInitialFilter({ sort: card.sort });
+                setIsModalOpen(true);
+              }}
+              className="px-4 py-3 bg-card border-2 border-border shadow-sm rounded-xl flex items-center justify-between hover:scale-[1.02] hover:shadow-md transition-all group cursor-pointer"
+            >
+              <div>
+                <div className="flex items-center gap-2 relative">
+                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{card.title}</p>
+                  {card.tooltip && (
+                    <div className="group/tooltip relative flex items-center">
+                      <div className="w-4 h-4 rounded-full border border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-[10px] font-bold cursor-help group-hover/tooltip:text-foreground group-hover/tooltip:border-foreground/50 transition-colors">
+                        ?
+                      </div>
+                      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 border-2 border-border shadow-sm shadow-md text-center">
+                        {card.tooltip}
+                      </div>
                     </div>
-                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 border-2 border-border shadow-sm shadow-md text-center">
-                      {card.tooltip}
+                  )}
+                </div>
+                <div className="flex items-baseline gap-1.5 mt-1.5 flex-wrap">
+                  <p className="text-3xl font-bold">{card.value}</p>
+                  {card.subtext && <span className="text-xs font-semibold text-muted-foreground">{card.subtext}</span>}
+                  {TrendIcon && (
+                    <div className={`flex items-center text-xs font-bold ml-1 ${(card as any).trend.color}`}>
+                      <TrendIcon className="w-4 h-4 mr-0.5" />
+                      {(card as any).trend.label}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-              <div className="flex items-baseline gap-1.5 mt-1.5 flex-wrap">
-                <p className="text-3xl font-bold">{card.value}</p>
-                {(card as any).subtext && <span className="text-sm font-semibold text-muted-foreground">{(card as any).subtext}</span>}
-                {TrendIcon && (
-                  <div className={`flex items-center text-xs font-bold ml-1 ${(card as any).trend.color}`}>
-                    <TrendIcon className="w-4 h-4 mr-0.5" />
-                    {(card as any).trend.label}
-                  </div>
-                )}
+              <div className={`p-3 bg-secondary rounded-full ${card.color}`}>
+                <card.icon className="w-6 h-6" />
               </div>
             </div>
-            <div className={`p-3 bg-secondary rounded-full ${card.color}`}>
-              <card.icon className="w-6 h-6" />
-            </div>
-          </div>
-        )})}
+          );
+        })}
       </div>
 
       <ConversationModal 
