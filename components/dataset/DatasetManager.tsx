@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { getConversations, saveConversations, clearConversations } from '@/lib/storage';
 import { PulseConversation } from '@/lib/types';
 import { X, FileJson, Trash2, Plus, Loader2 } from 'lucide-react';
@@ -137,11 +138,11 @@ export default function DatasetManager({
     }
   }, [data]);
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
       onClick={onClose}
     >
       <div 
@@ -221,6 +222,7 @@ export default function DatasetManager({
           </label>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
