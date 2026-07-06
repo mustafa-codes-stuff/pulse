@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { Users } from 'lucide-react';
 import { formatPT } from '@/lib/utils/timezone';
 
 export default function AgentCoverageHeatmap({ data, isTab = false }: { data: PulseConversation[], isTab?: boolean }) {
@@ -65,7 +64,7 @@ export default function AgentCoverageHeatmap({ data, isTab = false }: { data: Pu
   const getColor = (volume: number, max: number) => {
     if (volume === 0) return 'bg-secondary/20';
     if (max === 0) return 'bg-chart-1';
-    
+
     // 5 buckets of intensity
     const intensity = volume / max;
     if (intensity < 0.2) return 'bg-chart-1/20';
@@ -87,7 +86,7 @@ export default function AgentCoverageHeatmap({ data, isTab = false }: { data: Pu
               Hourly ticket handling volume per agent.
             </p>
           </div>
-          <select 
+          <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
             className="bg-secondary text-secondary-foreground text-sm rounded-md px-3 py-1.5 border-none outline-none cursor-pointer focus:ring-2 focus:ring-ring"
@@ -100,7 +99,7 @@ export default function AgentCoverageHeatmap({ data, isTab = false }: { data: Pu
         </div>
       ) : (
         <div className="mb-4 shrink-0 flex justify-end">
-          <select 
+          <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
             className="bg-secondary text-secondary-foreground text-sm rounded-md px-3 py-1.5 border-none outline-none cursor-pointer focus:ring-2 focus:ring-ring"
@@ -139,8 +138,8 @@ export default function AgentCoverageHeatmap({ data, isTab = false }: { data: Pu
                   </div>
                   <div className="flex-1 flex gap-0.5">
                     {agent.hours.map((volume, hour) => (
-                      <div 
-                        key={hour} 
+                      <div
+                        key={hour}
                         className={`flex-1 h-8 rounded-sm ${getColor(volume, heatmapData.maxVolume)} transition-all hover:ring-2 hover:ring-ring relative group/cell cursor-pointer`}
                       >
                         {volume > 0 && (
@@ -155,7 +154,7 @@ export default function AgentCoverageHeatmap({ data, isTab = false }: { data: Pu
               ))
             )}
           </div>
-          
+
           {/* Legend */}
           {heatmapData.maxVolume > 0 && (
             <div className="flex items-center justify-end gap-2 mt-6 text-xs text-muted-foreground">
