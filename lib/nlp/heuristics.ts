@@ -85,23 +85,6 @@ export function classifyConversation(title: string, body: string | null | undefi
   return { category: 'pre_sales_info', confidence: 'low' }; // Default category for general questions/pre-sales
 }
 
-/**
- * Check if the conversation references images or attachments.
- */
-export function hasAttachmentReferences(body: string | null | undefined): boolean {
-  if (!body) return false;
-  const lowerBody = body.toLowerCase();
-  
-  return (
-    lowerBody.includes('<img') || 
-    lowerBody.includes('attachment') || 
-    lowerBody.includes('attached') ||
-    lowerBody.includes('.png') ||
-    lowerBody.includes('.jpg') ||
-    lowerBody.includes('.jpeg') ||
-    lowerBody.includes('.pdf')
-  );
-}
 
 export function generateFallbackTitle(body: string | undefined | null): string {
   if (!body) return 'Untitled Conversation';

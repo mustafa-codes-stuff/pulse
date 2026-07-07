@@ -10,7 +10,6 @@ import MetricsCards from '@/components/dashboard/MetricsCards';
 import ConversationList from '@/components/dashboard/ConversationList';
 import AgentInsights from '@/components/dashboard/AgentInsights';
 import ServiceMetricsInsights from '@/components/dashboard/ServiceMetricsInsights';
-import FlaggedMoments from '@/components/dashboard/FlaggedMoments';
 import SupportCategoryBreakdown from '@/components/dashboard/SupportCategoryBreakdown';
 import TimelineResponseMetrics from '@/components/dashboard/TimelineResponseMetrics';
 import AttentionCallouts from '@/components/dashboard/AttentionCallouts';

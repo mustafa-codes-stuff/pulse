@@ -1,4 +1,4 @@
-import { get, set, del, clear } from 'idb-keyval';
+import { get, set, del } from 'idb-keyval';
 import { PulseConversation } from '../types';
 
 const DATASET_KEY = 'pulse_conversations';
@@ -22,11 +22,4 @@ export async function getConversations(): Promise<PulseConversation[] | undefine
  */
 export async function clearConversations(): Promise<void> {
   await del(DATASET_KEY);
-}
-
-/**
- * Completely clear the whole store (if needed).
- */
-export async function clearAll(): Promise<void> {
-  await clear();
 }

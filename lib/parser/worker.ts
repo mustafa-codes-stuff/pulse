@@ -1,4 +1,4 @@
-import { PulseConversation, IntercomConversation } from '../types';
+import { PulseConversation } from '../types';
 
 export type ParseRequest = 
   | { type: 'parse_string'; content: string; filename: string }
