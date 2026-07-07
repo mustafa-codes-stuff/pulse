@@ -5,35 +5,15 @@ import { PulseConversation } from '@/lib/types';
 import { formatPT } from '@/lib/utils/timezone';
 import { User, Bot, Shield, AlertTriangle } from 'lucide-react';
 import DOMPurify from 'dompurify';
-import { hasFrustrationPattern } from '@/lib/analytics/aggregations';
+import { hasFrustrationPattern, getVisibleParts, getFrustratedParts } from '@/lib/analytics/aggregations';
 
 export default function ConversationThread({ 
   conversation
 }: { 
   conversation: PulseConversation;
 }) {
-  // Combine initial message and subsequent parts
-  const allParts = [
-    {
-      id: 'initial_message',
-      type: 'initial',
-      body: conversation.source.body,
-      created_at: conversation.created_at,
-      author: conversation.source.author,
-    },
-    ...(conversation.conversation_parts?.conversation_parts || []).map(p => ({
-      id: p.id,
-      type: p.part_type,
-      body: p.body,
-      created_at: p.created_at,
-      author: p.author,
-    }))
-  ];
-
-  // Filter out system noise. We only want initial message, comments, and notes
-  const visibleParts = allParts
-    .filter(p => p.type === 'initial' || p.type === 'comment' || p.type === 'note')
-    .sort((a, b) => a.created_at - b.created_at);
+  const visibleParts = useMemo(() => getVisibleParts(conversation), [conversation]);
+  const flaggedPairs = useMemo(() => getFrustratedParts(conversation), [conversation]);
 
   const getAuthorIcon = (type: string) => {
     switch(type) {
@@ -45,30 +25,16 @@ export default function ConversationThread({
     }
   };
 
-  const flaggedPairs = useMemo(() => {
-    const flagged = new Set<string>();
-    for (let i = 0; i < visibleParts.length; i++) {
-      if (visibleParts[i].author?.type === 'admin') {
-        for (let j = i + 1; j < visibleParts.length; j++) {
-          if (visibleParts[j].author?.type === 'user' || visibleParts[j].author?.type === 'lead') {
-            const body = (visibleParts[j].body || '').replace(/<[^>]*>?/gm, ' ');
-            if (hasFrustrationPattern(body).hasFrustration) {
-              flagged.add(visibleParts[i].id); // admin part
-              flagged.add(visibleParts[j].id); // customer part
-            }
-            break;
-          }
-        }
-      }
-    }
-    return flagged;
-  }, [visibleParts]);
-
   const scrollRef = useRef<HTMLDivElement | null>(null);
   
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Delay the scroll slightly so the accordion DOM changes (unmounting the previous 
+      // thread and mounting the new one) have time to settle, preventing janky scrolling.
+      const timer = setTimeout(() => {
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+      return () => clearTimeout(timer);
     }
   }, [flaggedPairs]);
 
@@ -132,7 +98,7 @@ export default function ConversationThread({
                 {isFlagged && isUser && (
                    <div className="flex items-center gap-1 text-[10px] text-destructive font-bold mb-1 mr-2 px-2 py-0.5 bg-destructive/10 rounded border border-destructive/20">
                      <AlertTriangle className="w-3 h-3" />
-                     ⚠ Frustrated response detected
+                     Frustrated response detected
                    </div>
                 )}
                 <div 

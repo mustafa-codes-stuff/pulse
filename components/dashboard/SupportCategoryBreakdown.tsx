@@ -136,11 +136,29 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
             }}
             className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 ${index !== 0 ? 'border-t border-border/40' : ''} hover:bg-secondary/40 transition-colors gap-4 cursor-pointer group`}
           >
-            <div className="flex flex-col gap-1 group-hover:translate-x-1 transition-transform duration-300">
+            <div className="flex flex-col gap-1.5 group-hover:translate-x-1 transition-transform duration-300">
               <h3 className="text-sm font-bold text-foreground transition-colors">{item.title}</h3>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-foreground/80">{item.count}</span> conversations &middot; {item.signalLabel}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground/80">{item.count}</span> conversations
+                </p>
+                {(() => {
+                  const labelStr = item.signalLabel.toLowerCase();
+                  let badgeColor = 'bg-secondary text-secondary-foreground border-border/50';
+                  
+                  if (labelStr.includes('reopen') || labelStr.includes('csat')) {
+                    badgeColor = 'bg-destructive/10 text-destructive border-destructive/20';
+                  } else if (labelStr.includes('highest volume')) {
+                    badgeColor = 'bg-chart-4/10 text-chart-4 border-chart-4/20';
+                  }
+
+                  return (
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold border ${badgeColor}`}>
+                      {item.signalLabel}
+                    </span>
+                  );
+                })()}
+              </div>
             </div>
           </div>
         ))}

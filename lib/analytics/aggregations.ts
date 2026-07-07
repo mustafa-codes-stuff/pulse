@@ -217,6 +217,58 @@ export function hasFrustrationPattern(body: string): { hasFrustration: boolean, 
   return { hasFrustration: false };
 }
 
+export function getVisibleParts(conv: PulseConversation) {
+  const allParts = [
+    {
+      id: 'initial_message',
+      type: 'initial',
+      body: conv.source?.body || '',
+      created_at: conv.created_at,
+      author: conv.source?.author,
+    },
+    ...(conv.conversation_parts?.conversation_parts || []).map(p => ({
+      id: p.id,
+      type: p.part_type,
+      body: p.body,
+      created_at: p.created_at,
+      author: p.author,
+    }))
+  ];
+
+  return allParts
+    .filter(p => p.type === 'initial' || p.type === 'comment' || p.type === 'note')
+    .sort((a, b) => a.created_at - b.created_at);
+}
+
+export function getFrustratedParts(conv: PulseConversation): Set<string> {
+  const flagged = new Set<string>();
+  const visibleParts = getVisibleParts(conv);
+
+  for (let i = 0; i < visibleParts.length; i++) {
+    const p = visibleParts[i];
+    if (p.author?.type === 'user' || p.author?.type === 'lead') {
+      const body = (p.body || '').replace(/<[^>]*>?/gm, ' ');
+      if (hasFrustrationPattern(body).hasFrustration) {
+        flagged.add(p.id);
+        
+        // Also flag the immediately preceding admin message to show context
+        for (let j = i - 1; j >= 0; j--) {
+          if (visibleParts[j].author?.type === 'admin') {
+            flagged.add(visibleParts[j].id);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  return flagged;
+}
+
+export function hasConversationFrustration(conv: PulseConversation): boolean {
+  return getFrustratedParts(conv).size > 0;
+}
+
 export function computeEscalationRisk(
   conv: PulseConversation,
   thresholds: EscalationThresholds
@@ -238,23 +290,7 @@ export function computeEscalationRisk(
   if (comments > thresholds.backAndForthP90) risk += 0.2;
 
   // 4. Frustration (per conversation)
-  let hasFrustration = false;
-  for (let i = 0; i < parts.length; i++) {
-    if (parts[i].author?.type === 'admin') {
-      // Look at the immediately following customer reply
-      for (let j = i + 1; j < parts.length; j++) {
-        if (parts[j].author?.type === 'user' || parts[j].author?.type === 'lead') {
-          const body = (parts[j].body || '').replace(/<[^>]*>?/gm, ' ');
-          if (hasFrustrationPattern(body).hasFrustration) {
-            hasFrustration = true;
-          }
-          break; // Stop looking after the first response
-        }
-      }
-    }
-    if (hasFrustration) break;
-  }
-  if (hasFrustration) risk += 0.2;
+  if (hasConversationFrustration(conv)) risk += 0.2;
 
   return Math.min(risk, 1.0);
 }

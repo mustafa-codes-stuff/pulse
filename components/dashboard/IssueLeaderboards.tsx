@@ -119,7 +119,7 @@ export default function IssueLeaderboards({
                       <div className="flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 text-primary rounded border border-primary/20 text-[10px] font-bold cursor-help">
                         Friction: {item.painIndex}%
                       </div>
-                      <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 border border-border shadow-md text-center">
+                      <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 group-hover/tooltip:delay-300 pointer-events-none z-10 border border-border shadow-md text-center">
                         Percentage of tickets in this category showing customer frustration or risk.
                       </div>
                     </div>
@@ -129,7 +129,7 @@ export default function IssueLeaderboards({
                         <MessageSquare className="w-3 h-3" />
                         {item.count} {item.lowConfidenceCount > 0 && `· ${item.lowConfidenceCount} low confidence`}
                       </div>
-                      <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 border border-border shadow-md text-center">
+                      <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 group-hover/tooltip:delay-300 pointer-events-none z-10 border border-border shadow-md text-center">
                         Total tickets (and how many the tool was not highly confident in categorizing).
                       </div>
                     </div>

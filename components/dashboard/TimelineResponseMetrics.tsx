@@ -127,10 +127,10 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={hourData.data} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+              <BarChart data={hourData.data} margin={{ top: 10, right: 30, left: 15, bottom: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-                <XAxis dataKey="hourLabel" tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} interval={2} />
-                <YAxis tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} label={{ value: 'Minutes', angle: -90, position: 'insideLeft', style: { fill: 'var(--color-muted-foreground)' } }} />
+                <XAxis dataKey="hourLabel" tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} interval={2} label={{ value: 'Time of Day (PST)', position: 'insideBottom', offset: -25, style: { fill: 'var(--color-muted-foreground)', fontSize: 12, fontWeight: 500 } }} />
+                <YAxis tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} label={{ value: 'Minutes', angle: -90, position: 'insideLeft', offset: -10, style: { fill: 'var(--color-muted-foreground)', fontSize: 12, fontWeight: 500 } }} />
                 <Tooltip content={<CustomTooltipHour />} />
                 <Bar dataKey="median" radius={[4, 4, 0, 0]}>
                   {hourData.data.map((entry, index) => (
@@ -159,9 +159,9 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
               </div>
             </div>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={percentilesData} margin={{ top: 0, right: 30, left: 0, bottom: 0 }} layout="vertical">
+              <BarChart data={percentilesData} margin={{ top: 0, right: 30, left: 0, bottom: 40 }} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="var(--color-border)" />
-                <XAxis type="number" tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} />
+                <XAxis type="number" tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} label={{ value: 'Hours', position: 'insideBottom', offset: -25, style: { fill: 'var(--color-muted-foreground)', fontSize: 12, fontWeight: 500 } }} />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} width={120} />
                 <Tooltip contentStyle={{ backgroundColor: 'var(--color-popover)', borderColor: 'var(--color-border)', borderRadius: '8px' }} itemStyle={{ color: 'var(--color-popover-foreground)' }} />
                 <Bar dataKey="p50" name="Median (P50)" fill="var(--color-chart-2)" radius={[0, 4, 4, 0]} />
@@ -174,10 +174,10 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
 
         {activeTab === 'volume' && (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={volumeData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <AreaChart data={volumeData} margin={{ top: 10, right: 30, left: 15, bottom: 40 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-              <XAxis dataKey="date" tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} tickFormatter={(val) => val.substring(5)} />
-              <YAxis tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} tickFormatter={(val) => val.substring(5)} label={{ value: 'Date (MM-DD)', position: 'insideBottom', offset: -25, style: { fill: 'var(--color-muted-foreground)', fontSize: 12, fontWeight: 500 } }} />
+              <YAxis tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} label={{ value: 'Volume', angle: -90, position: 'insideLeft', offset: -10, style: { fill: 'var(--color-muted-foreground)', fontSize: 12, fontWeight: 500 } }} />
               <Tooltip contentStyle={{ backgroundColor: 'var(--color-popover)', borderColor: 'var(--color-border)', borderRadius: '8px' }} itemStyle={{ color: 'var(--color-popover-foreground)' }} />
               <Area type="monotone" dataKey="total" name="Total" stroke="var(--color-chart-1)" fill="var(--color-chart-1)" fillOpacity={0.2} />
             </AreaChart>

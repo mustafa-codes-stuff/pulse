@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { AlertCircle, Search, ChevronLeft, ChevronRight, MessageSquareWarning } from 'lucide-react';
+import { AlertCircle, Search, ChevronLeft, ChevronRight, MessageSquareWarning, AlertTriangle } from 'lucide-react';
 import ConversationThread from './ConversationThread';
 import { formatPT } from '@/lib/utils/timezone';
-import { computeDatasetThresholds, computeEscalationRisk } from '@/lib/analytics/aggregations';
+import { computeDatasetThresholds, computeEscalationRisk, hasConversationFrustration } from '@/lib/analytics/aggregations';
 
 export default function ConversationList({ 
   data, 
@@ -157,6 +157,7 @@ export default function ConversationList({
             const isExpanded = expandedConvId === conv.id;
             const risk = computeEscalationRisk(conv, thresholds);
             const riskBadge = getRiskDetails(risk);
+            const hasFrustration = hasConversationFrustration(conv);
             
             return (
               <div key={conv.id || idx} className="flex flex-col">
@@ -171,17 +172,32 @@ export default function ConversationList({
                     <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed">{displaySubject}</p>
                     
                     <div className="flex flex-wrap items-center gap-3 mt-2 min-h-[22px]">
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded border border-border">
-                        <MessageSquareWarning className="w-3 h-3" />
-                        {(conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment').length} turns
+                      <span className="relative group/turns inline-flex items-center">
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded border border-border cursor-help">
+                          <MessageSquareWarning className="w-3 h-3" />
+                          {(conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment').length} turns
+                        </span>
+                        <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/turns:opacity-100 transition-opacity duration-200 group-hover/turns:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                          The total number of back-and-forth messages (comments) in this conversation.
+                        </span>
                       </span>
-                      <span 
-                        className={`text-[10px] font-semibold flex items-center gap-1 px-2 py-0.5 rounded border ${riskBadge.color}`}
-                        title="Composite score from reopens, handling time, back-and-forth count, and detected customer frustration — capped at 100%. Not a probability."
-                      >
-                        <AlertCircle className="w-3 h-3" />
-                        {riskBadge.text} ({Math.round(risk * 100)}%)
-                      </span>
+                      {hasFrustration && (
+                        <span className="text-[10px] font-bold text-destructive flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded border border-destructive/20">
+                          <AlertTriangle className="w-3 h-3" />
+                          Frustrated Response
+                        </span>
+                      )}
+                      {!isModal && (
+                        <span className="relative group/risk inline-flex items-center">
+                          <span className={`text-[10px] font-semibold flex items-center gap-1 px-2 py-0.5 rounded border ${riskBadge.color} cursor-help`}>
+                            <AlertCircle className="w-3 h-3" />
+                            {riskBadge.text} ({Math.round(risk * 100)}%)
+                          </span>
+                          <span className="absolute bottom-full mb-2 left-0 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/risk:opacity-100 transition-opacity duration-200 group-hover/risk:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                            Composite score from reopens, handling time, back-and-forth count, and detected customer frustration.
+                          </span>
+                        </span>
+                      )}
                     </div>
                     
                     {/* Mobile only Status/Date */}

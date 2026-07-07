@@ -2,9 +2,9 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { Search, ChevronLeft, ChevronRight, Bug, Lightbulb, CheckCircle2, MessageSquareWarning } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Bug, Lightbulb, CheckCircle2, MessageSquareWarning, AlertTriangle } from 'lucide-react';
 import { classifyConversation } from '@/lib/nlp/heuristics';
-import { computeDatasetThresholds, computeEscalationRisk, CATEGORY_FRIENDLY_NAMES } from '@/lib/analytics/aggregations';
+import { computeDatasetThresholds, computeEscalationRisk, CATEGORY_FRIENDLY_NAMES, hasConversationFrustration } from '@/lib/analytics/aggregations';
 import ConversationThread from './ConversationThread';
 import { formatPT } from '@/lib/utils/timezone';
 
@@ -82,16 +82,29 @@ export default function EngineeringConversationList({
     
     const label = CATEGORY_FRIENDLY_NAMES[classification] || classification;
     const isLowConf = confidence === 'low';
-    const borderStyle = isLowConf ? 'border-dashed opacity-80' : 'border-solid';
-    const confIcon = isLowConf ? <span className="font-bold opacity-70" title="Uncertain classification">?</span> : null;
     
+    let mainBadge;
     if (bugCategories.includes(classification)) {
-      return <span className={`inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-destructive/10 text-destructive border border-destructive/20 ${borderStyle}`}>{confIcon}<Bug className="w-3 h-3" /> {label}</span>;
+      mainBadge = <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-destructive/10 text-destructive border border-destructive/20"><Bug className="w-3 h-3" /> {label}</span>;
     } else if (featureCategories.includes(classification)) {
-      return <span className={`inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-chart-2/10 text-chart-2 border border-chart-2/20 ${borderStyle}`}>{confIcon}<Lightbulb className="w-3 h-3" /> {label}</span>;
+      mainBadge = <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-chart-2/10 text-chart-2 border border-chart-2/20"><Lightbulb className="w-3 h-3" /> {label}</span>;
     } else {
-      return <span className={`inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-muted text-muted-foreground border border-border shadow-sm ${borderStyle}`}>{confIcon}<CheckCircle2 className="w-3 h-3" /> {label}</span>;
+      mainBadge = <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-muted text-muted-foreground border border-border shadow-sm"><CheckCircle2 className="w-3 h-3" /> {label}</span>;
     }
+
+    return (
+      <div className="flex flex-col items-start gap-1.5">
+        {mainBadge}
+        {isLowConf && (
+          <span className="relative group/conf inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-secondary/80 text-muted-foreground border border-border/50 cursor-help">
+            <span className="font-bold opacity-70">?</span> Low Confidence
+            <span className="absolute bottom-full mb-2 left-0 w-32 p-1.5 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/conf:opacity-100 transition-opacity pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal leading-tight normal-case tracking-normal">
+              Low confidence classification
+            </span>
+          </span>
+        )}
+      </div>
+    );
   };
 
   const renderEscalationRisk = (risk: number) => {
@@ -106,12 +119,12 @@ export default function EngineeringConversationList({
     }
     
     return (
-      <div 
-        className="group relative flex items-center"
-        title="Composite score from reopens, handling time, back-and-forth count, and detected customer frustration — capped at 100%. Not a probability."
-      >
-        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${color}`}>
+      <div className="relative group/risk inline-flex items-center">
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${color} cursor-help`}>
           {label} ({Math.round(risk * 100)}%)
+        </span>
+        <span className="absolute bottom-full mb-2 right-0 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/risk:opacity-100 transition-opacity duration-200 group-hover/risk:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+          Composite score from reopens, handling time, back-and-forth count, and detected customer frustration.
         </span>
       </div>
     );
@@ -142,7 +155,7 @@ export default function EngineeringConversationList({
               className="w-[200px] h-9 pl-9 pr-3 rounded-md border-2 border-border shadow-sm bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-shadow"
             />
           </div>
-          
+
           <div className="flex items-center gap-2 border border-border rounded-md bg-background p-1">
             <select 
               value={sortFilter}
@@ -161,28 +174,30 @@ export default function EngineeringConversationList({
       {/* Table Headers */}
       <div className="flex items-center px-6 py-3 border-b border-border bg-secondary/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         <div className="flex-1 min-w-0 pr-4">Conversation</div>
-        <div className="w-40 shrink-0 hidden sm:block">Classification</div>
-        <div 
-          className="w-24 shrink-0 hidden lg:flex items-center justify-end font-semibold text-muted-foreground select-none relative group/tooltip"
-        >
-          <div
-            className="flex items-center gap-1 hover:text-foreground cursor-pointer transition-colors"
-            onClick={() => handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc');
-              }
-            }}
-            tabIndex={0}
-            role="button"
-            aria-sort={sortFilter === 'escalation_desc' ? 'descending' : sortFilter === 'escalation_asc' ? 'ascending' : 'none'}
+        <div className="w-56 shrink-0 hidden sm:block pr-2">Classification</div>
+        {!isModal && (
+          <div 
+            className="w-24 shrink-0 hidden lg:flex items-center justify-start font-semibold text-muted-foreground select-none relative group/tooltip"
           >
-            Risk Level {sortFilter === 'escalation_desc' ? '↓' : sortFilter === 'escalation_asc' ? '↑' : ''}
+            <div
+              className="flex items-center gap-1 hover:text-foreground cursor-pointer transition-colors"
+              onClick={() => handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc');
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-sort={sortFilter === 'escalation_desc' ? 'descending' : sortFilter === 'escalation_asc' ? 'ascending' : 'none'}
+            >
+              Risk Level {sortFilter === 'escalation_desc' ? '↓' : sortFilter === 'escalation_asc' ? '↑' : ''}
+            </div>
+            <div className="absolute top-full mt-2 right-0 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 group-hover/tooltip:delay-300 pointer-events-none z-10 border border-border shadow-md text-center">
+              A computed score based on customer sentiment and urgency.
+            </div>
           </div>
-          <div className="absolute top-full mt-2 right-0 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 border border-border shadow-md text-center">
-            A computed score based on customer sentiment and urgency.
-          </div>
-        </div>
+        )}
         <div 
           className="w-32 shrink-0 hidden md:flex items-center justify-end mr-4 cursor-pointer hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary rounded px-1 -ml-1 transition-colors"
           onClick={() => handleFilterChange(setSortFilter, sortFilter === 'newest' ? 'oldest' : 'newest')}
@@ -215,6 +230,7 @@ export default function EngineeringConversationList({
             const displaySubject = cleanSubject || (rawBody.length > 80 ? rawBody.substring(0, 80) + '...' : rawBody) || 'No description provided.';
             
             const isExpanded = expandedConvId === conv.id;
+            const hasFrustration = hasConversationFrustration(conv);
 
             return (
               <div key={conv.id || idx} className="flex flex-col">
@@ -228,20 +244,33 @@ export default function EngineeringConversationList({
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed">{displaySubject}</p>
                     <div className="flex flex-wrap items-center gap-3 mt-2 min-h-[22px]">
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded border border-border">
-                        <MessageSquareWarning className="w-3 h-3" />
-                        {(conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment').length} turns
+                      <span className="relative group/turns inline-flex items-center">
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded border border-border cursor-help">
+                          <MessageSquareWarning className="w-3 h-3" />
+                          {(conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment').length} turns
+                        </span>
+                        <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/turns:opacity-100 transition-opacity duration-200 group-hover/turns:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                          The total number of back-and-forth messages (comments) in this conversation.
+                        </span>
                       </span>
+                      {hasFrustration && (
+                        <span className="text-[10px] font-bold text-destructive flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded border border-destructive/20">
+                          <AlertTriangle className="w-3 h-3" />
+                          Frustrated Response
+                        </span>
+                      )}
                     </div>
                   </div>
                   
-                  <div className="w-40 shrink-0 hidden sm:block">
+                  <div className="w-56 shrink-0 hidden sm:block pr-2">
                     {getClassificationBadge(conv.classification, conv.confidence)}
                   </div>
                   
-                  <div className="w-24 shrink-0 hidden lg:flex items-center justify-end">
-                    {renderEscalationRisk(conv.escalationRisk)}
-                  </div>
+                  {!isModal && (
+                    <div className="w-24 shrink-0 hidden lg:flex items-center justify-start">
+                      {renderEscalationRisk(conv.escalationRisk)}
+                    </div>
+                  )}
                   
                   <div className="w-32 shrink-0 hidden md:flex items-center justify-end gap-2 text-sm text-muted-foreground mr-4">
                     {formatPT(conv.created_at, "MMM d, HH:mm 'PST'")}

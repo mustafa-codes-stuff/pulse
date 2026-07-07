@@ -17,5 +17,9 @@
 ## Engineering & Product View
 
 - **Product signals needing review:** Automatically highlights anomalous volume spikes on specific dates. It achieves this by aggregating daily ticket volume and applying a Z-score based anomaly detection algorithm (`detectSpikes`) to find statistical outliers.
-- **Signal Categorization (All signals / Bugs / Feature Requests / Other):** A list categorizing conversations. It aggregates the internal NLP classifications, calculates a "Friction" percentage derived from the frustration heuristic, and tracks classification confidence scores.
+
+## Recent UI Clarifications & Enhancements
+- **Context-Aware Modal Columns:** The "Risk Level" column is now intelligently hidden when viewing conversations inside the Needs Attention modal. This prevents the "Medium Risk" label from mentally competing with the "ACTION REQUIRED" badge on the main panel.
+- **Explicit Frustration Tags:** Any conversation containing a frustrated response now proudly displays a `⚠ Frustrated Response` tag directly on the row itself. This ensures that when a user clicks the row, the auto-scroll feature feels like a helpful shortcut rather than a confusing mix-up.
+- **Delayed Tooltips:** Escalation Risk badges and Severity badges across the app now feature informative custom tooltips with a slight `delay-300` appearance, making them easier to digest without cluttering the screen during fast mouse movements.- **Signal Categorization (All signals / Bugs / Feature Requests / Other):** A list categorizing conversations. It aggregates the internal NLP classifications, calculates a "Friction" percentage derived from the frustration heuristic, and tracks classification confidence scores.
 - **Evidence Panel:** A drill-down view that opens when selecting a specific issue category. It filters the dataset based on the internal classification string, displaying the underlying conversations and their Risk Levels.

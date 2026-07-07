@@ -92,9 +92,12 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
                     <div className="min-w-0">
                       <h4 className="text-sm font-semibold text-foreground truncate">{agent.name}</h4>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[11px] text-muted-foreground">
-                        <span className="flex items-center gap-1">
+                        <span className="relative group/volume inline-flex items-center gap-1 cursor-help">
                           <MessageSquare className="w-3 h-3" />
-                          {agent.volume} tickets
+                          {agent.volume} conversations
+                          <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/volume:opacity-100 transition-opacity duration-200 group-hover/volume:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                            The total number of conversations handled by this agent.
+                          </span>
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
@@ -104,39 +107,51 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center divide-x divide-border/50 shrink-0">
                     {agent.avgTurns !== null && (
-                      <div className="flex flex-col items-end">
+                      <div className="flex flex-col items-end px-4 first:pl-0 last:pr-0 relative group/turns cursor-help">
                         <span className="text-[10px] uppercase text-muted-foreground font-semibold">Turns</span>
                         <span className={`flex items-center gap-1 font-bold text-sm ${turnColor}`}>
                           ~{agent.avgTurns.toFixed(1)} avg
+                        </span>
+                        <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/turns:opacity-100 transition-opacity duration-200 group-hover/turns:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                          Average number of back-and-forth messages per conversation.
                         </span>
                       </div>
                     )}
 
                     {agent.csatAvg !== null && (
-                      <div className="flex flex-col items-end">
+                      <div className="flex flex-col items-end px-4 first:pl-0 last:pr-0 relative group/csat cursor-help">
                         <span className="text-[10px] uppercase text-muted-foreground font-semibold">CSAT</span>
                         <span className={`flex items-center gap-1 font-bold text-sm ${agent.csatAvg >= 4.5 ? 'text-chart-2' : agent.csatAvg >= 4.0 ? 'text-chart-4' : 'text-destructive'}`}>
                           {agent.csatAvg.toFixed(1)} <Star className="w-3.5 h-3.5 fill-current" />
+                        </span>
+                        <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/csat:opacity-100 transition-opacity duration-200 group-hover/csat:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                          Average customer satisfaction score (out of 5).
                         </span>
                       </div>
                     )}
                     
                     {agent.frictionRate > 0 && (
-                      <div className="flex flex-col items-end">
+                      <div className="flex flex-col items-end px-4 first:pl-0 last:pr-0 relative group/friction cursor-help">
                         <span className="text-[10px] uppercase text-muted-foreground font-semibold">Friction</span>
                         <span className={`flex items-center gap-1 font-bold text-sm ${agent.frictionRate > 0.2 ? 'text-destructive' : 'text-chart-3'}`}>
-                          {(agent.frictionRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.frictionCount}/{agent.volume})</span> <AlertTriangle className="w-3.5 h-3.5" />
+                          {(agent.frictionRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.frictionCount}/{agent.volume})</span>
+                        </span>
+                        <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/friction:opacity-100 transition-opacity duration-200 group-hover/friction:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                          Percentage of conversations showing signs of customer frustration.
                         </span>
                       </div>
                     )}
 
                     {agent.reopenRate > 0 && (
-                      <div className="flex flex-col items-end">
+                      <div className="flex flex-col items-end px-4 first:pl-0 last:pr-0 relative group/reopens cursor-help">
                         <span className="text-[10px] uppercase text-muted-foreground font-semibold">Reopens</span>
                         <span className={`flex items-center gap-1 font-bold text-sm ${agent.reopenRate > 0.1 ? 'text-destructive' : 'text-chart-1'}`}>
                           {(agent.reopenRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.reopenCount}/{agent.volume})</span>
+                        </span>
+                        <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/reopens:opacity-100 transition-opacity duration-200 group-hover/reopens:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                          Percentage of conversations that were closed and subsequently reopened by the customer.
                         </span>
                       </div>
                     )}
