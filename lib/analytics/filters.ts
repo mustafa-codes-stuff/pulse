@@ -33,9 +33,15 @@ export function filterAnalyzableConversations(
   for (const conv of conversations) {
     const subject = (conv.source.subject || '').toLowerCase();
     
-    // Check if it's a known system notification
+    // Check if it's a known system notification or marketing email
     const isSystem = SYSTEM_SUBJECTS.some(sysSubj => subject.includes(sysSubj));
-    if (isSystem) {
+    const bodyStr = (conv.source.body || '').toLowerCase();
+    const isMarketing = bodyStr.includes('unsubscribe from this list') || 
+                        bodyStr.includes('view in browser') || 
+                        bodyStr.includes('update your preferences') ||
+                        bodyStr.includes('manage preferences');
+
+    if (isSystem || isMarketing) {
       excludedSystem.push(conv);
       continue;
     }

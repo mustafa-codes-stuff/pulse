@@ -6,6 +6,7 @@ import { computeDatasetThresholds, computeEscalationRisk, extractFrustrationPair
 import { detectSpikes } from '@/lib/analytics/anomalies';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { formatPT } from '@/lib/utils/timezone';
 import ConversationModal from './ConversationModal';
 
 export default function AttentionCallouts({ data, mode = 'support' }: { data: PulseConversation[], mode?: 'support' | 'engineering' }) {
@@ -107,7 +108,7 @@ export default function AttentionCallouts({ data, mode = 'support' }: { data: Pu
         reopenDetected.sort((a, b) => b.value - a.value);
         const anomaly = reopenDetected[0];
         const convs = data.filter(c => {
-            const dateStr = format(new Date(c.created_at * 1000), 'yyyy-MM-dd');
+            const dateStr = formatPT(c.created_at, 'yyyy-MM-dd');
             return dateStr === anomaly.date && (c.statistics?.count_reopens || 0) > 0;
         });
         activeItems.push({
@@ -135,7 +136,7 @@ export default function AttentionCallouts({ data, mode = 'support' }: { data: Pu
         // Sort by value (largest spike first)
         detected.sort((a, b) => b.value - a.value);
         detected.slice(0, 3).forEach((anomaly, index) => {
-          const convs = data.filter(c => format(new Date(c.created_at * 1000), 'yyyy-MM-dd') === anomaly.date);
+          const convs = data.filter(c => formatPT(c.created_at, 'yyyy-MM-dd') === anomaly.date);
           let desc = `${anomaly.value.toLocaleString()} conversations created.`;
           if (index === 0) {
              desc = `${anomaly.value.toLocaleString()} conversations created — the largest spike this period.`;

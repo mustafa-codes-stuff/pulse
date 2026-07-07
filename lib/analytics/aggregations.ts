@@ -318,10 +318,10 @@ export function extractFrustrationPairs(conversations: PulseConversation[]): Fru
         const { hasFrustration, matchedPattern } = hasFrustrationPattern(customerBody);
         
         if (hasFrustration) {
-          // Find the closest preceding admin reply
+          // Find the closest preceding admin reply that is an actual message to the customer
           let adminPart = null;
           for (let j = i - 1; j >= 0; j--) {
-            if (parts[j].author?.type === 'admin') {
+            if (parts[j].author?.type === 'admin' && parts[j].part_type === 'comment') {
               adminPart = parts[j];
               break;
             }
@@ -360,7 +360,15 @@ export const CATEGORY_FRIENDLY_NAMES: Record<string, string> = {
   subscription_cancel: 'Subscriptions & Cancellations',
   pre_sales_info: 'Pre-sales & Pricing Info',
   delivery_status: 'Delivery Status & ETAs',
-  system_automated: 'Automated System Spam'
+  system_automated: 'Automated System Spam',
+  general_inquiry: 'General Inquiries & Unclassified',
+  double_charge_payment: 'Double Charging & Payment Confusion',
+  access_delivered_photos: 'Accessing Delivered Photos',
+  specific_retouching: 'Specific Retouching & Edits',
+  account_deletion: 'Account Deletion & Privacy',
+  credits_quotas: 'Credits & Quotas',
+  cross_tagged_engineering: 'Also Flagged from Support',
+  cross_tagged_product_quality: 'Likeness & Quality Flags',
 };
 
 export interface CategoryPainMetrics {
@@ -409,7 +417,7 @@ function calculateCategoryMetrics(
   let lowConfidenceCount = 0;
 
   convs.forEach(c => {
-    const { confidence } = classifyConversation(c.title || '', c.source.body);
+    const { confidence } = classifyConversation(c);
     if (confidence === 'low') lowConfidenceCount++;
     
     totalEscalationRisk += computeEscalationRisk(c, thresholds);
@@ -452,35 +460,54 @@ function calculateCategoryMetrics(
 export function aggregateIssues(conversations: PulseConversation[]): { 
   bugs: CategoryPainMetrics[], 
   features: CategoryPainMetrics[], 
+  billing: CategoryPainMetrics[],
+  sales: CategoryPainMetrics[],
   other: CategoryPainMetrics[], 
-  totals: { bugs: number, features: number, other: number } 
+  totals: { bugs: number, features: number, billing: number, sales: number, other: number } 
 } {
-  const totals = { bugs: 0, features: 0, other: 0 };
+  const totals = { bugs: 0, features: 0, billing: 0, sales: 0, other: 0 };
   const thresholds = computeDatasetThresholds(conversations);
 
   // Split rendering quality category
-  const bugCategories = ['image_quality_technical', 'generation_accuracy', 'attribute_mismatch', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs'];
-  const featureCategories = ['customization_request', 'core_feature_request'];
-  const otherCategories = ['refund_request', 'subscription_cancel', 'pre_sales_info', 'delivery_status']; // Exclude system_automated from dashboard lists
+  const bugCategories = ['image_quality_technical', 'generation_accuracy', 'attribute_mismatch', 'upload_flow', 'other_bugs', 'cross_tagged_engineering'];
+  const featureCategories = ['customization_request', 'specific_retouching', 'core_feature_request'];
+  const billingCategories = ['payment_checkout', 'double_charge_payment', 'refund_request', 'subscription_cancel', 'auth_access', 'account_deletion', 'credits_quotas'];
+  const salesCategories = ['pre_sales_info', 'delivery_status', 'access_delivered_photos'];
+  const otherCategories = ['general_inquiry']; // Exclude system_automated from dashboard lists
 
   // Initialize maps
   const groups: Record<string, PulseConversation[]> = {};
-  const allCategories = [...bugCategories, ...featureCategories, ...otherCategories, 'system_automated'];
+  const allCategories = [...bugCategories, ...featureCategories, ...billingCategories, ...salesCategories, ...otherCategories, 'system_automated', 'cross_tagged_product_quality'];
   allCategories.forEach(cat => groups[cat] = []);
 
   conversations.forEach(c => {
-    const { category: classification } = classifyConversation(c.title || '', c.source.body);
+    const { category: classification, also_relevant_to } = classifyConversation(c);
+    
+    if (also_relevant_to?.includes('product_quality')) {
+      groups['cross_tagged_product_quality'].push(c);
+    }
+    
     if (groups[classification]) {
       groups[classification].push(c);
     } else {
       // Fallback in case of unexpected string
-      groups['pre_sales_info'].push(c);
+      if (groups['general_inquiry']) {
+        groups['general_inquiry'].push(c);
+      }
+    }
+
+    if (also_relevant_to?.includes('engineering')) {
+      groups['cross_tagged_engineering'].push(c);
     }
 
     if (bugCategories.includes(classification)) {
       totals.bugs++;
     } else if (featureCategories.includes(classification)) {
       totals.features++;
+    } else if (billingCategories.includes(classification)) {
+      totals.billing++;
+    } else if (salesCategories.includes(classification)) {
+      totals.sales++;
     } else if (classification !== 'system_automated') {
       totals.other++;
     }
@@ -496,6 +523,8 @@ export function aggregateIssues(conversations: PulseConversation[]): {
   return {
     bugs: sortAndFilter(bugCategories),
     features: sortAndFilter(featureCategories),
+    billing: sortAndFilter(billingCategories),
+    sales: sortAndFilter(salesCategories),
     other: sortAndFilter(otherCategories),
     totals
   };

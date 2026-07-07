@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { Search, ChevronLeft, ChevronRight, Bug, Lightbulb, CheckCircle2, MessageSquareWarning, AlertTriangle } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Bug, Lightbulb, CheckCircle2, MessageSquareWarning, AlertTriangle, HelpCircle } from 'lucide-react';
 import { classifyConversation } from '@/lib/nlp/heuristics';
 import { computeDatasetThresholds, computeEscalationRisk, CATEGORY_FRIENDLY_NAMES, hasConversationFrustration } from '@/lib/analytics/aggregations';
 import ConversationThread from './ConversationThread';
@@ -39,16 +39,18 @@ export default function EngineeringConversationList({
 
   const processedData = useMemo(() => {
     return data.map(conv => {
-      const { category: classification, confidence } = classifyConversation(conv.title || '', conv.source.body);
+      const { category: classification, confidence, also_relevant_to, cross_tag_reason } = classifyConversation(conv);
       const hasAttachments = !!conv.custom_attributes?.['Has attachments'] || (conv.source.attachments && conv.source.attachments.length > 0);
       const escalationRisk = computeEscalationRisk(conv, thresholds);
-      return { ...conv, classification, confidence, hasAttachments, escalationRisk };
+      return { ...conv, classification, confidence, also_relevant_to, cross_tag_reason, hasAttachments, escalationRisk };
     });
   }, [data, thresholds]);
 
   const filteredData = useMemo(() => {
     return processedData.filter(conv => {
-      if (activeCategory !== 'all') {
+      if (activeCategory === 'cross_tagged_engineering') {
+        if (!conv.also_relevant_to?.includes('engineering')) return false;
+      } else if (activeCategory !== 'all') {
         if (conv.classification !== activeCategory) return false;
       }
 
@@ -67,6 +69,11 @@ export default function EngineeringConversationList({
     }).sort((a, b) => {
       if (sortFilter === 'newest') return b.created_at - a.created_at;
       if (sortFilter === 'oldest') return a.created_at - b.created_at;
+      if (sortFilter === 'needs_review') {
+        if (a.confidence === 'low' && b.confidence !== 'low') return -1;
+        if (b.confidence === 'low' && a.confidence !== 'low') return 1;
+        return (b as any).escalationRisk - (a as any).escalationRisk;
+      }
       if (sortFilter === 'escalation_desc') return (b as any).escalationRisk - (a as any).escalationRisk;
       if (sortFilter === 'escalation_asc') return (a as any).escalationRisk - (b as any).escalationRisk;
       return 0;
@@ -76,7 +83,7 @@ export default function EngineeringConversationList({
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const getClassificationBadge = (classification: string, confidence?: string) => {
+  const getClassificationBadge = (classification: string, confidence?: string, cross_tag_reason?: string) => {
     const bugCategories = ['image_quality_technical', 'generation_accuracy', 'attribute_mismatch', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs'];
     const featureCategories = ['customization_request', 'core_feature_request'];
     
@@ -97,10 +104,15 @@ export default function EngineeringConversationList({
         {mainBadge}
         {isLowConf && (
           <span className="relative group/conf inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-secondary/80 text-muted-foreground border border-border/50 cursor-help">
-            <span className="font-bold opacity-70">?</span> Low Confidence
-            <span className="absolute bottom-full mb-2 left-0 w-32 p-1.5 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/conf:opacity-100 transition-opacity pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal leading-tight normal-case tracking-normal">
-              Low confidence classification
+            <HelpCircle className="w-3 h-3 text-amber-500" /> Needs Review
+            <span className="absolute bottom-full mb-2 left-0 w-56 p-1.5 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/conf:opacity-100 transition-opacity pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal leading-tight normal-case tracking-normal">
+              This ticket needs manual review — it was categorized from a single keyword match rather than multiple strong signals.
             </span>
+          </span>
+        )}
+        {cross_tag_reason && (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-chart-1/10 text-chart-1 border border-chart-1/20">
+            "{cross_tag_reason}"
           </span>
         )}
       </div>
@@ -130,9 +142,13 @@ export default function EngineeringConversationList({
     );
   };
 
-  const panelTitle = activeCategory === 'all' 
+  let panelTitle = activeCategory === 'all' 
     ? 'All Signals' 
     : CATEGORY_FRIENDLY_NAMES[activeCategory] || activeCategory;
+    
+  if (activeCategory === 'cross_tagged_engineering') {
+    panelTitle = 'Also flagged from Support';
+  }
 
   return (
     <div className={`w-full flex flex-col ${isModal ? '' : 'bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden'}`}>
@@ -166,6 +182,7 @@ export default function EngineeringConversationList({
               <option value="oldest">Oldest</option>
               <option value="escalation_desc">Highest Risk</option>
               <option value="escalation_asc">Lowest Risk</option>
+              <option value="needs_review">Needs Review</option>
             </select>
           </div>
         </div>
@@ -236,7 +253,7 @@ export default function EngineeringConversationList({
               <div key={conv.id || idx} className="flex flex-col">
                 <div 
                   onClick={() => setExpandedConvId(isExpanded ? null : conv.id)}
-                  className={`flex items-center px-6 py-4 transition-colors hover:bg-secondary/20 cursor-pointer ${isExpanded ? 'bg-secondary/10' : ''}`}
+                  className={`flex items-center px-6 py-4 transition-colors hover:bg-secondary/20 cursor-pointer ${isExpanded ? 'bg-secondary/10' : ''} ${conv.confidence === 'low' ? 'border-l-4 border-l-amber-500/50' : 'border-l-4 border-l-transparent'}`}
                 >
                   <div className="flex-1 min-w-0 pr-4 space-y-1">
                     <div className="flex items-center gap-2">
@@ -263,7 +280,7 @@ export default function EngineeringConversationList({
                   </div>
                   
                   <div className="w-56 shrink-0 hidden sm:block pr-2">
-                    {getClassificationBadge(conv.classification, conv.confidence)}
+                    {getClassificationBadge(conv.classification, conv.confidence, conv.cross_tag_reason)}
                   </div>
                   
                   {!isModal && (

@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import IssueLeaderboards from '@/components/dashboard/IssueLeaderboards';
 import EngineeringConversationList from '@/components/dashboard/EngineeringConversationList';
+import ProductQualitySummaryCard from '@/components/dashboard/ProductQualitySummaryCard';
 import AttentionCallouts from '@/components/dashboard/AttentionCallouts';
 import GlobalFilterToggle from '@/components/ui/GlobalFilterToggle';
 import { useFilterContext } from '@/lib/context/FilterContext';
@@ -67,6 +68,14 @@ export default function EngineeringPage() {
 
         <div className="lg:col-span-12">
           <IssueLeaderboards 
+            data={analyzableData} 
+            activeCategory={activeCategory}
+            onCategorySelect={handleCategorySelect}
+          />
+        </div>
+
+        <div className="lg:col-span-12">
+          <ProductQualitySummaryCard 
             data={analyzableData} 
             activeCategory={activeCategory}
             onCategorySelect={handleCategorySelect}

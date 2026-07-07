@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { Bug, Lightbulb, HelpCircle, ArrowUpRight, ArrowDownRight, Minus, MessageSquare, Layers } from 'lucide-react';
+import { Bug, Lightbulb, HelpCircle, ArrowUpRight, ArrowDownRight, Minus, MessageSquare, Layers, CreditCard, ShoppingCart, Info } from 'lucide-react';
 import { aggregateIssues, CategoryPainMetrics } from '@/lib/analytics/aggregations';
 
 export default function IssueLeaderboards({ 
@@ -14,13 +14,13 @@ export default function IssueLeaderboards({
   activeCategory: string | null, 
   onCategorySelect: (category: string | null) => void 
 }) {
-  const [activeTab, setActiveTab] = useState<'all' | 'bugs' | 'features' | 'other'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'bugs' | 'features' | 'billing' | 'sales' | 'other'>('all');
 
-  const { bugs, features, other, totals } = useMemo(() => aggregateIssues(data), [data]);
+  const { bugs, features, billing, sales, other, totals } = useMemo(() => aggregateIssues(data), [data]);
   
   const allSignals = useMemo(() => {
-    return [...bugs, ...features, ...other].sort((a, b) => b.painIndex - a.painIndex);
-  }, [bugs, features, other]);
+    return [...bugs, ...features, ...billing, ...sales, ...other].sort((a, b) => b.painIndex - a.painIndex);
+  }, [bugs, features, billing, sales, other]);
 
   const overallMidDate = useMemo(() => {
     if (data.length === 0) return 0;
@@ -42,42 +42,69 @@ export default function IssueLeaderboards({
     return { icon: Minus, color: 'text-muted-foreground', label: 'steady' };
   };
 
+  const getTabScore = (items: CategoryPainMetrics[]) => {
+    return items.reduce((acc, item) => acc + (item.count * item.painIndex), 0);
+  };
+
+  const specificTabs = [
+    { id: 'bugs', label: 'Bugs', icon: Bug, count: totals.bugs, score: getTabScore(bugs) },
+    { id: 'features', label: 'Feature Requests', icon: Lightbulb, count: totals.features, score: getTabScore(features) },
+    { id: 'billing', label: 'Account & Billing', icon: CreditCard, count: totals.billing, score: getTabScore(billing) },
+    { id: 'sales', label: 'Sales & Delivery', icon: ShoppingCart, count: totals.sales, score: getTabScore(sales) },
+  ].sort((a, b) => b.score - a.score);
+
   const tabs = [
-    { id: 'all', label: 'All signals', icon: Layers, count: totals.bugs + totals.features + totals.other },
-    { id: 'bugs', label: 'Bugs', icon: Bug, count: totals.bugs },
-    { id: 'features', label: 'Feature Requests', icon: Lightbulb, count: totals.features },
-    { id: 'other', label: 'Other', icon: HelpCircle, count: totals.other },
+    { id: 'all', label: 'All signals', icon: Layers, count: totals.bugs + totals.features + totals.billing + totals.sales + totals.other },
+    ...specificTabs,
+    { id: 'other', label: 'General', icon: HelpCircle, count: totals.other },
   ];
 
   let displayItems: CategoryPainMetrics[] = [];
   if (activeTab === 'all') displayItems = allSignals;
   else if (activeTab === 'bugs') displayItems = bugs;
   else if (activeTab === 'features') displayItems = features;
+  else if (activeTab === 'billing') displayItems = billing;
+  else if (activeTab === 'sales') displayItems = sales;
   else if (activeTab === 'other') displayItems = other;
 
   return (
     <div className="flex flex-col bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden">
       {/* Tabs Header */}
-      <div className="flex items-center overflow-x-auto border-b border-border hide-scrollbar bg-secondary/5">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
-              activeTab === tab.id 
-                ? 'border-primary text-primary bg-background' 
-                : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/20'
-            }`}
-          >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
-            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-              activeTab === tab.id ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
-            }`}>
-              {tab.count}
-            </span>
-          </button>
-        ))}
+      <div className="relative border-b border-border bg-secondary/5">
+        <div className="flex items-center overflow-x-auto hide-scrollbar pr-12">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id as any);
+                if (activeCategory) {
+                  onCategorySelect(null);
+                }
+              }}
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                activeTab === tab.id 
+                  ? 'border-primary text-primary bg-background' 
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/20'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                activeTab === tab.id ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
+              }`}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center pr-4 pl-4 bg-gradient-to-l from-secondary/5 via-secondary/5 to-transparent">
+          <div className="group/tabinfo relative flex items-center">
+            <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+            <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-64 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tabinfo:opacity-100 transition-opacity duration-200 pointer-events-none z-50 border border-border shadow-md text-center">
+              Tabs are ranked by volume × friction%, with General always shown last as an unclassified catch-all.
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Leaderboard List */}
@@ -127,10 +154,14 @@ export default function IssueLeaderboards({
                     <div className="group/tooltip relative flex items-center">
                       <div className="flex items-center gap-1 px-1.5 py-0.5 bg-secondary/50 rounded border border-border/50 text-[10px] text-muted-foreground cursor-help">
                         <MessageSquare className="w-3 h-3" />
-                        {item.count} {item.lowConfidenceCount > 0 && `· ${item.lowConfidenceCount} low confidence`}
+                        {item.lowConfidenceCount > 0 
+                          ? `${item.count} tickets (${item.lowConfidenceCount} needs review)`
+                          : `${item.count} tickets`}
                       </div>
-                      <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 group-hover/tooltip:delay-300 pointer-events-none z-10 border border-border shadow-md text-center">
-                        Total tickets (and how many the tool was not highly confident in categorizing).
+                      <div className="absolute right-full mr-2 top-0 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 group-hover/tooltip:delay-300 pointer-events-none z-50 border border-border shadow-md text-center">
+                        {item.lowConfidenceCount > 0 
+                          ? `${item.lowConfidenceCount} of ${item.count} tickets need manual review — categorized from a single keyword match rather than multiple strong signals.`
+                          : `Total tickets in this category.`}
                       </div>
                     </div>
                   </div>

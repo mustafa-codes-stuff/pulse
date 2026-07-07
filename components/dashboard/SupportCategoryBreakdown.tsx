@@ -25,19 +25,13 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
   const topCategories = useMemo(() => {
     if (data.length === 0) return [];
 
-    const supportCategories = [
-      // Make sure missing category "image_quality_technical" is covered
-      'image_quality_technical', 'generation_accuracy', 'attribute_mismatch',
-      'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs',
-      'customization_request', 'core_feature_request',
-      'refund_request', 'subscription_cancel', 'pre_sales_info', 'delivery_status'
-    ];
+    const supportCategories = Object.keys(CATEGORY_FRIENDLY_NAMES).filter(cat => cat !== 'system_automated' && cat !== 'general_inquiry' && cat !== 'cross_tagged_engineering' && cat !== 'cross_tagged_product_quality');
     const groups: Record<string, PulseConversation[]> = {};
     supportCategories.forEach(cat => groups[cat] = []);
 
     let totalOpsCount = 0;
     data.forEach(c => {
-      const { category: classification } = classifyConversation(c.title || '', c.source.body);
+      const { category: classification } = classifyConversation(c);
       if (supportCategories.includes(classification)) {
         groups[classification].push(c);
         totalOpsCount++;
