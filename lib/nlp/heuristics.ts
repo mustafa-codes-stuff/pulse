@@ -60,6 +60,33 @@ export interface ClassificationResult {
   is_dual_intent?: boolean;
 }
 
+export interface CategoryMatcher {
+  category: TicketClassification;
+  match: (text: string) => boolean;
+}
+
+export const CATEGORY_PRIORITY: CategoryMatcher[] = [
+  { category: 'system_automated', match: (t) => SPAM_SYSTEM_REGEX.test(t) },
+  { category: 'refund_request', match: (t) => REFUND_REGEX.test(t) },
+  { category: 'subscription_cancel', match: (t) => CANCEL_REGEX.test(t) },
+  { category: 'double_charge_payment', match: (t) => DOUBLE_CHARGE_REGEX.test(t) },
+  { category: 'payment_checkout', match: (t) => PAYMENT_REGEX.test(t) },
+  { category: 'auth_access', match: (t) => AUTH_REGEX.test(t) },
+  { category: 'access_delivered_photos', match: (t) => ACCESS_PHOTOS_REGEX.test(t) },
+  { category: 'upload_flow', match: (t) => UPLOAD_REGEX.test(t) },
+  { category: 'image_quality_technical', match: (t) => IMAGE_QUALITY_TECH_REGEX.test(t) || QUALITY_CONTEXT_REGEX.test(t) },
+  { category: 'generation_accuracy', match: (t) => GEN_ACCURACY_REGEX.test(t) || WEIRD_CONTEXT_REGEX.test(t) },
+  { category: 'attribute_mismatch', match: (t) => ATTR_MISMATCH_REGEX.test(t) || ATTR_CONTEXT_REGEX.test(t) },
+  { category: 'customization_request', match: (t) => CUSTOMIZE_REGEX.test(t) },
+  { category: 'specific_retouching', match: (t) => SPECIFIC_RETOUCH_REGEX.test(t) },
+  { category: 'core_feature_request', match: (t) => FEATURE_REGEX.test(t) },
+  { category: 'delivery_status', match: (t) => DELIVERY_REGEX.test(t) },
+  { category: 'pre_sales_info', match: (t) => PRESALES_REGEX.test(t) },
+  { category: 'other_bugs', match: (t) => BUG_REGEX.test(t) },
+  { category: 'account_deletion', match: (t) => PRIVACY_REGEX.test(t) },
+  { category: 'credits_quotas', match: (t) => CREDITS_REGEX.test(t) },
+];
+
 const TECH_MALFUNCTION_REGEX = /\b(crash|crashed|bug|glitch|error message|won'?t load|can'?t log in|blank screen|stuck on|failed to (load|process|charge)|freez(e|ing)|frozen|keeps closing|won'?t open|timed out)\b/i;
 
 /**
@@ -75,27 +102,11 @@ export function classifyConversation(conv: PulseConversation): ClassificationRes
 
   const matchedCategories: TicketClassification[] = [];
 
-  if (SPAM_SYSTEM_REGEX.test(text)) matchedCategories.push('system_automated');
-  if (REFUND_REGEX.test(text)) matchedCategories.push('refund_request');
-  if (CANCEL_REGEX.test(text)) matchedCategories.push('subscription_cancel');
-  if (PAYMENT_REGEX.test(text)) matchedCategories.push('payment_checkout');
-  if (DOUBLE_CHARGE_REGEX.test(text)) matchedCategories.push('double_charge_payment');
-  if (AUTH_REGEX.test(text)) matchedCategories.push('auth_access');
-  if (ACCESS_PHOTOS_REGEX.test(text)) matchedCategories.push('access_delivered_photos');
-  if (UPLOAD_REGEX.test(text)) matchedCategories.push('upload_flow');
-  
-  if (IMAGE_QUALITY_TECH_REGEX.test(text) || QUALITY_CONTEXT_REGEX.test(text)) matchedCategories.push('image_quality_technical');
-  if (GEN_ACCURACY_REGEX.test(text) || WEIRD_CONTEXT_REGEX.test(text)) matchedCategories.push('generation_accuracy');
-  if (ATTR_MISMATCH_REGEX.test(text) || ATTR_CONTEXT_REGEX.test(text)) matchedCategories.push('attribute_mismatch');
-
-  if (CUSTOMIZE_REGEX.test(text)) matchedCategories.push('customization_request');
-  if (SPECIFIC_RETOUCH_REGEX.test(text)) matchedCategories.push('specific_retouching');
-  if (FEATURE_REGEX.test(text)) matchedCategories.push('core_feature_request');
-  if (DELIVERY_REGEX.test(text)) matchedCategories.push('delivery_status');
-  if (PRESALES_REGEX.test(text)) matchedCategories.push('pre_sales_info');
-  if (BUG_REGEX.test(text)) matchedCategories.push('other_bugs');
-  if (PRIVACY_REGEX.test(text)) matchedCategories.push('account_deletion');
-  if (CREDITS_REGEX.test(text)) matchedCategories.push('credits_quotas');
+  for (const matcher of CATEGORY_PRIORITY) {
+    if (matcher.match(text)) {
+      matchedCategories.push(matcher.category);
+    }
+  }
 
   // Determine category and confidence
   let finalCategory: TicketClassification = 'general_inquiry';
@@ -119,7 +130,8 @@ export function classifyConversation(conv: PulseConversation): ClassificationRes
 
   if (finalCategory === 'refund_request' || finalCategory === 'subscription_cancel') {
     let qualityMatch = null;
-    if (SPECIFIC_RETOUCH_REGEX.test(text)) qualityMatch = text.match(SPECIFIC_RETOUCH_REGEX);
+    if (IMAGE_QUALITY_TECH_REGEX.test(text)) qualityMatch = text.match(IMAGE_QUALITY_TECH_REGEX);
+    else if (SPECIFIC_RETOUCH_REGEX.test(text)) qualityMatch = text.match(SPECIFIC_RETOUCH_REGEX);
     else if (GEN_ACCURACY_REGEX.test(text)) qualityMatch = text.match(GEN_ACCURACY_REGEX);
     else if (ATTR_MISMATCH_REGEX.test(text)) qualityMatch = text.match(ATTR_MISMATCH_REGEX);
 

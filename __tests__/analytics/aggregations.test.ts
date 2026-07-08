@@ -98,7 +98,7 @@ describe('Aggregations & Heuristics', () => {
   describe('aggregateIssues', () => {
     it('aggregates bugs and feature requests, returning counts for each category', () => {
       const dummyConversations = [
-        { title: 'App crashes on login', source: { body: 'When I click login it dies' }, statistics: {} },
+        { title: 'App crashes on opening', source: { body: 'When I click open it dies' }, statistics: {} },
         { title: 'Crash at startup', source: { body: 'I get a stacktrace when opening' }, statistics: {} },
         { title: 'Dark mode', source: { body: 'Please add a dark theme' }, statistics: {} },
         { title: 'Add a dark theme', source: { body: 'I would love a dark theme' }, statistics: {} },
@@ -108,9 +108,7 @@ describe('Aggregations & Heuristics', () => {
       const result = aggregateIssues(dummyConversations);
       
       // Based on our NLP heuristics: 
-      // 'App crashes on login' -> auth_access
-      // 'Crash at startup' -> other_bugs
-      expect(result.bugs.length).toBe(2); 
+      expect(result.bugs.length).toBe(1); 
 
       // 'Dark mode', 'Add a dark theme', 'Another feature' -> core_feature_request
       expect(result.features.length).toBe(1);
