@@ -23,7 +23,7 @@ export default function FlaggedMoments({ data, isTab = false }: { data: PulseCon
               <AlertOctagon className="w-5 h-5 text-destructive" />
               <h2 className="text-base font-semibold">Frustration history</h2>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">Unresolved customer sentiment following an agent's response.</p>
+            <p className="text-sm text-muted-foreground mt-1">Unresolved customer sentiment following an agent&apos;s response.</p>
           </div>
           <div className="text-xs font-medium bg-secondary text-secondary-foreground px-2.5 py-1 rounded-full">
             {flaggedPairs.length} flagged
@@ -58,11 +58,11 @@ export default function FlaggedMoments({ data, isTab = false }: { data: PulseCon
                     <div className="space-y-1.5 mb-4 text-xs leading-relaxed">
                       <div className="bg-background/80 rounded-md px-2.5 py-1.5 border border-border/50">
                         <span className="font-semibold text-foreground mr-1.5">{agentName}:</span>
-                        <span className="text-muted-foreground line-clamp-2">"{agentReplySnippet}"</span>
+                        <span className="text-muted-foreground line-clamp-2">&quot;{agentReplySnippet}&quot;</span>
                       </div>
                       <div className="bg-destructive/10 rounded-md px-2.5 py-1.5 border border-destructive/20">
                         <span className="font-semibold text-destructive mr-1.5">Customer:</span>
-                        <span className="text-foreground/80 line-clamp-2">"{customerReplySnippet}"</span>
+                        <span className="text-foreground/80 line-clamp-2">&quot;{customerReplySnippet}&quot;</span>
                       </div>
                     </div>
                   </div>

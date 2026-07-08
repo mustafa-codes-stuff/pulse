@@ -10,7 +10,7 @@ interface ConversationModalProps {
   title: string;
   conversations: PulseConversation[];
   type?: 'support' | 'engineering';
-  initialFilter?: any;
+  initialFilter?: { sort?: string; classification?: string };
 }
 
 export default function ConversationModal({ isOpen, onClose, title, conversations, type = 'support', initialFilter }: ConversationModalProps) {

@@ -1,5 +1,5 @@
 import { PulseConversation } from '../types';
-import { classifyConversation } from '../nlp/heuristics';
+import { classifyConversation, ClassificationResult } from '../nlp/heuristics';
 import { calculatePercentile } from './stats';
 import { formatPT } from '../utils/timezone';
 
@@ -386,7 +386,8 @@ export interface CategoryPainMetrics {
 function calculateCategoryMetrics(
   category: string, 
   convs: PulseConversation[], 
-  thresholds: EscalationThresholds
+  thresholds: EscalationThresholds,
+  classificationCache?: Map<string, ClassificationResult>
 ): CategoryPainMetrics {
   const count = convs.length;
   const emails = convs.map(c => c.source?.author?.email || c.source?.author?.name || c.id);
@@ -417,7 +418,13 @@ function calculateCategoryMetrics(
   let lowConfidenceCount = 0;
 
   convs.forEach(c => {
-    const { confidence } = classifyConversation(c);
+    let confidence = 'low';
+    if (classificationCache && c.id) {
+      confidence = classificationCache.get(c.id)?.confidence || 'low';
+    } else {
+      confidence = classifyConversation(c).confidence;
+    }
+
     if (confidence === 'low') lowConfidenceCount++;
     
     totalEscalationRisk += computeEscalationRisk(c, thresholds);
@@ -480,8 +487,14 @@ export function aggregateIssues(conversations: PulseConversation[]): {
   const allCategories = [...bugCategories, ...featureCategories, ...billingCategories, ...salesCategories, ...otherCategories, 'system_automated', 'cross_tagged_product_quality'];
   allCategories.forEach(cat => groups[cat] = []);
 
+  const classificationCache = new Map<string, ClassificationResult>();
+
   conversations.forEach(c => {
-    const { category: classification, also_relevant_to } = classifyConversation(c);
+    const classificationRes = classifyConversation(c);
+    if (c.id) {
+      classificationCache.set(c.id, classificationRes);
+    }
+    const { category: classification, also_relevant_to } = classificationRes;
     
     if (also_relevant_to?.includes('product_quality')) {
       groups['cross_tagged_product_quality'].push(c);
@@ -515,7 +528,7 @@ export function aggregateIssues(conversations: PulseConversation[]): {
 
   const sortAndFilter = (cats: string[]) => {
     return cats
-      .map(cat => calculateCategoryMetrics(cat, groups[cat] || [], thresholds))
+      .map(cat => calculateCategoryMetrics(cat, groups[cat] || [], thresholds, classificationCache))
       .filter(metrics => metrics.count > 0)
       .sort((a, b) => b.painIndex - a.painIndex);
   };

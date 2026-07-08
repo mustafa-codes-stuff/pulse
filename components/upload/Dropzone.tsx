@@ -26,10 +26,8 @@ export default function Dropzone() {
       if (files.length === 0) return;
 
       const allConversations: PulseConversation[] = [];
-      let hasError = false;
 
       for (const file of files) {
-        if (hasError) break;
         
         try {
           const content = await new Promise<string>((resolve, reject) => {
@@ -62,30 +60,31 @@ export default function Dropzone() {
           });
 
           allConversations.push(...conversations);
-        } catch (err: any) {
-          hasError = true;
-          setError(err.message || `Failed to process ${file.name}`);
+        } catch (err: unknown) {
+          console.error(err);
+          const errorMsg = err instanceof Error ? err.message : 'Unknown error occurred.';
+          setError(`Error parsing JSON in file ${file.name}: ${errorMsg}`);
           setIsParsing(false);
           return; // Stop processing further files
         }
       }
 
-      if (!hasError) {
-        try {
-          // Deduplicate by conversation ID
-          const seenIds = new Set<string>();
-          const deduplicated = allConversations.filter(c => {
-            if (seenIds.has(c.id)) return false;
-            seenIds.add(c.id);
-            return true;
-          });
-          
-          await saveConversations(deduplicated);
-          router.push('/support');
-        } catch (err) {
-          setError("Failed to save to local storage. Dataset may be too large.");
-          setIsParsing(false);
-        }
+
+      try {
+        // Deduplicate by conversation ID
+        const seenIds = new Set<string>();
+        const deduplicated = allConversations.filter(c => {
+          if (seenIds.has(c.id)) return false;
+          seenIds.add(c.id);
+          return true;
+        });
+        
+        await saveConversations(deduplicated);
+        router.push('/support');
+      } catch {
+        // Fallback for IDB failures (e.g. quota exceeded)
+        console.warn("Could not save to IndexedDB.");
+        setIsParsing(false);
       }
     }, [router]);
 
@@ -99,10 +98,6 @@ export default function Dropzone() {
       );
       
       if (validFiles.length > 0) {
-        // We need to pass a FileList or array, let's just pass the array disguised as FileList
-        // actually processFiles takes FileList, but we can change it to take File[]
-        // Wait, processFiles signature is processFiles(fileList: FileList). Let's fix that.
-        // I will pass the original DataTransfer.files and let it convert.
         processFiles(e.dataTransfer.files);
       } else {
         setError("Please upload valid JSON files.");
@@ -128,8 +123,8 @@ export default function Dropzone() {
         try {
           await saveConversations(response.data);
           router.push('/support');
-        } catch (err) {
-          setError("Failed to save sample data.");
+        } catch {
+          setError("Failed to load sample data. Please make sure sample-data.json exists.");
           setIsParsing(false);
         }
       } else {
@@ -200,7 +195,7 @@ export default function Dropzone() {
       )}
 
       <div className="flex flex-col items-center gap-4 pt-6 border-t border-border">
-        <p className="text-sm text-muted-foreground">Don't have an export handy?</p>
+        <p className="mt-2 text-sm text-muted-foreground">Don&apos;t have an export handy?</p>
         <button 
           onClick={loadSampleData}
           disabled={isParsing}

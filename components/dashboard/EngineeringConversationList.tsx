@@ -2,11 +2,21 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { Search, ChevronLeft, ChevronRight, Bug, Lightbulb, CheckCircle2, MessageSquareWarning, AlertTriangle, HelpCircle } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Bug, Lightbulb, CheckCircle2, MessageSquareWarning, AlertTriangle, HelpCircle, Split } from 'lucide-react';
 import { classifyConversation } from '@/lib/nlp/heuristics';
 import { computeDatasetThresholds, computeEscalationRisk, CATEGORY_FRIENDLY_NAMES, hasConversationFrustration } from '@/lib/analytics/aggregations';
 import ConversationThread from './ConversationThread';
 import { formatPT } from '@/lib/utils/timezone';
+
+export interface ProcessedConversation extends PulseConversation {
+  classification: string;
+  confidence: 'high' | 'low';
+  also_relevant_to?: string[];
+  cross_tag_reasons?: Record<string, string>;
+  is_dual_intent?: boolean;
+  hasAttachments: boolean;
+  escalationRisk: number;
+}
 
 export default function EngineeringConversationList({ 
   data, 
@@ -25,11 +35,12 @@ export default function EngineeringConversationList({
 
   // Reset pagination when category changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
     setExpandedConvId(null);
   }, [activeCategory]);
 
-  const handleFilterChange = (setter: any, value: any) => {
+  const handleFilterChange = (setter: React.Dispatch<React.SetStateAction<string>>, value: string) => {
     setter(value);
     setCurrentPage(1);
     setExpandedConvId(null);
@@ -37,12 +48,12 @@ export default function EngineeringConversationList({
 
   const thresholds = useMemo(() => computeDatasetThresholds(data), [data]);
 
-  const processedData = useMemo(() => {
+  const processedData = useMemo<ProcessedConversation[]>(() => {
     return data.map(conv => {
-      const { category: classification, confidence, also_relevant_to, cross_tag_reason } = classifyConversation(conv);
-      const hasAttachments = !!conv.custom_attributes?.['Has attachments'] || (conv.source.attachments && conv.source.attachments.length > 0);
+      const { category: classification, confidence, also_relevant_to, cross_tag_reasons, is_dual_intent } = classifyConversation(conv);
+      const hasAttachments = !!conv.custom_attributes?.['Has attachments'] || !!(conv.source.attachments && conv.source.attachments.length > 0);
       const escalationRisk = computeEscalationRisk(conv, thresholds);
-      return { ...conv, classification, confidence, also_relevant_to, cross_tag_reason, hasAttachments, escalationRisk };
+      return { ...conv, classification, confidence, also_relevant_to, cross_tag_reasons, is_dual_intent, hasAttachments, escalationRisk };
     });
   }, [data, thresholds]);
 
@@ -74,10 +85,10 @@ export default function EngineeringConversationList({
       if (sortFilter === 'needs_review') {
         if (a.confidence === 'low' && b.confidence !== 'low') return -1;
         if (b.confidence === 'low' && a.confidence !== 'low') return 1;
-        return (b as any).escalationRisk - (a as any).escalationRisk;
+        return b.escalationRisk - a.escalationRisk;
       }
-      if (sortFilter === 'escalation_desc') return (b as any).escalationRisk - (a as any).escalationRisk;
-      if (sortFilter === 'escalation_asc') return (a as any).escalationRisk - (b as any).escalationRisk;
+      if (sortFilter === 'escalation_desc') return b.escalationRisk - a.escalationRisk;
+      if (sortFilter === 'escalation_asc') return a.escalationRisk - b.escalationRisk;
       return 0;
     });
   }, [processedData, search, activeCategory, sortFilter]);
@@ -85,7 +96,7 @@ export default function EngineeringConversationList({
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const getClassificationBadge = (classification: string, confidence?: string, cross_tag_reason?: string) => {
+  const getClassificationBadge = (classification: string, confidence?: string, cross_tag_reasons?: Record<string, string>) => {
     const bugCategories = ['image_quality_technical', 'generation_accuracy', 'attribute_mismatch', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs'];
     const featureCategories = ['customization_request', 'core_feature_request'];
     
@@ -112,11 +123,11 @@ export default function EngineeringConversationList({
             </span>
           </span>
         )}
-        {cross_tag_reason && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-chart-1/10 text-chart-1 border border-chart-1/20">
-            "{cross_tag_reason}"
+        {cross_tag_reasons && Object.entries(cross_tag_reasons).map(([tag, reason]) => (
+          <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-chart-1/10 text-chart-1 border border-chart-1/20">
+            &quot;{reason}&quot;
           </span>
-        )}
+        ))}
       </div>
     );
   };
@@ -208,7 +219,6 @@ export default function EngineeringConversationList({
               }}
               tabIndex={0}
               role="button"
-              aria-sort={sortFilter === 'escalation_desc' ? 'descending' : sortFilter === 'escalation_asc' ? 'ascending' : 'none'}
             >
               Risk Level {sortFilter === 'escalation_desc' ? '↓' : sortFilter === 'escalation_asc' ? '↑' : ''}
             </div>
@@ -278,12 +288,23 @@ export default function EngineeringConversationList({
                           Frustrated Response
                         </span>
                       )}
+                      {conv.is_dual_intent && (
+                        <span className="relative group/dual inline-flex items-center">
+                          <span className="text-[10px] font-bold text-indigo-500 flex items-center gap-1 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 cursor-help">
+                            <Split className="w-3 h-3" />
+                            Dual Intent
+                          </span>
+                          <span className={`absolute ${idx < 2 ? 'top-full mt-2' : 'bottom-full mb-2'} left-0 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/dual:opacity-100 transition-opacity duration-200 group-hover/dual:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case`}>
+                            This conversation contains keywords matching multiple distinct categories or teams.
+                          </span>
+                        </span>
+                      )}
                     </div>
                   </div>
                   
                   <div className="w-56 shrink-0 hidden sm:block pr-2">
-                    {getClassificationBadge(conv.classification, conv.confidence, conv.cross_tag_reason)}
-                  </div>
+                {getClassificationBadge(conv.classification, conv.confidence, conv.cross_tag_reasons)}
+              </div>
                   
                   {!isModal && (
                     <div className="w-24 shrink-0 hidden lg:flex items-center justify-start">

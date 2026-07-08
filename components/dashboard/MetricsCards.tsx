@@ -11,7 +11,7 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
   const [modalTitle, setModalTitle] = useState('');
 // ... replacing just the top line and then I'll add the new block lower down. Wait, I should replace exactly what I need.
   const [modalData, setModalData] = useState<PulseConversation[]>([]);
-  const [modalInitialFilter, setModalInitialFilter] = useState<any>(undefined);
+  const [modalInitialFilter, setModalInitialFilter] = useState<{ sort?: string; classification?: string } | undefined>(undefined);
 
   const metrics = useMemo(() => {
     const total = data.length;
@@ -102,11 +102,23 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
     return null;
   }, [data, metrics.frictionConvs]);
 
-  const allCards = [
+  interface MetricCard {
+    title: string;
+    value: string | number;
+    subtext: string;
+    icon: React.ElementType;
+    color: string;
+    tooltip: string;
+    sort: string;
+    filterFn: (_d: PulseConversation[]) => PulseConversation[];
+    trend?: { icon: React.ElementType; color: string; label: string } | null;
+  }
+
+  const allCards: MetricCard[] = [
     { title: 'Total Volume', value: metrics.volume.toLocaleString(), subtext: '', icon: Users, color: 'text-chart-1', tooltip: 'Total number of conversations loaded in the dataset.', sort: 'newest', filterFn: (d: PulseConversation[]) => d },
     { title: 'Median Reply Time', value: metrics.p50Reply, subtext: metrics.replySub, icon: Clock, color: 'text-chart-2', tooltip: 'Median time from ticket creation to the first admin reply.', sort: 'time_to_admin_reply_desc', filterFn: (d: PulseConversation[]) => d.filter(c => c.statistics?.time_to_admin_reply != null && c.statistics.time_to_admin_reply > 0) },
     { title: 'Reopen Rate', value: metrics.reopenRate, subtext: metrics.reopenSub, icon: RefreshCw, color: 'text-chart-3', tooltip: 'Percentage of tickets that were closed and then reopened by the customer.', sort: 'reopens_desc', filterFn: (d: PulseConversation[]) => d.filter(c => c.statistics?.count_reopens > 0) },
-    { title: 'Friction Rate', value: metrics.frictionRate, subtext: metrics.frictionSub, icon: AlertTriangle, color: 'text-destructive', tooltip: 'Percentage of conversations with high escalation risk or frustration indicators.', sort: 'escalation_desc', filterFn: (d: PulseConversation[]) => metrics.frictionConvs, trend: frictionTrend },
+    { title: 'Friction Rate', value: metrics.frictionRate, subtext: metrics.frictionSub, icon: AlertTriangle, color: 'text-destructive', tooltip: 'Percentage of conversations with high escalation risk or frustration indicators.', sort: 'escalation_desc', filterFn: (_d: PulseConversation[]) => metrics.frictionConvs, trend: frictionTrend },
     { title: 'Avg CSAT', value: metrics.csat, subtext: metrics.csatSub, icon: ThumbsUp, color: 'text-chart-4', tooltip: 'Average customer satisfaction score from all rated conversations.', sort: 'csat_asc', filterFn: (d: PulseConversation[]) => d.filter(c => c.conversation_rating?.rating != null) },
   ];
 
@@ -121,7 +133,7 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
     return (
       <div className="flex flex-col">
         {displayedCards.map((card, idx) => {
-          const TrendIcon = (card as any).trend?.icon;
+          const TrendIcon = card.trend?.icon;
           return (
             <div 
               key={card.title} 
@@ -161,9 +173,9 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
                      <div className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-1">
                        Trend
                      </div>
-                     <div className={`flex items-center text-xs font-bold ${(card as any).trend.color}`}>
+                     <div className={`flex items-center text-xs font-bold ${card.trend?.color}`}>
                        <TrendIcon className="w-3 h-3 mr-0.5" />
-                       {(card as any).trend.label}
+                       {card.trend?.label}
                      </div>
                    </div>
                 )}
@@ -186,7 +198,7 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
     return (
       <div className="flex flex-wrap gap-4 mb-2">
         {displayedCards.map((card) => {
-          const TrendIcon = (card as any).trend?.icon;
+          const TrendIcon = card.trend?.icon;
           return (
             <div 
               key={card.title} 
@@ -206,10 +218,10 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-sm font-bold text-foreground">{card.value}</span>
                   {card.subtext && <span className="text-[10px] text-muted-foreground">{card.subtext}</span>}
-                  {TrendIcon && (
-                    <div className={`flex items-center text-[10px] font-bold ${(card as any).trend.color}`}>
-                      <TrendIcon className="w-3 h-3" />
-                      {(card as any).trend.label}
+                  {card.trend && (
+                    <div className={`flex items-center text-[10px] font-bold ${card.trend.color}`}>
+                      {TrendIcon && <TrendIcon className="w-3 h-3 mr-0.5" />}
+                      {card.trend.label}
                     </div>
                   )}
                 </div>
@@ -234,7 +246,7 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
     <div className="space-y-4">
       <div className={`grid grid-cols-1 sm:grid-cols-2 ${gridClass} gap-6`}>
         {displayedCards.map((card) => {
-          const TrendIcon = (card as any).trend?.icon;
+          const TrendIcon = card.trend?.icon;
           return (
             <div 
               key={card.title} 
@@ -263,10 +275,10 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
                 <div className="flex items-baseline gap-2 mt-2 flex-wrap">
                   <p className="text-4xl font-bold tracking-tight text-foreground">{card.value}</p>
                   {card.subtext && <span className="text-xs font-medium text-muted-foreground">{card.subtext}</span>}
-                  {TrendIcon && (
-                    <div className={`flex items-center text-xs font-bold ml-1 ${(card as any).trend.color}`}>
-                      <TrendIcon className="w-4 h-4 mr-0.5" />
-                      {(card as any).trend.label}
+                  {card.trend && (
+                    <div className={`flex items-center text-xs font-bold ${card.trend.color}`}>
+                      {TrendIcon && <TrendIcon className="w-3 h-3 mr-0.5" />}
+                      {card.trend.label}
                     </div>
                   )}
                 </div>

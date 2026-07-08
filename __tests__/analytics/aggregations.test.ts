@@ -40,7 +40,7 @@ describe('Aggregations & Heuristics', () => {
             conversation_parts: [{ author: { id: 'agent_c', type: 'admin', name: 'Agent C' } }]
           }
         }
-      ] as any as PulseConversation[];
+      ] as unknown as PulseConversation[];
 
       const results = aggregateAgentPerformance(dummyConversations);
 
@@ -69,29 +69,29 @@ describe('Aggregations & Heuristics', () => {
     it('calculates the thresholds accurately for large datasets', () => {
       const data = Array.from({ length: 100 }).map((_, i) => ({
         statistics: { handling_time: (i + 1) * 1000 } // 1000, 2000, ..., 100000
-      })) as any as PulseConversation[];
+      })) as unknown as PulseConversation[];
       
       const thresholds = computeDatasetThresholds(data);
       expect(thresholds.handlingTimeP90).toBe(90100); 
     });
 
     it('computes escalation risk based on reopens and handling time', () => {
-      const thresholds = { handlingTimeP90: 50000, backAndForthP90: 15 };
+      const thresholds = { handlingTimeP90: 10, backAndForthP90: 5, responseTimeP90: 1015 };
       
       // Below threshold
       expect(computeEscalationRisk({
         statistics: { count_reopens: 0, handling_time: 40000 }
-      } as any, thresholds) > 0.5).toBe(false);
+      } as unknown as PulseConversation, thresholds) > 0.5).toBe(false);
 
       // Flagged by reopens
       expect(computeEscalationRisk({
         statistics: { count_reopens: 2, handling_time: 40000 }
-      } as any, thresholds)).toBeGreaterThanOrEqual(0.4);
+      } as unknown as PulseConversation, thresholds)).toBeGreaterThanOrEqual(0.4);
 
       // Flagged by handling time and reopens (combined > 0.5)
       expect(computeEscalationRisk({
         statistics: { count_reopens: 2, handling_time: 60000 }
-      } as any, thresholds)).toBeGreaterThanOrEqual(0.6);
+      } as unknown as PulseConversation, thresholds)).toBeGreaterThanOrEqual(0.6);
     });
   });
 
@@ -103,7 +103,7 @@ describe('Aggregations & Heuristics', () => {
         { title: 'Dark mode', source: { body: 'Please add a dark theme' }, statistics: {} },
         { title: 'Add a dark theme', source: { body: 'I would love a dark theme' }, statistics: {} },
         { title: 'Another feature', source: { body: 'Can you add offline support' }, statistics: {} },
-      ] as any as PulseConversation[];
+      ] as unknown as PulseConversation[];
 
       const result = aggregateIssues(dummyConversations);
       

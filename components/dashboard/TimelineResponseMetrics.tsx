@@ -5,8 +5,28 @@ import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveCo
 import { PulseConversation } from '@/lib/types';
 import { calculatePercentile } from '@/lib/analytics/stats';
 import { calculateResponseTimePercentiles, aggregateDailyVolume } from '@/lib/analytics/aggregations';
-import { Clock, BarChart2, Activity } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { formatPT } from '@/lib/utils/timezone';
+
+const CustomTooltipHour = ({ active, payload }: { active?: boolean, payload?: { payload: { hourLabel: string, median: number, count: number } }[] }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-popover border-2 border-border shadow-sm p-3 rounded-lg shadow-md text-sm">
+        <p className="font-semibold text-foreground mb-1">{data.hourLabel} PST</p>
+        <p className="text-muted-foreground flex items-center justify-between gap-4">
+          <span>Median Reply:</span>
+          <span className="font-bold text-foreground">{data.median} min</span>
+        </p>
+        <p className="text-muted-foreground flex items-center justify-between gap-4">
+          <span>Sample Size:</span>
+          <span className="font-bold text-foreground">{data.count}</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function TimelineResponseMetrics({ data }: { data: PulseConversation[] }) {
   const [activeTab, setActiveTab] = useState<'hour' | 'percentiles' | 'volume'>('hour');
@@ -68,26 +88,6 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
 
   // Volume Data
   const volumeData = useMemo(() => aggregateDailyVolume(data), [data]);
-
-  const CustomTooltipHour = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-popover border-2 border-border shadow-sm p-3 rounded-lg shadow-md text-sm">
-          <p className="font-semibold text-foreground mb-1">{data.hourLabel} PST</p>
-          <p className="text-muted-foreground flex items-center justify-between gap-4">
-            <span>Median Reply:</span>
-            <span className="font-bold text-foreground">{data.median} min</span>
-          </p>
-          <p className="text-muted-foreground flex items-center justify-between gap-4">
-            <span>Sample Size:</span>
-            <span className="font-bold text-foreground">{data.count}</span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="h-full flex flex-col">

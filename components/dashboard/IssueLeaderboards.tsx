@@ -14,7 +14,8 @@ export default function IssueLeaderboards({
   activeCategory: string | null, 
   onCategorySelect: (category: string | null) => void 
 }) {
-  const [activeTab, setActiveTab] = useState<'all' | 'bugs' | 'features' | 'billing' | 'sales' | 'other'>('all');
+  type TabId = 'all' | 'bugs' | 'features' | 'billing' | 'sales' | 'other';
+  const [activeTab, setActiveTab] = useState<TabId>('all');
 
   const { bugs, features, billing, sales, other, totals } = useMemo(() => aggregateIssues(data), [data]);
   
@@ -46,14 +47,15 @@ export default function IssueLeaderboards({
     return items.reduce((acc, item) => acc + (item.count * item.painIndex), 0);
   };
 
-  const specificTabs = [
+  const rawSpecificTabs: { id: TabId; label: string; icon: React.ElementType; count: number; score: number }[] = [
     { id: 'bugs', label: 'Bugs', icon: Bug, count: totals.bugs, score: getTabScore(bugs) },
     { id: 'features', label: 'Feature Requests', icon: Lightbulb, count: totals.features, score: getTabScore(features) },
     { id: 'billing', label: 'Account & Billing', icon: CreditCard, count: totals.billing, score: getTabScore(billing) },
     { id: 'sales', label: 'Sales & Delivery', icon: ShoppingCart, count: totals.sales, score: getTabScore(sales) },
-  ].sort((a, b) => b.score - a.score);
+  ];
+  const specificTabs = rawSpecificTabs.sort((a, b) => b.score - a.score);
 
-  const tabs = [
+  const tabs: { id: TabId; label: string; icon: React.ElementType; count: number }[] = [
     { id: 'all', label: 'All signals', icon: Layers, count: totals.bugs + totals.features + totals.billing + totals.sales + totals.other },
     ...specificTabs,
     { id: 'other', label: 'General', icon: HelpCircle, count: totals.other },
@@ -76,7 +78,7 @@ export default function IssueLeaderboards({
             <button
               key={tab.id}
               onClick={() => {
-                setActiveTab(tab.id as any);
+                setActiveTab(tab.id);
                 if (activeCategory) {
                   onCategorySelect(null);
                 }

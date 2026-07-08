@@ -23,7 +23,7 @@ export default function ConversationList({
   const itemsPerPage = 10;
 
   // Reset page when filters change
-  const handleFilterChange = (setter: any, value: any) => {
+  const handleFilterChange = (setter: React.Dispatch<React.SetStateAction<string>>, value: string) => {
     setter(value);
     setCurrentPage(1);
     setExpandedConvId(null);

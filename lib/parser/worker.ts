@@ -11,7 +11,7 @@ export type ParseResponse =
 // We want this to be treated as a module worker
 self.addEventListener('message', async (e: MessageEvent<ParseRequest>) => {
   try {
-    let parsed: any;
+    let parsed: unknown;
     
     if (e.data.type === 'parse_url') {
       const res = await fetch(e.data.url);
@@ -49,11 +49,12 @@ self.addEventListener('message', async (e: MessageEvent<ParseRequest>) => {
     }
 
     self.postMessage({ type: 'success', data: conversations } as ParseResponse);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error occurred';
     self.postMessage({ 
       type: 'error', 
-      error: error.message || String(error),
-      filename: (e.data as any).filename 
+      error: errorMsg,
+      filename: (e.data as { filename?: string }).filename 
     } as ParseResponse);
   }
 });

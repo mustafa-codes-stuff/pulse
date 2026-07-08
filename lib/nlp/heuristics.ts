@@ -1,5 +1,5 @@
 import { stripHtml } from './tfidf';
-import { PulseConversation } from '../types';
+import { PulseConversation, ConversationPart } from '../types';
 
 export type TicketClassification = 
   | 'image_quality_technical'
@@ -33,7 +33,7 @@ const ACCESS_PHOTOS_REGEX = /\b(where are my photos|where are my pictures|where 
 const UPLOAD_REGEX = /\b(upload|uploading|photo upload|file size|unsupported format|image upload|upload error|reference photo)\b/i;
 
 // Split rendering quality technical, accuracy, and styling attributes
-const IMAGE_QUALITY_TECH_REGEX = /\b(blurry|fuzzy|pixelated|glitch|grainy|low.resolution|not clear)\b|\b(artifact(s|ing)?)\b/i;
+const IMAGE_QUALITY_TECH_REGEX = /\b(blurry|fuzzy|pixelated|glitch|grainy|low[- ]resolution|not clear)\b|\b(artifact(s|ing)?)\b/i;
 const GEN_ACCURACY_REGEX = /\b(wrong face|deformed|disfigured|morphed|extra (finger|limb)|doesn't look like me|didn't look like me|don't look like me|don't look like myself|not realistic|doesn't look realistic|didn't look realistic|non looked realistic|none looked realistic|don't look natural|doesn't look natural|not natural)\b/i;
 const ATTR_MISMATCH_REGEX = /\b(wrong (hair|color|eye)|hijab|headscarf|different (hair|clothes)|didn't match (my|the) (photo|reference))\b/i;
 
@@ -56,7 +56,8 @@ export interface ClassificationResult {
   category: TicketClassification;
   confidence: 'high' | 'low';
   also_relevant_to?: string[];
-  cross_tag_reason?: string;
+  cross_tag_reasons?: Record<string, string>;
+  is_dual_intent?: boolean;
 }
 
 const TECH_MALFUNCTION_REGEX = /\b(crash|crashed|bug|glitch|error message|won'?t load|can'?t log in|blank screen|stuck on|failed to (load|process|charge)|freez(e|ing)|frozen|keeps closing|won'?t open|timed out)\b/i;
@@ -67,8 +68,8 @@ const TECH_MALFUNCTION_REGEX = /\b(crash|crashed|bug|glitch|error message|won'?t
  */
 export function classifyConversation(conv: PulseConversation): ClassificationResult {
   const partsText = (conv.conversation_parts?.conversation_parts || [])
-    .filter((p: any) => p.author?.type !== 'admin' && p.body)
-    .map((p: any) => stripHtml(p.body))
+    .filter((p: ConversationPart) => p.author?.type !== 'admin' && p.body)
+    .map((p: ConversationPart) => stripHtml(p.body))
     .join(' ');
   const text = ((conv.title || '') + ' ' + stripHtml(conv.source?.body) + ' ' + partsText).toLowerCase();
 
@@ -112,7 +113,7 @@ export function classifyConversation(conv: PulseConversation): ClassificationRes
     const techMatch = text.match(TECH_MALFUNCTION_REGEX);
     if (techMatch) {
       result.also_relevant_to = ['engineering'];
-      result.cross_tag_reason = techMatch[0].toLowerCase();
+      result.cross_tag_reasons = { ...result.cross_tag_reasons, engineering: techMatch[0].toLowerCase() };
     }
   }
 
@@ -125,8 +126,12 @@ export function classifyConversation(conv: PulseConversation): ClassificationRes
     if (qualityMatch) {
       if (!result.also_relevant_to) result.also_relevant_to = [];
       result.also_relevant_to.push('product_quality');
-      result.cross_tag_reason = qualityMatch[0].toLowerCase();
+      result.cross_tag_reasons = { ...result.cross_tag_reasons, product_quality: qualityMatch[0].toLowerCase() };
     }
+  }
+
+  if (matchedCategories.length > 1 || (result.also_relevant_to && result.also_relevant_to.length > 0)) {
+    result.is_dual_intent = true;
   }
 
   return result;

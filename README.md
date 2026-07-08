@@ -11,6 +11,7 @@ Pulse is a browser-based, interactive dashboard built for deep-diving into your 
   - Analyze snoozed tickets to see how many are blocking on customer attachments vs. standard follow-ups.
 - **Engineering & Product Dashboard**:
   - **Heuristic Classification**: Automatically tags tickets as "Bug Reports," "Feature Requests," or "Other" by analyzing keywords in the title and body.
+  - **Cross-Tagged Signals**: Intelligently surfaces hidden technical malfunctions ("stuck on", "error message") and Product Quality complaints ("morphed", "doesn't look natural") that are buried inside Support/Billing tickets like refund requests.
   - **Theme Clusters**: Groups and surfaces the most common topics using the conversation's internal AI-generated titles.
   - **Deep Systemic Issues**: Flags the top most complex tickets based on back-and-forth message count.
   - **Anomaly Detection**: Highlights dates that had an unusually high spike in incoming tickets (2+ standard deviations above the mean).

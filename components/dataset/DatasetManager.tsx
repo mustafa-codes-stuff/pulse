@@ -104,9 +104,9 @@ export default function DatasetManager({
         });
 
         newConversations.push(...conversations);
-      } catch (err: any) {
+      } catch {
         hasError = true;
-        setError(err.message || `Failed to process ${file.name}`);
+        setError(`Failed to process ${file.name}`);
         setIsProcessing(false);
         return; // Stop processing further files
       }
