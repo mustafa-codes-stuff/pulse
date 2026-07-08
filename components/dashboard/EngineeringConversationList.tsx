@@ -50,6 +50,8 @@ export default function EngineeringConversationList({
     return processedData.filter(conv => {
       if (activeCategory === 'cross_tagged_engineering') {
         if (!conv.also_relevant_to?.includes('engineering')) return false;
+      } else if (activeCategory === 'cross_tagged_product_quality') {
+        if (!conv.also_relevant_to?.includes('product_quality')) return false;
       } else if (activeCategory !== 'all') {
         if (conv.classification !== activeCategory) return false;
       }

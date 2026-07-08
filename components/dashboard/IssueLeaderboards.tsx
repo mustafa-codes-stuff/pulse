@@ -108,7 +108,7 @@ export default function IssueLeaderboards({
       </div>
 
       {/* Leaderboard List */}
-      <div className="max-h-[400px] overflow-y-auto scrollbar-thin">
+      <div className={`max-h-[400px] overflow-y-auto scrollbar-thin ${displayItems.length <= 2 ? 'min-h-[140px]' : ''}`}>
         {displayItems.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground text-sm">
             No signals found for this category.
@@ -146,7 +146,7 @@ export default function IssueLeaderboards({
                       <div className="flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 text-primary rounded border border-primary/20 text-[10px] font-bold cursor-help">
                         Friction: {item.painIndex}%
                       </div>
-                      <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 group-hover/tooltip:delay-300 pointer-events-none z-10 border border-border shadow-md text-center">
+                      <div className={`absolute right-full mr-2 ${index === 0 ? 'top-0' : index === displayItems.length - 1 ? 'bottom-0' : 'top-1/2 -translate-y-1/2'} w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 group-hover/tooltip:delay-300 pointer-events-none z-10 border border-border shadow-md text-center`}>
                         Percentage of tickets in this category showing customer frustration or risk.
                       </div>
                     </div>
@@ -158,7 +158,7 @@ export default function IssueLeaderboards({
                           ? `${item.count} tickets (${item.lowConfidenceCount} needs review)`
                           : `${item.count} tickets`}
                       </div>
-                      <div className="absolute right-full mr-2 top-0 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 group-hover/tooltip:delay-300 pointer-events-none z-50 border border-border shadow-md text-center">
+                      <div className={`absolute right-full mr-2 ${index === displayItems.length - 1 && displayItems.length > 1 ? 'bottom-0' : 'top-0'} w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 group-hover/tooltip:delay-300 pointer-events-none z-50 border border-border shadow-md text-center`}>
                         {item.lowConfidenceCount > 0 
                           ? `${item.lowConfidenceCount} of ${item.count} tickets need manual review — categorized from a single keyword match rather than multiple strong signals.`
                           : `Total tickets in this category.`}

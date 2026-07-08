@@ -34,7 +34,7 @@ const UPLOAD_REGEX = /\b(upload|uploading|photo upload|file size|unsupported for
 
 // Split rendering quality technical, accuracy, and styling attributes
 const IMAGE_QUALITY_TECH_REGEX = /\b(blurry|fuzzy|pixelated|glitch|grainy|low.resolution|not clear)\b|\b(artifact(s|ing)?)\b/i;
-const GEN_ACCURACY_REGEX = /\b(wrong face|deformed|disfigured|extra (finger|limb)|doesn't look like me|didn't look like me|don't look like me|don't look like myself)\b/i;
+const GEN_ACCURACY_REGEX = /\b(wrong face|deformed|disfigured|morphed|extra (finger|limb)|doesn't look like me|didn't look like me|don't look like me|don't look like myself|not realistic|doesn't look realistic|didn't look realistic|non looked realistic|none looked realistic|don't look natural|doesn't look natural|not natural)\b/i;
 const ATTR_MISMATCH_REGEX = /\b(wrong (hair|color|eye)|hijab|headscarf|different (hair|clothes)|didn't match (my|the) (photo|reference))\b/i;
 
 // Contextual fallback checks to avoid generic false-positives
@@ -43,7 +43,7 @@ const WEIRD_CONTEXT_REGEX = /\b(weird|body|deformed|disfigured)\b[^]{0,80}?\b(ph
 const ATTR_CONTEXT_REGEX = /\b(teeth|eyes|hair|color|clothes)\b[^]{0,80}?\b(photo|image|render|picture|generation|output)s?\b|\b(photo|image|render|picture|generation|output)s?\b[^]{0,80}?\b(teeth|eyes|hair|color|clothes)\b/i;
 
 const CUSTOMIZE_REGEX = /\b(change clothing|different background|tie|suit|glasses|smile|hairstyle|backdrop|edit|retouch|unbutton|customize photo|costumize)\b/i;
-const SPECIFIC_RETOUCH_REGEX = /\b(scar(s)?|turkey neck|cleavage|eye color|skin tone|look fat|look fatter|wrinkle(s)?|neck line(s)?|blemish(es)?|fix my hair|fix my eyes|double chin|fatter|heavier|nose|rerun.*headshot|redo.*headshot|redo.*photos)\b/i;
+const SPECIFIC_RETOUCH_REGEX = /\b(scar(s)?|turkey neck|cleavage|eye color|skin tone|look fat|look fatter|wrinkle(s)?|neck line(s)?|blemish(es)?|fix my hair|fix my eyes|double chin|fatter|heavier|nose|(redo|rerun)\s+(my\s+|the\s+)?(headshots?|photos?))\b/i;
 const FEATURE_REGEX = /\b(would love|please add|not supported|feature|can you add|missing|wish|suggestion|idea|could you add|api|bulk|enterprise|6k|4k|download quality|character)\b/i;
 const PRESALES_REGEX = /\b(sample|try before|preview|coupon|discount|price|pricing|cost|package|packages|group discount|before i buy|before purchasing|trial)\b/i;
 const DELIVERY_REGEX = /\b(how long|where is|not received|pending|waiting|generating|status|ready|when will|duration|turnaround)\b/i;
