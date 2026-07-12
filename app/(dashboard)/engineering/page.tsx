@@ -6,34 +6,45 @@ import { PulseConversation } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import IssueLeaderboards from '@/components/dashboard/IssueLeaderboards';
+import EngineeringMetricsCards from '@/components/dashboard/EngineeringMetricsCards';
 import EngineeringConversationList from '@/components/dashboard/EngineeringConversationList';
-import ProductQualitySummaryCard from '@/components/dashboard/ProductQualitySummaryCard';
 import AttentionCallouts from '@/components/dashboard/AttentionCallouts';
-import GlobalFilterToggle from '@/components/ui/GlobalFilterToggle';
-import { useFilterContext } from '@/lib/context/FilterContext';
+
+
 import { filterAnalyzableConversations } from '@/lib/analytics/filters';
 
 export default function EngineeringPage() {
   const [data, setData] = useState<PulseConversation[] | null>(null);
-  const { excludeNoHuman } = useFilterContext();
+
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeListData, setActiveListData] = useState<{ data: PulseConversation[], title: string } | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<{ id: string, title?: string } | undefined>(undefined);
   const evidencePanelRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
-    getConversations().then(res => {
-      if (!res || res.length === 0) {
-        router.push('/');
-      } else {
-        setData(res);
-      }
-    });
+    const fetchData = () => {
+      getConversations().then(res => {
+        if (!res || res.length === 0) {
+          router.push('/');
+        } else {
+          setData(res);
+        }
+      });
+    };
+
+    fetchData();
+
+    window.addEventListener('pulse-dataset-updated', fetchData);
+    return () => {
+      window.removeEventListener('pulse-dataset-updated', fetchData);
+    };
   }, [router]);
 
   const analyzableData = useMemo(() => {
     if (!data) return null;
-    return filterAnalyzableConversations(data, excludeNoHuman).analyzable;
-  }, [data, excludeNoHuman]);
+    return filterAnalyzableConversations(data).analyzable;
+  }, [data]);
 
   if (!analyzableData) {
     return (
@@ -45,6 +56,8 @@ export default function EngineeringPage() {
 
   const handleCategorySelect = (category: string | null) => {
     setActiveCategory(category);
+    setActiveListData(null);
+    setSelectedFilter(undefined);
     if (category) {
       setTimeout(() => {
         evidencePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -58,12 +71,37 @@ export default function EngineeringPage() {
         <p className="text-muted-foreground mb-4">
           Actionable bug and feature leaderboards, impact analysis, and triage.
         </p>
-        <GlobalFilterToggle />
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-12">
-          <AttentionCallouts data={analyzableData} mode="engineering" />
+          <EngineeringMetricsCards 
+            data={analyzableData} 
+            onCardClick={(conversations, title, sort) => {
+              setActiveListData({ data: conversations, title });
+              setSelectedFilter({ id: sort || 'newest', title });
+              setActiveCategory('all');
+              setTimeout(() => {
+                evidencePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 50);
+            }}
+          />
+        </div>
+
+        <div className="lg:col-span-12">
+          <AttentionCallouts 
+            data={analyzableData} 
+            mode="engineering" 
+            onCardClick={(convs, title) => {
+              setActiveListData({ data: convs, title });
+              setSelectedFilter({ id: 'newest', title });
+              setActiveCategory('all');
+              setTimeout(() => {
+                evidencePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 50);
+            }} 
+          />
         </div>
 
         <div className="lg:col-span-12">
@@ -74,19 +112,17 @@ export default function EngineeringPage() {
           />
         </div>
 
-        <div className="lg:col-span-12">
-          <ProductQualitySummaryCard 
-            data={analyzableData} 
-            activeCategory={activeCategory}
-            onCategorySelect={handleCategorySelect}
-          />
-        </div>
-
-        {activeCategory && (
+        {(activeCategory || activeListData || selectedFilter) && (
           <div className="lg:col-span-12 scroll-mt-6" ref={evidencePanelRef}>
             <EngineeringConversationList 
-              data={analyzableData} 
-              activeCategory={activeCategory} 
+              data={activeListData ? activeListData.data : analyzableData} 
+              activeCategory={activeListData ? 'all' : (activeCategory || 'all')} 
+              initialFilter={selectedFilter ? { sort: selectedFilter.id } : undefined}
+              filterTitle={activeListData ? activeListData.title : selectedFilter?.title}
+              onClearFilter={() => {
+                setActiveListData(null);
+                setSelectedFilter(undefined);
+              }}
             />
           </div>
         )}

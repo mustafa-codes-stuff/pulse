@@ -4,9 +4,10 @@ import { useState, useMemo } from 'react';
 import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { PulseConversation } from '@/lib/types';
 import { calculatePercentile } from '@/lib/analytics/stats';
-import { calculateResponseTimePercentiles, aggregateDailyVolume } from '@/lib/analytics/aggregations';
+import { aggregateDailyVolume } from '@/lib/analytics/aggregations';
 import { Clock } from 'lucide-react';
 import { formatPT } from '@/lib/utils/timezone';
+import { Tooltip as RadixTooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
 
 const CustomTooltipHour = ({ active, payload }: { active?: boolean, payload?: { payload: { hourLabel: string, median: number, count: number } }[] }) => {
   if (active && payload && payload.length) {
@@ -29,7 +30,7 @@ const CustomTooltipHour = ({ active, payload }: { active?: boolean, payload?: { 
 };
 
 export default function TimelineResponseMetrics({ data }: { data: PulseConversation[] }) {
-  const [activeTab, setActiveTab] = useState<'hour' | 'percentiles' | 'volume'>('hour');
+  const [activeTab, setActiveTab] = useState<'hour' | 'volume'>('hour');
 
   // Hour Data
   const hourData = useMemo(() => {
@@ -65,26 +66,7 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
     return { data: result, dailyMedian };
   }, [data]);
 
-  // Percentiles Data
-  const percentilesData = useMemo(() => {
-    const { timeToAdminReply, timeToFirstClose } = calculateResponseTimePercentiles(data);
-    const toHours = (secs: number | null) => secs ? Number((secs / 3600).toFixed(2)) : 0;
-    
-    return [
-      {
-        name: 'Reply Time (hrs)',
-        p50: toHours(timeToAdminReply.p50),
-        p90: toHours(timeToAdminReply.p90),
-        p99: toHours(timeToAdminReply.p99),
-      },
-      {
-        name: 'Resolution Time (hrs)',
-        p50: toHours(timeToFirstClose.p50),
-        p90: toHours(timeToFirstClose.p90),
-        p99: toHours(timeToFirstClose.p99),
-      }
-    ];
-  }, [data]);
+
 
   // Volume Data
   const volumeData = useMemo(() => aggregateDailyVolume(data), [data]);
@@ -95,6 +77,16 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
         <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Clock className="w-5 h-5 text-chart-2" />
           Response times
+          <RadixTooltip>
+            <TooltipTrigger asChild>
+              <div className="w-4 h-4 rounded-full border border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-[10px] font-bold cursor-help hover:text-foreground hover:border-foreground/50 transition-colors ml-1">
+                ?
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              Tracks the median time to first agent reply and total ticket volume. Red bars indicate response times double the daily average.
+            </TooltipContent>
+          </RadixTooltip>
         </h2>
       </div>
       
@@ -106,12 +98,7 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
           >
             By Hour
           </button>
-          <button 
-            onClick={() => setActiveTab('percentiles')}
-            className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'percentiles' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
-          >
-            Percentiles
-          </button>
+
           <button 
             onClick={() => setActiveTab('volume')}
             className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'volume' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
@@ -142,35 +129,7 @@ export default function TimelineResponseMetrics({ data }: { data: PulseConversat
           )
         )}
 
-        {activeTab === 'percentiles' && (
-          <div className="h-full flex flex-col">
-            <div className="flex flex-wrap items-center gap-3 text-xs font-medium mb-4">
-              <div className="flex items-center gap-1.5 text-chart-2">
-                <div className="w-2.5 h-2.5 rounded-sm bg-chart-2" />
-                <span>Median (P50)</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-chart-4">
-                <div className="w-2.5 h-2.5 rounded-sm bg-chart-4" />
-                <span>P90</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-chart-1">
-                <div className="w-2.5 h-2.5 rounded-sm bg-chart-1" />
-                <span>P99 (Long-tail)</span>
-              </div>
-            </div>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={percentilesData} margin={{ top: 0, right: 30, left: 0, bottom: 40 }} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="var(--color-border)" />
-                <XAxis type="number" tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} label={{ value: 'Hours', position: 'insideBottom', offset: -25, style: { fill: 'var(--color-muted-foreground)', fontSize: 12, fontWeight: 500 } }} />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }} axisLine={false} tickLine={false} width={120} />
-                <Tooltip contentStyle={{ backgroundColor: 'var(--color-popover)', borderColor: 'var(--color-border)', borderRadius: '8px' }} itemStyle={{ color: 'var(--color-popover-foreground)' }} />
-                <Bar dataKey="p50" name="Median (P50)" fill="var(--color-chart-2)" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="p90" name="P90" fill="var(--color-chart-4)" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="p99" name="P99 (Long-tail)" fill="var(--color-chart-1)" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+
 
         {activeTab === 'volume' && (
           <ResponsiveContainer width="100%" height="100%">

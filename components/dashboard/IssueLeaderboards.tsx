@@ -1,73 +1,37 @@
 "use client";
-
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { Bug, Lightbulb, HelpCircle, ArrowUpRight, ArrowDownRight, Minus, MessageSquare, Layers, CreditCard, ShoppingCart, Info } from 'lucide-react';
-import { aggregateIssues, CategoryPainMetrics } from '@/lib/analytics/aggregations';
+import { Bug, Lightbulb, HelpCircle, MessageSquare, Layers, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
+import { aggregateIssues, CATEGORY_DESCRIPTIONS } from '@/lib/analytics/aggregations';
 
 export default function IssueLeaderboards({ 
   data, 
-  activeCategory, 
+  activeCategory = 'all', 
   onCategorySelect 
 }: { 
   data: PulseConversation[], 
-  activeCategory: string | null, 
-  onCategorySelect: (category: string | null) => void 
+  activeCategory?: string | null, 
+  onCategorySelect?: (category: string | null) => void 
 }) {
-  type TabId = 'all' | 'bugs' | 'features' | 'billing' | 'sales' | 'other';
-  const [activeTab, setActiveTab] = useState<TabId>('all');
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const issues = useMemo(() => aggregateIssues(data), [data]);
 
-  const { bugs, features, billing, sales, other, totals } = useMemo(() => aggregateIssues(data), [data]);
-  
-  const allSignals = useMemo(() => {
-    return [...bugs, ...features, ...billing, ...sales, ...other].sort((a, b) => b.painIndex - a.painIndex);
-  }, [bugs, features, billing, sales, other]);
-
-  const overallMidDate = useMemo(() => {
-    if (data.length === 0) return 0;
-    const dates = data.map(c => c.created_at).sort((a, b) => a - b);
-    return dates[Math.floor(dates.length / 2)];
-  }, [data]);
-
-  const getTrend = (conversations: PulseConversation[]) => {
-    if (conversations.length < 2 || overallMidDate === 0) return { icon: Minus, color: 'text-muted-foreground', label: 'steady' };
-    
-    const firstHalfCount = conversations.filter(c => c.created_at < overallMidDate).length;
-    const secondHalfCount = conversations.filter(c => c.created_at >= overallMidDate).length;
-    
-    if (secondHalfCount > firstHalfCount * 1.5 && secondHalfCount > 2) {
-      return { icon: ArrowUpRight, color: 'text-destructive', label: 'rising' };
-    } else if (secondHalfCount < firstHalfCount * 0.5 && firstHalfCount > 2) {
-      return { icon: ArrowDownRight, color: 'text-chart-2', label: 'declining' };
-    }
-    return { icon: Minus, color: 'text-muted-foreground', label: 'steady' };
-  };
-
-  const getTabScore = (items: CategoryPainMetrics[]) => {
-    return items.reduce((acc, item) => acc + (item.count * item.painIndex), 0);
-  };
-
-  const rawSpecificTabs: { id: TabId; label: string; icon: React.ElementType; count: number; score: number }[] = [
-    { id: 'bugs', label: 'Bugs', icon: Bug, count: totals.bugs, score: getTabScore(bugs) },
-    { id: 'features', label: 'Feature Requests', icon: Lightbulb, count: totals.features, score: getTabScore(features) },
-    { id: 'billing', label: 'Account & Billing', icon: CreditCard, count: totals.billing, score: getTabScore(billing) },
-    { id: 'sales', label: 'Sales & Delivery', icon: ShoppingCart, count: totals.sales, score: getTabScore(sales) },
-  ];
-  const specificTabs = rawSpecificTabs.sort((a, b) => b.score - a.score);
-
-  const tabs: { id: TabId; label: string; icon: React.ElementType; count: number }[] = [
-    { id: 'all', label: 'All signals', icon: Layers, count: totals.bugs + totals.features + totals.billing + totals.sales + totals.other },
-    ...specificTabs,
-    { id: 'other', label: 'General', icon: HelpCircle, count: totals.other },
+  const tabs = [
+    { id: 'all', label: 'All Issues', count: data.length, icon: Layers },
+    { id: 'bugs', label: 'Bugs', count: issues.totals.bugs, icon: Bug },
+    { id: 'features', label: 'Feature Requests', count: issues.totals.features, icon: Lightbulb },
+    { id: 'billing', label: 'Finance & Billing', count: issues.totals.billing, icon: MessageSquare },
+    { id: 'other', label: 'Other', count: issues.totals.other, icon: HelpCircle }
   ];
 
-  let displayItems: CategoryPainMetrics[] = [];
-  if (activeTab === 'all') displayItems = allSignals;
-  else if (activeTab === 'bugs') displayItems = bugs;
-  else if (activeTab === 'features') displayItems = features;
-  else if (activeTab === 'billing') displayItems = billing;
-  else if (activeTab === 'sales') displayItems = sales;
-  else if (activeTab === 'other') displayItems = other;
+  const activeTabData = useMemo(() => {
+    if (activeTab === 'bugs') return issues.bugs;
+    if (activeTab === 'features') return issues.features;
+    if (activeTab === 'billing') return issues.billing;
+    if (activeTab === 'other') return issues.other;
+    return [...issues.bugs, ...issues.features, ...issues.billing, ...issues.other].sort((a, b) => b.painIndex - a.painIndex);
+  }, [activeTab, issues]);
 
   return (
     <div className="flex flex-col bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden">
@@ -77,12 +41,7 @@ export default function IssueLeaderboards({
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                if (activeCategory) {
-                  onCategorySelect(null);
-                }
-              }}
+              onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
                 activeTab === tab.id 
                   ? 'border-primary text-primary bg-background' 
@@ -100,77 +59,76 @@ export default function IssueLeaderboards({
           ))}
         </div>
         <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center pr-4 pl-4 bg-gradient-to-l from-secondary/5 via-secondary/5 to-transparent">
-          <div className="group/tabinfo relative flex items-center">
-            <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
-            <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-64 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tabinfo:opacity-100 transition-opacity duration-200 pointer-events-none z-50 border border-border shadow-md text-center">
-              Tabs are ranked by volume × friction%, with General always shown last as an unclassified catch-all.
-            </div>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="w-4 h-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+            </TooltipTrigger>
+            <TooltipContent>
+              Tabs are generated from aggregate issue categories.
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
       {/* Leaderboard List */}
-      <div className={`max-h-[400px] overflow-y-auto scrollbar-thin ${displayItems.length <= 2 ? 'min-h-[140px]' : ''}`}>
-        {displayItems.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground text-sm">
-            No signals found for this category.
+      <div className="max-h-[400px] overflow-y-auto scrollbar-thin">
+        {activeTabData.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">
+            No issues found for this category.
           </div>
         ) : (
-          displayItems.map((item, index) => {
-            const trend = getTrend(item.conversations);
-            const isActive = activeCategory === item.category;
-            
-            return (
-              <div
+          <div className="divide-y divide-border/50">
+            {activeTabData.map((item, idx) => (
+              <div 
                 key={item.category}
-                onClick={() => onCategorySelect(isActive ? null : item.category)}
-                className={`flex items-center justify-between p-4 border-b border-border/50 cursor-pointer transition-colors group ${
-                  isActive ? 'bg-primary/5 border-l-4 border-l-primary' : 'hover:bg-secondary/20 border-l-4 border-l-transparent'
+                onClick={() => onCategorySelect?.(activeCategory === item.category ? null : item.category)}
+                className={`flex items-center justify-between p-4 hover:bg-secondary/20 transition-colors cursor-pointer group border-l-4 ${
+                  activeCategory === item.category ? 'bg-primary/5 border-l-primary' : 'border-transparent'
                 }`}
               >
-                <div className="flex items-center gap-3 min-w-0 pr-4">
-                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                    isActive ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary transition-colors'
-                  }`}>
-                    {index + 1}
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="w-6 text-center text-sm font-semibold text-muted-foreground group-hover:text-foreground">
+                    {idx + 1}
                   </div>
-                  <p className={`text-sm font-medium truncate transition-colors ${isActive ? 'text-primary' : 'text-foreground group-hover:text-primary'}`}>
-                    {item.title}
-                  </p>
+                  <div className="flex-1 flex items-center gap-2">
+                    <p className="font-medium text-sm group-hover:text-primary transition-colors">{item.title}</p>
+                    {CATEGORY_DESCRIPTIONS[item.category] && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="w-4 h-4 rounded-full border border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-[10px] font-bold cursor-help hover:text-foreground hover:border-foreground/50 transition-colors">
+                            ?
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {CATEGORY_DESCRIPTIONS[item.category]}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
                 </div>
-                
-                <div className="flex items-center gap-2.5 shrink-0">
-                  <div className={`flex items-center justify-center ${trend.color}`} title={`Trend: ${trend.label}`}>
-                    <trend.icon className="w-4 h-4" />
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="group/tooltip relative flex items-center">
-                      <div className="flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 text-primary rounded border border-primary/20 text-[10px] font-bold cursor-help">
-                        Friction: {item.painIndex}%
-                      </div>
-                      <div className={`absolute right-full mr-2 ${index === 0 ? 'top-0' : index === displayItems.length - 1 ? 'bottom-0' : 'top-1/2 -translate-y-1/2'} w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 group-hover/tooltip:delay-300 pointer-events-none z-10 border border-border shadow-md text-center`}>
-                        Percentage of tickets in this category showing customer frustration or risk.
-                      </div>
-                    </div>
-                    
-                    <div className="group/tooltip relative flex items-center">
-                      <div className="flex items-center gap-1 px-1.5 py-0.5 bg-secondary/50 rounded border border-border/50 text-[10px] text-muted-foreground cursor-help">
-                        <MessageSquare className="w-3 h-3" />
-                        {item.lowConfidenceCount > 0 
-                          ? `${item.count} tickets (${item.lowConfidenceCount} needs review)`
-                          : `${item.count} tickets`}
-                      </div>
-                      <div className={`absolute right-full mr-2 ${index === displayItems.length - 1 && displayItems.length > 1 ? 'bottom-0' : 'top-0'} w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 group-hover/tooltip:delay-300 pointer-events-none z-50 border border-border shadow-md text-center`}>
-                        {item.lowConfidenceCount > 0 
-                          ? `${item.lowConfidenceCount} of ${item.count} tickets need manual review — categorized from a single keyword match rather than multiple strong signals.`
-                          : `Total tickets in this category.`}
-                      </div>
-                    </div>
+                <div className="flex items-center gap-6">
+                  {item.painIndex > 0 && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1.5 min-w-[100px] justify-end">
+                          <span className="text-[10px] font-semibold bg-destructive/10 text-destructive border border-destructive/20 px-2 py-0.5 rounded">
+                            Churn Risk: {(item.painIndex / 10).toFixed(1)}/10
+                          </span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Based on volume, reopens, and customer sentiment
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  <div className="flex items-center gap-1.5 text-muted-foreground w-24 justify-end">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span className="text-xs font-medium">{item.count} tickets</span>
                   </div>
                 </div>
               </div>
-            );
-          })
+            ))}
+          </div>
         )}
       </div>
     </div>

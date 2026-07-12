@@ -19,20 +19,16 @@ export default function Home() {
         <div className="max-w-3xl w-full space-y-8">
           <div className="text-center space-y-4 mb-12">
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
-              Support Conversation Intelligence
+              Intercom Snapshot Analyzer
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              Analyze Intercom exports instantly. Discover operational bottlenecks, emerging product bugs, and customer sentiment—all in your browser.
+              Upload and combine daily Intercom conversation snapshots to analyze support trends, categorize issues, and extract actionable insights for Support Ops and Engineering.
             </p>
           </div>
           
           <Dropzone />
         </div>
       </main>
-      
-      <footer className="w-full py-6 text-center text-sm text-muted-foreground border-t border-border mt-auto">
-        No data leaves your browser. Safe to use with real support data.
-      </footer>
     </div>
   );
 }

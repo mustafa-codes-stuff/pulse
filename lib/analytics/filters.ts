@@ -17,8 +17,7 @@ export function isBotOnlyConversation(conv: PulseConversation): boolean {
 }
 
 export function filterAnalyzableConversations(
-  conversations: PulseConversation[],
-  excludeNoHumanParts?: boolean
+  conversations: PulseConversation[]
 ): {
   analyzable: PulseConversation[];
   excludedSystem: PulseConversation[];
@@ -62,7 +61,8 @@ export function filterAnalyzableConversations(
       excludedBotOnly.push(conv);
     }
 
-    if (excludeNoHumanParts && (isNoReply || isBotOnly)) {
+    // Only include AI-reviewed data per user request
+    if (!conv.llm_classification) {
       continue;
     }
 

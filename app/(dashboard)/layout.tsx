@@ -1,5 +1,5 @@
 import Header from '@/components/layout/Header';
-import { FilterProvider } from '@/lib/context/FilterContext';
+
 
 export default function DashboardLayout({
   children,
@@ -7,13 +7,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <FilterProvider>
-      <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto relative">
-          {children}
-        </main>
-      </div>
-    </FilterProvider>
+    <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
+      <Header />
+      <main className="flex-1 overflow-y-auto relative">
+        {children}
+      </main>
+    </div>
   );
 }

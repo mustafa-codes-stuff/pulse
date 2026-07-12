@@ -4,14 +4,21 @@ import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
 import { aggregateAgentPerformance } from '@/lib/analytics/aggregations';
 import { User, Clock, MessageSquare, Star, AlertTriangle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
 import ConversationModal from './ConversationModal';
 
-export default function AgentLeaderboard({ data, isTab = false }: { data: PulseConversation[], isTab?: boolean }) {
+export default function AgentLeaderboard({ data, isTab = false, agentName = null }: { data: PulseConversation[], isTab?: boolean, agentName?: string | null }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [modalData, setModalData] = useState<PulseConversation[]>([]);
 
-  const agentMetrics = useMemo(() => aggregateAgentPerformance(data), [data]);
+  const agentMetrics = useMemo(() => {
+    let metrics = aggregateAgentPerformance(data);
+    if (agentName) {
+      metrics = metrics.filter(a => a.name === agentName);
+    }
+    return metrics;
+  }, [data, agentName]);
 
   // Filter conversations for a specific agent
   const getConversationsForAgent = (agentId: string) => {
@@ -92,13 +99,17 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
                     <div className="min-w-0">
                       <h4 className="text-sm font-semibold text-foreground truncate">{agent.name}</h4>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-[11px] text-muted-foreground">
-                        <span className="relative group/volume inline-flex items-center gap-1 cursor-help">
-                          <MessageSquare className="w-3 h-3" />
-                          {agent.volume} conversations
-                          <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/volume:opacity-100 transition-opacity duration-200 group-hover/volume:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center gap-1 cursor-help">
+                              <MessageSquare className="w-3 h-3" />
+                              {agent.volume} conversations
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
                             The total number of conversations handled by this agent.
-                          </span>
-                        </span>
+                          </TooltipContent>
+                        </Tooltip>
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {formatTime(agent.medianTimeToAdminReply)} median
@@ -109,51 +120,67 @@ export default function AgentLeaderboard({ data, isTab = false }: { data: PulseC
                   
                   <div className="flex items-center divide-x divide-border/50 shrink-0">
                     {agent.avgTurns !== null && (
-                      <div className="flex flex-col items-end px-4 first:pl-0 last:pr-0 relative group/turns cursor-help">
-                        <span className="text-[10px] uppercase text-muted-foreground font-semibold">Turns</span>
-                        <span className={`flex items-center gap-1 font-bold text-sm ${turnColor}`}>
-                          ~{agent.avgTurns.toFixed(1)} avg
-                        </span>
-                        <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/turns:opacity-100 transition-opacity duration-200 group-hover/turns:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex flex-col items-end px-4 first:pl-0 last:pr-0 cursor-help">
+                            <span className="text-[10px] uppercase text-muted-foreground font-semibold">Turns</span>
+                            <span className={`flex items-center gap-1 font-bold text-sm ${turnColor}`}>
+                              ~{agent.avgTurns.toFixed(1)} avg
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
                           Average number of back-and-forth messages per conversation.
-                        </span>
-                      </div>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
 
                     {agent.csatAvg !== null && (
-                      <div className="flex flex-col items-end px-4 first:pl-0 last:pr-0 relative group/csat cursor-help">
-                        <span className="text-[10px] uppercase text-muted-foreground font-semibold">CSAT</span>
-                        <span className={`flex items-center gap-1 font-bold text-sm ${agent.csatAvg >= 4.5 ? 'text-chart-2' : agent.csatAvg >= 4.0 ? 'text-chart-4' : 'text-destructive'}`}>
-                          {agent.csatAvg.toFixed(1)} <Star className="w-3.5 h-3.5 fill-current" />
-                        </span>
-                        <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/csat:opacity-100 transition-opacity duration-200 group-hover/csat:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex flex-col items-end px-4 first:pl-0 last:pr-0 cursor-help">
+                            <span className="text-[10px] uppercase text-muted-foreground font-semibold">CSAT</span>
+                            <span className={`flex items-center gap-1 font-bold text-sm ${agent.csatAvg >= 4.5 ? 'text-chart-2' : agent.csatAvg >= 4.0 ? 'text-chart-4' : 'text-destructive'}`}>
+                              {agent.csatAvg.toFixed(1)} <Star className="w-3.5 h-3.5 fill-current" />
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
                           Average customer satisfaction score (out of 5).
-                        </span>
-                      </div>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                     
                     {agent.frictionRate > 0 && (
-                      <div className="flex flex-col items-end px-4 first:pl-0 last:pr-0 relative group/friction cursor-help">
-                        <span className="text-[10px] uppercase text-muted-foreground font-semibold">Friction</span>
-                        <span className={`flex items-center gap-1 font-bold text-sm ${agent.frictionRate > 0.2 ? 'text-destructive' : 'text-chart-3'}`}>
-                          {(agent.frictionRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.frictionCount}/{agent.volume})</span>
-                        </span>
-                        <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/friction:opacity-100 transition-opacity duration-200 group-hover/friction:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex flex-col items-end px-4 first:pl-0 last:pr-0 cursor-help">
+                            <span className="text-[10px] uppercase text-muted-foreground font-semibold">Friction</span>
+                            <span className={`flex items-center gap-1 font-bold text-sm ${agent.frictionRate > 0.2 ? 'text-destructive' : 'text-chart-3'}`}>
+                              {(agent.frictionRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.frictionCount}/{agent.volume})</span>
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
                           Percentage of conversations showing signs of customer frustration.
-                        </span>
-                      </div>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
 
                     {agent.reopenRate > 0 && (
-                      <div className="flex flex-col items-end px-4 first:pl-0 last:pr-0 relative group/reopens cursor-help">
-                        <span className="text-[10px] uppercase text-muted-foreground font-semibold">Reopens</span>
-                        <span className={`flex items-center gap-1 font-bold text-sm ${agent.reopenRate > 0.1 ? 'text-destructive' : 'text-chart-1'}`}>
-                          {(agent.reopenRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.reopenCount}/{agent.volume})</span>
-                        </span>
-                        <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/reopens:opacity-100 transition-opacity duration-200 group-hover/reopens:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex flex-col items-end px-4 first:pl-0 last:pr-0 cursor-help">
+                            <span className="text-[10px] uppercase text-muted-foreground font-semibold">Reopens</span>
+                            <span className={`flex items-center gap-1 font-bold text-sm ${agent.reopenRate > 0.1 ? 'text-destructive' : 'text-chart-1'}`}>
+                              {(agent.reopenRate * 100).toFixed(0)}% <span className="text-xs font-normal opacity-70">({agent.reopenCount}/{agent.volume})</span>
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
                           Percentage of conversations that were closed and subsequently reopened by the customer.
-                        </span>
-                      </div>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                   </div>
                 </div>

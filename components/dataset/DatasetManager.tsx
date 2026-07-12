@@ -130,7 +130,7 @@ export default function DatasetManager({
         });
           
         await saveConversations(merged);
-        window.location.reload();
+        window.location.href = '/processing';
       } catch (err) {
         setError("Failed to save to local storage. Dataset may be too large.");
         setIsProcessing(false);

@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { Search, ChevronLeft, ChevronRight, Bug, Lightbulb, CheckCircle2, MessageSquareWarning, AlertTriangle, HelpCircle, Split } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Bug, Lightbulb, CheckCircle2, MessageSquareWarning, AlertTriangle, HelpCircle, Split, AlertCircle } from 'lucide-react';
 import { classifyConversation } from '@/lib/nlp/heuristics';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
 import { computeDatasetThresholds, computeEscalationRisk, CATEGORY_FRIENDLY_NAMES, hasConversationFrustration } from '@/lib/analytics/aggregations';
 import ConversationThread from './ConversationThread';
 import { formatPT } from '@/lib/utils/timezone';
@@ -21,28 +22,36 @@ export interface ProcessedConversation extends PulseConversation {
 export default function EngineeringConversationList({ 
   data, 
   activeCategory = 'all',
-  isModal = false
+  isModal = false,
+  initialFilter,
+  filterTitle,
+  onClearFilter
 }: { 
   data: PulseConversation[],
   activeCategory?: string,
-  isModal?: boolean
+  isModal?: boolean,
+  initialFilter?: { sort?: string },
+  filterTitle?: string,
+  onClearFilter?: () => void
 }) {
   const [search, setSearch] = useState('');
   const [sortFilter, setSortFilter] = useState<string>('escalation_desc');
-  const [currentPage, setCurrentPage] = useState(1);
   const [expandedConvId, setExpandedConvId] = useState<string | null>(null);
-  const itemsPerPage = 10;
 
-  // Reset pagination when category changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCurrentPage(1);
     setExpandedConvId(null);
-  }, [activeCategory]);
+  }, [activeCategory, initialFilter]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (initialFilter?.sort) {
+      setSortFilter(initialFilter.sort);
+    }
+  }, [initialFilter]);
 
   const handleFilterChange = (setter: React.Dispatch<React.SetStateAction<string>>, value: string) => {
     setter(value);
-    setCurrentPage(1);
     setExpandedConvId(null);
   };
 
@@ -50,7 +59,13 @@ export default function EngineeringConversationList({
 
   const processedData = useMemo<ProcessedConversation[]>(() => {
     return data.map(conv => {
-      const { category: classification, confidence, also_relevant_to, cross_tag_reasons, is_dual_intent } = classifyConversation(conv);
+      const { category: classification, confidence, also_relevant_to, cross_tag_reasons, is_dual_intent } = conv.llm_classification || { 
+        category: 'other', 
+        confidence: 'low', 
+        also_relevant_to: [], 
+        cross_tag_reasons: { engineering: null, product_quality: null }, 
+        is_dual_intent: false 
+      };
       const hasAttachments = !!conv.custom_attributes?.['Has attachments'] || !!(conv.source.attachments && conv.source.attachments.length > 0);
       const escalationRisk = computeEscalationRisk(conv, thresholds);
       return { ...conv, classification, confidence, also_relevant_to, cross_tag_reasons, is_dual_intent, hasAttachments, escalationRisk };
@@ -93,15 +108,11 @@ export default function EngineeringConversationList({
     });
   }, [processedData, search, activeCategory, sortFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-  const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  const getClassificationBadge = (classification: string, confidence?: string, cross_tag_reasons?: Record<string, string>) => {
+  const getClassificationBadge = (classification: string) => {
     const bugCategories = ['image_quality_technical', 'generation_accuracy', 'attribute_mismatch', 'auth_access', 'upload_flow', 'payment_checkout', 'other_bugs'];
     const featureCategories = ['customization_request', 'core_feature_request'];
     
     const label = CATEGORY_FRIENDLY_NAMES[classification] || classification;
-    const isLowConf = confidence === 'low';
     
     let mainBadge;
     if (bugCategories.includes(classification)) {
@@ -115,60 +126,59 @@ export default function EngineeringConversationList({
     return (
       <div className="flex flex-col items-start gap-1.5">
         {mainBadge}
-        {isLowConf && (
-          <span className="relative group/conf inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-secondary/80 text-muted-foreground border border-border/50 cursor-help">
-            <HelpCircle className="w-3 h-3 text-amber-500" /> Needs Review
-            <span className="absolute bottom-full mb-2 left-0 w-56 p-1.5 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/conf:opacity-100 transition-opacity pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal leading-tight normal-case tracking-normal">
-              This ticket needs manual review — it was categorized from a single keyword match rather than multiple strong signals.
-            </span>
-          </span>
-        )}
-        {cross_tag_reasons && Object.entries(cross_tag_reasons).map(([tag, reason]) => (
-          <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 whitespace-nowrap rounded text-[10px] font-semibold bg-chart-1/10 text-chart-1 border border-chart-1/20">
-            &quot;{reason}&quot;
-          </span>
-        ))}
       </div>
     );
   };
 
+  const getRiskDetails = (risk: number) => {
+    if (risk >= 0.5) return { text: 'High Support Friction', color: 'bg-destructive/10 text-destructive border-destructive/20', show: true };
+    if (risk >= 0.3) return { text: 'Medium Support Friction', color: 'bg-chart-4/10 text-chart-4 border-chart-4/20', show: true };
+    return { text: 'Low Support Friction', color: 'bg-secondary/80 text-muted-foreground border-border/50', show: false };
+  };
+
   const renderEscalationRisk = (risk: number) => {
-    let label = 'Low';
-    let color = 'text-muted-foreground bg-secondary/80 border-border/50';
-    if (risk >= 0.5) {
-      label = 'High';
-      color = 'text-destructive bg-destructive/10 border-destructive/20';
-    } else if (risk >= 0.3) {
-      label = 'Medium';
-      color = 'text-chart-4 bg-chart-4/10 border-chart-4/20';
-    }
+    const { text, color } = getRiskDetails(risk);
     
     return (
-      <div className="relative group/risk inline-flex items-center">
-        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${color} cursor-help`}>
-          {label} ({Math.round(risk * 100)}%)
-        </span>
-        <span className="absolute bottom-full mb-2 right-0 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/risk:opacity-100 transition-opacity duration-200 group-hover/risk:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${color} cursor-help`}>
+            {text.replace(' Support Friction', '')} ({Math.round(risk * 100)}%)
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
           Composite score from reopens, handling time, back-and-forth count, and detected customer frustration.
-        </span>
-      </div>
+        </TooltipContent>
+      </Tooltip>
     );
   };
 
   let panelTitle = activeCategory === 'all' 
-    ? 'All Signals' 
+    ? (filterTitle || 'All Signals') 
     : CATEGORY_FRIENDLY_NAMES[activeCategory] || activeCategory;
     
   if (activeCategory === 'cross_tagged_engineering') {
     panelTitle = 'Also flagged from Support';
   }
 
+  const showClassification = activeCategory === 'all' || activeCategory === 'cross_tagged_engineering' || activeCategory === 'cross_tagged_product_quality';
+
   return (
     <div className={`w-full flex flex-col ${isModal ? '' : 'bg-card border-2 border-border shadow-sm rounded-xl overflow-hidden'}`}>
       <div className={`flex flex-col gap-4 md:flex-row md:items-center justify-between ${isModal ? 'pb-4' : 'p-6 border-b border-border'}`}>
         {!isModal && (
           <div>
-            <h2 className="text-lg font-semibold flex items-center gap-2">Evidence Panel: {panelTitle}</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-semibold flex items-center gap-2">Evidence Panel: {panelTitle}</h2>
+              {onClearFilter && (filterTitle || initialFilter) && (
+                <button
+                  onClick={onClearFilter}
+                  className="px-2 py-1 text-xs font-medium bg-secondary text-muted-foreground rounded-md hover:bg-secondary/80 transition-colors"
+                >
+                  Clear Filter
+                </button>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground mt-1">Showing {filteredData.length} matching conversations</p>
           </div>
         )}
@@ -185,18 +195,26 @@ export default function EngineeringConversationList({
             />
           </div>
 
-          <div className="flex items-center gap-2 border border-border rounded-md bg-background p-1">
-            <select 
-              value={sortFilter}
-              onChange={(e) => handleFilterChange(setSortFilter, e.target.value)}
-              className="h-7 bg-transparent text-sm focus:outline-none px-2 text-muted-foreground"
-            >
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="escalation_desc">Highest Risk</option>
-              <option value="escalation_asc">Lowest Risk</option>
-              <option value="needs_review">Needs Review</option>
-            </select>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-muted-foreground mr-1">Sort:</span>
+            {[
+              { id: 'newest', label: 'Newest' },
+              { id: 'oldest', label: 'Oldest' },
+              { id: 'escalation_desc', label: 'Highest Friction' },
+              { id: 'escalation_asc', label: 'Lowest Friction' }
+            ].map((option) => (
+              <button
+                key={option.id}
+                onClick={() => handleFilterChange(setSortFilter, option.id)}
+                className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
+                  sortFilter === option.id 
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm' 
+                    : 'bg-background text-muted-foreground border-border hover:bg-secondary'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -204,27 +222,29 @@ export default function EngineeringConversationList({
       {/* Table Headers */}
       <div className="flex items-center px-6 py-3 border-b border-border bg-secondary/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         <div className="flex-1 min-w-0 pr-4">Conversation</div>
-        <div className="w-56 shrink-0 hidden sm:block pr-2">Classification</div>
+        {showClassification && <div className="w-56 shrink-0 hidden sm:block pr-2">Classification</div>}
         {!isModal && (
-          <div 
-            className="w-24 shrink-0 hidden lg:flex items-center justify-start font-semibold text-muted-foreground select-none relative group/tooltip"
-          >
-            <div
-              className="flex items-center gap-1 hover:text-foreground cursor-pointer transition-colors"
-              onClick={() => handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc')}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc');
-                }
-              }}
-              tabIndex={0}
-              role="button"
-            >
-              Risk Level {sortFilter === 'escalation_desc' ? '↓' : sortFilter === 'escalation_asc' ? '↑' : ''}
-            </div>
-            <div className="absolute top-full mt-2 right-0 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 group-hover/tooltip:delay-300 pointer-events-none z-10 border border-border shadow-md text-center">
-              A computed score based on customer sentiment and urgency.
-            </div>
+          <div className="w-24 shrink-0 hidden lg:flex items-center justify-start font-semibold text-muted-foreground select-none">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className="flex items-center gap-1 hover:text-foreground cursor-pointer transition-colors"
+                  onClick={() => handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      handleFilterChange(setSortFilter, sortFilter === 'escalation_desc' ? 'escalation_asc' : 'escalation_desc');
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                >
+                  Friction {sortFilter === 'escalation_desc' ? '↓' : sortFilter === 'escalation_asc' ? '↑' : ''}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                A computed score based on customer sentiment and urgency.
+              </TooltipContent>
+            </Tooltip>
           </div>
         )}
         <div 
@@ -244,14 +264,13 @@ export default function EngineeringConversationList({
         </div>
       </div>
 
-      {/* List Body */}
-      <div className="flex-1 overflow-y-auto min-h-[400px] divide-y divide-border/50">
-        {paginatedData.length === 0 ? (
+      <div className="flex-1 divide-y divide-border/50">
+        {filteredData.length === 0 ? (
           <div className="w-full h-full min-h-[200px] flex items-center justify-center">
             <p className="text-muted-foreground">No conversations match your criteria.</p>
           </div>
         ) : (
-          paginatedData.map((conv, idx) => {
+          filteredData.map((conv, idx) => {
             const rawBody = conv.source.body ? conv.source.body.replace(/<[^>]*>?/gm, ' ').trim() : '';
             const cleanSubject = conv.source.subject ? conv.source.subject.replace(/<[^>]*>?/gm, ' ').trim() : '';
             const fallbackTitle = rawBody.length > 60 ? rawBody.substring(0, 60) + '...' : rawBody;
@@ -260,12 +279,13 @@ export default function EngineeringConversationList({
             
             const isExpanded = expandedConvId === conv.id;
             const hasFrustration = hasConversationFrustration(conv);
+            const riskBadge = getRiskDetails(conv.escalationRisk);
 
             return (
               <div key={conv.id || idx} className="flex flex-col">
                 <div 
                   onClick={() => setExpandedConvId(isExpanded ? null : conv.id)}
-                  className={`flex items-center px-6 py-4 transition-colors hover:bg-secondary/20 cursor-pointer ${isExpanded ? 'bg-secondary/10' : ''} ${conv.confidence === 'low' ? 'border-l-4 border-l-amber-500/50' : 'border-l-4 border-l-transparent'}`}
+                  className={`flex items-center px-6 py-4 transition-colors hover:bg-secondary/20 cursor-pointer ${isExpanded ? 'bg-secondary/10' : ''} border-l-4 border-l-transparent`}
                 >
                   <div className="flex-1 min-w-0 pr-4 space-y-1">
                     <div className="flex items-center gap-2">
@@ -273,38 +293,64 @@ export default function EngineeringConversationList({
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed">{displaySubject}</p>
                     <div className="flex flex-wrap items-center gap-3 mt-2 min-h-[22px]">
-                      <span className="relative group/turns inline-flex items-center">
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded border border-border cursor-help">
-                          <MessageSquareWarning className="w-3 h-3" />
-                          {(conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment').length} turns
-                        </span>
-                        <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/turns:opacity-100 transition-opacity duration-200 group-hover/turns:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded border border-border cursor-help">
+                            <MessageSquareWarning className="w-3 h-3" />
+                            {(conv.conversation_parts?.conversation_parts || []).filter(p => p.part_type === 'comment').length} turns
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
                           The total number of back-and-forth messages (comments) in this conversation.
-                        </span>
-                      </span>
+                        </TooltipContent>
+                      </Tooltip>
                       {hasFrustration && (
-                        <span className="text-[10px] font-bold text-destructive flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded border border-destructive/20">
-                          <AlertTriangle className="w-3 h-3" />
-                          Frustrated Response
-                        </span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-500 flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30 cursor-help">
+                              <AlertTriangle className="w-3 h-3" />
+                              Frustrated Response
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Detected via NLP matching negative sentiment keywords or phrases (e.g., unacceptable, frustrated, scam).
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {!isModal && riskBadge.show && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className={`text-[10px] font-semibold flex items-center gap-1 px-2 py-0.5 rounded border ${riskBadge.color} cursor-help`}>
+                              <AlertCircle className="w-3 h-3" />
+                              {riskBadge.text}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Composite score from reopens, handling time, back-and-forth count, and detected customer frustration.
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                       {conv.is_dual_intent && (
-                        <span className="relative group/dual inline-flex items-center">
-                          <span className="text-[10px] font-bold text-indigo-500 flex items-center gap-1 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 cursor-help">
-                            <Split className="w-3 h-3" />
-                            Dual Intent
-                          </span>
-                          <span className={`absolute ${idx < 2 ? 'top-full mt-2' : 'bottom-full mb-2'} left-0 w-48 p-2 bg-popover text-popover-foreground text-[10px] leading-tight font-medium rounded opacity-0 group-hover/dual:opacity-100 transition-opacity duration-200 group-hover/dual:delay-300 pointer-events-none z-50 border border-border shadow-md text-center whitespace-normal normal-case`}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-[10px] font-bold text-indigo-500 flex items-center gap-1 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 cursor-help">
+                              <Split className="w-3 h-3" />
+                              Dual Intent
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
                             This conversation contains keywords matching multiple distinct categories or teams.
-                          </span>
-                        </span>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                     </div>
                   </div>
                   
-                  <div className="w-56 shrink-0 hidden sm:block pr-2">
-                {getClassificationBadge(conv.classification, conv.confidence, conv.cross_tag_reasons)}
-              </div>
+                  {showClassification && (
+                    <div className="w-56 shrink-0 hidden sm:block pr-2">
+                      {getClassificationBadge(conv.classification)}
+                    </div>
+                  )}
                   
                   {!isModal && (
                     <div className="w-24 shrink-0 hidden lg:flex items-center justify-start">
@@ -318,7 +364,7 @@ export default function EngineeringConversationList({
                 </div>
                 {isExpanded && (
                   <div className="p-6 bg-muted/15 border-t border-b border-border/50 shrink-0">
-                    <ConversationThread conversation={conv} />
+                    <ConversationThread conversation={conv} viewContext="engineering" />
                   </div>
                 )}
               </div>
@@ -327,32 +373,6 @@ export default function EngineeringConversationList({
         )}
       </div>
 
-      {/* Pagination Footer */}
-      <div className="p-4 border-t border-border flex items-center justify-between bg-secondary/10 shrink-0">
-        <p className="text-sm text-muted-foreground">
-          Showing <span className="font-medium text-foreground">{Math.min(1 + (currentPage - 1) * itemsPerPage, filteredData.length)}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * itemsPerPage, filteredData.length)}</span> of <span className="font-medium text-foreground">{filteredData.length}</span> entries
-        </p>
-        
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="p-1.5 rounded-md border border-border hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="text-sm font-medium px-2 text-muted-foreground">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button 
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="p-1.5 rounded-md border border-border hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

@@ -1,9 +1,7 @@
-import { stripHtml } from './tfidf';
+import { stripHtml } from '../utils/string';
 import { PulseConversation, ConversationPart } from '../types';
 
 export type TicketClassification = 
-  | 'image_quality_technical'
-  | 'generation_accuracy'
   | 'attribute_mismatch'
   | 'auth_access'
   | 'upload_flow'
@@ -13,44 +11,23 @@ export type TicketClassification =
   | 'core_feature_request'
   | 'refund_request'
   | 'subscription_cancel'
-  | 'pre_sales_info'
-  | 'delivery_status'
   | 'system_automated'
-  | 'general_inquiry'
-  | 'double_charge_payment'
-  | 'access_delivered_photos'
-  | 'specific_retouching'
-  | 'account_deletion'
-  | 'credits_quotas';
+  | 'general_inquiry';
 
 const SPAM_SYSTEM_REGEX = /\b(business manager|partner request|meta affiliate|privacy rights request|automatic email|no-reply|noreply|auto-reply|auto-response|slack|receipt|welcome to)\b/i;
 const REFUND_REGEX = /\b(refund|money back|charge back|chargeback|wrong amount)\b/i;
 const CANCEL_REGEX = /\b(cancel|unsubscribe|auto-renew|renew|subscription|billing|invoice|billing cycle)\b/i;
-const PAYMENT_REGEX = /\b(order(ed|s)?|purchas(e|ed|ing)|paid|billed|checkout|payment error|failed to pay|declined|credit card|stripe|pay error|checkout screen|billing form|transaction failed)\b/i;
-const DOUBLE_CHARGE_REGEX = /\b(charged twice|charge me again|paid twice|double charge|charged me twice|two charges|second charge|charged monthly|pay again|paid again|charged again|billed again|recharged|took my payment)\b/i;
-const AUTH_REGEX = /\b(login|sign in|verify|verification|password|verify email|email link|sign-in|account access|unauthorized location|not valid link|sign up|create account|invite|join team)\b/i;
-const ACCESS_PHOTOS_REGEX = /\b(where are my photos|where are my pictures|where can i find|where are the pics|how to access them|access my photos|find my photos|download my photos|see my photos|access them|not downloading|trouble downloading|mobile download|download to my phone|photos are gone|how do i access|receive the pictures|receive the photos)\b/i;
-const UPLOAD_REGEX = /\b(upload|uploading|photo upload|file size|unsupported format|image upload|upload error|reference photo)\b/i;
+const PAYMENT_REGEX = /\b(order(ed|s)?|purchas(e|ed|ing)|paid|billed|checkout|payment error|failed to pay|declined|credit card|stripe|pay error|checkout screen|billing form|transaction failed|charged twice|charge me again|paid twice|double charge|charged me twice|two charges|second charge|charged monthly|pay again|paid again|charged again|billed again|recharged|took my payment|token(s)?|quota|credit(s)?)\b/i;
+const AUTH_REGEX = /\b(login|sign in|verify|verification|password|verify email|email link|sign-in|account access|unauthorized location|not valid link|sign up|create account|invite|join team|delete my account|delete the data|delete my data|delete account|erase pictures|erase photos|remove my data|remove my account)\b/i;
+const UPLOAD_REGEX = /\b(upload|uploading|photo upload|file size|unsupported format|image upload|upload error|reference photo|where are my photos|where are my pictures|where can i find|where are the pics|how to access them|access my photos|find my photos|download my photos|see my photos|access them|not downloading|trouble downloading|mobile download|download to my phone|photos are gone|how do i access|receive the pictures|receive the photos)\b/i;
 
-// Split rendering quality technical, accuracy, and styling attributes
-const IMAGE_QUALITY_TECH_REGEX = /\b(blurry|fuzzy|pixelated|glitch|grainy|low[- ]resolution|not clear)\b|\b(artifact(s|ing)?)\b/i;
-const GEN_ACCURACY_REGEX = /\b(wrong face|deformed|disfigured|morphed|extra (finger|limb)|doesn't look like me|didn't look like me|don't look like me|don't look like myself|not realistic|doesn't look realistic|didn't look realistic|non looked realistic|none looked realistic|don't look natural|doesn't look natural|not natural)\b/i;
-const ATTR_MISMATCH_REGEX = /\b(wrong (hair|color|eye)|hijab|headscarf|different (hair|clothes)|didn't match (my|the) (photo|reference))\b/i;
+const ATTR_MISMATCH_REGEX = /\b(wrong (hair|color|eye)|hijab|headscarf|different (hair|clothes)|didn't match (my|the) (photo|reference)|wrong face|deformed|disfigured|morphed|extra (finger|limb)|doesn't look like me|didn't look like me|don't look like me|don't look like myself|not realistic|doesn't look realistic|didn't look realistic|non looked realistic|none looked realistic|don't look natural|doesn't look natural|not natural|blurry|fuzzy|pixelated|glitch|grainy|low[- ]resolution|not clear)\b|\b(artifact(s|ing)?)\b/i;
+const ATTR_CONTEXT_REGEX = /\b(teeth|eyes|hair|color|clothes|weird|body|deformed|disfigured|quality|not clear|blurry)\b[^]{0,80}?\b(photo|image|render|picture|generation|output)s?\b|\b(photo|image|render|picture|generation|output)s?\b[^]{0,80}?\b(teeth|eyes|hair|color|clothes|weird|body|deformed|disfigured|quality|not clear|blurry)\b/i;
 
-// Contextual fallback checks to avoid generic false-positives
-const QUALITY_CONTEXT_REGEX = /\b(quality|not clear|blurry)\b[^]{0,80}?\b(photo|image|render|picture|generation|output)s?\b|\b(photo|image|render|picture|generation|output)s?\b[^]{0,80}?\b(quality|not clear|blurry)\b/i;
-const WEIRD_CONTEXT_REGEX = /\b(weird|body|deformed|disfigured)\b[^]{0,80}?\b(photo|image|render|picture|generation|output)s?\b|\b(photo|image|render|picture|generation|output)s?\b[^]{0,80}?\b(weird|body|deformed|disfigured)\b/i;
-const ATTR_CONTEXT_REGEX = /\b(teeth|eyes|hair|color|clothes)\b[^]{0,80}?\b(photo|image|render|picture|generation|output)s?\b|\b(photo|image|render|picture|generation|output)s?\b[^]{0,80}?\b(teeth|eyes|hair|color|clothes)\b/i;
-
-const CUSTOMIZE_REGEX = /\b(change clothing|different background|tie|suit|glasses|smile|hairstyle|backdrop|edit|retouch|unbutton|customize photo|costumize)\b/i;
-const SPECIFIC_RETOUCH_REGEX = /\b(scar(s)?|turkey neck|cleavage|eye color|skin tone|look fat|look fatter|wrinkle(s)?|neck line(s)?|blemish(es)?|fix my hair|fix my eyes|double chin|fatter|heavier|nose|(redo|rerun)\s+(my\s+|the\s+)?(headshots?|photos?))\b/i;
+const CUSTOMIZE_REGEX = /\b(change clothing|different background|tie|suit|glasses|smile|hairstyle|backdrop|edit|retouch|unbutton|customize photo|costumize|scar(s)?|turkey neck|cleavage|eye color|skin tone|look fat|look fatter|wrinkle(s)?|neck line(s)?|blemish(es)?|fix my hair|fix my eyes|double chin|fatter|heavier|nose|(redo|rerun)\s+(my\s+|the\s+)?(headshots?|photos?))\b/i;
 const FEATURE_REGEX = /\b(would love|please add|not supported|feature|can you add|missing|wish|suggestion|idea|could you add|api|bulk|enterprise|6k|4k|download quality|character)\b/i;
-const PRESALES_REGEX = /\b(sample|try before|preview|coupon|discount|price|pricing|cost|package|packages|group discount|before i buy|before purchasing|trial)\b/i;
-const DELIVERY_REGEX = /\b(how long|where is|not received|pending|waiting|generating|status|ready|when will|duration|turnaround)\b/i;
+const DELIVERY_PRESALES_REGEX = /\b(how long|where is|not received|pending|waiting|generating|status|ready|when will|duration|turnaround|sample|try before|preview|coupon|discount|price|pricing|cost|package|packages|group discount|before i buy|before purchasing|trial)\b/i;
 const BUG_REGEX = /\b(bug|broken|error|crash|crashed|fail|failing|failed|doesn't work|does not work|stuck|glitch|not loading|not working|scroll|button|ui issue|webpage|page|screen)\b/i;
-
-const PRIVACY_REGEX = /\b(delete my account|delete the data|delete my data|delete account|erase pictures|erase photos|remove my data|remove my account)\b/i;
-const CREDITS_REGEX = /\b(token(s)?|quota|credit(s)?)\b(?!\s*card)/i;
 
 export interface ClassificationResult {
   category: TicketClassification;
@@ -69,22 +46,14 @@ export const CATEGORY_PRIORITY: CategoryMatcher[] = [
   { category: 'system_automated', match: (t) => SPAM_SYSTEM_REGEX.test(t) },
   { category: 'refund_request', match: (t) => REFUND_REGEX.test(t) },
   { category: 'subscription_cancel', match: (t) => CANCEL_REGEX.test(t) },
-  { category: 'double_charge_payment', match: (t) => DOUBLE_CHARGE_REGEX.test(t) },
   { category: 'payment_checkout', match: (t) => PAYMENT_REGEX.test(t) },
   { category: 'auth_access', match: (t) => AUTH_REGEX.test(t) },
-  { category: 'access_delivered_photos', match: (t) => ACCESS_PHOTOS_REGEX.test(t) },
   { category: 'upload_flow', match: (t) => UPLOAD_REGEX.test(t) },
-  { category: 'image_quality_technical', match: (t) => IMAGE_QUALITY_TECH_REGEX.test(t) || QUALITY_CONTEXT_REGEX.test(t) },
-  { category: 'generation_accuracy', match: (t) => GEN_ACCURACY_REGEX.test(t) || WEIRD_CONTEXT_REGEX.test(t) },
   { category: 'attribute_mismatch', match: (t) => ATTR_MISMATCH_REGEX.test(t) || ATTR_CONTEXT_REGEX.test(t) },
   { category: 'customization_request', match: (t) => CUSTOMIZE_REGEX.test(t) },
-  { category: 'specific_retouching', match: (t) => SPECIFIC_RETOUCH_REGEX.test(t) },
   { category: 'core_feature_request', match: (t) => FEATURE_REGEX.test(t) },
-  { category: 'delivery_status', match: (t) => DELIVERY_REGEX.test(t) },
-  { category: 'pre_sales_info', match: (t) => PRESALES_REGEX.test(t) },
   { category: 'other_bugs', match: (t) => BUG_REGEX.test(t) },
-  { category: 'account_deletion', match: (t) => PRIVACY_REGEX.test(t) },
-  { category: 'credits_quotas', match: (t) => CREDITS_REGEX.test(t) },
+  { category: 'general_inquiry', match: (t) => DELIVERY_PRESALES_REGEX.test(t) }
 ];
 
 const TECH_MALFUNCTION_REGEX = /\b(crash|crashed|bug|glitch|error message|won'?t load|can'?t log in|blank screen|stuck on|failed to (load|process|charge)|freez(e|ing)|frozen|keeps closing|won'?t open|timed out)\b/i;
@@ -94,6 +63,11 @@ const TECH_MALFUNCTION_REGEX = /\b(crash|crashed|bug|glitch|error message|won'?t
  * Returns the category and a confidence score.
  */
 export function classifyConversation(conv: PulseConversation): ClassificationResult {
+  // If the conversation has been enriched by our LLM pipeline, return that!
+  if (conv.llm_classification) {
+    return conv.llm_classification as ClassificationResult;
+  }
+
   const partsText = (conv.conversation_parts?.conversation_parts || [])
     .filter((p: ConversationPart) => p.author?.type !== 'admin' && p.body)
     .map((p: ConversationPart) => stripHtml(p.body))
@@ -119,7 +93,7 @@ export function classifyConversation(conv: PulseConversation): ClassificationRes
 
   const result: ClassificationResult = { category: finalCategory, confidence: finalConfidence };
 
-  const supportBillingCategories = ['refund_request', 'subscription_cancel', 'payment_checkout', 'double_charge_payment', 'credits_quotas', 'account_deletion'];
+  const supportBillingCategories = ['refund_request', 'subscription_cancel', 'payment_checkout', 'auth_access'];
   if (supportBillingCategories.includes(finalCategory)) {
     const techMatch = text.match(TECH_MALFUNCTION_REGEX);
     if (techMatch) {
@@ -130,10 +104,8 @@ export function classifyConversation(conv: PulseConversation): ClassificationRes
 
   if (finalCategory === 'refund_request' || finalCategory === 'subscription_cancel') {
     let qualityMatch = null;
-    if (IMAGE_QUALITY_TECH_REGEX.test(text)) qualityMatch = text.match(IMAGE_QUALITY_TECH_REGEX);
-    else if (SPECIFIC_RETOUCH_REGEX.test(text)) qualityMatch = text.match(SPECIFIC_RETOUCH_REGEX);
-    else if (GEN_ACCURACY_REGEX.test(text)) qualityMatch = text.match(GEN_ACCURACY_REGEX);
-    else if (ATTR_MISMATCH_REGEX.test(text)) qualityMatch = text.match(ATTR_MISMATCH_REGEX);
+    if (ATTR_MISMATCH_REGEX.test(text)) qualityMatch = text.match(ATTR_MISMATCH_REGEX);
+    else if (CUSTOMIZE_REGEX.test(text)) qualityMatch = text.match(CUSTOMIZE_REGEX);
 
     if (qualityMatch) {
       if (!result.also_relevant_to) result.also_relevant_to = [];
@@ -148,7 +120,6 @@ export function classifyConversation(conv: PulseConversation): ClassificationRes
 
   return result;
 }
-
 
 export function generateFallbackTitle(body: string | undefined | null): string {
   if (!body) return 'Untitled Conversation';

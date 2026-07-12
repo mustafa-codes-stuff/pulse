@@ -1,5 +1,5 @@
 import { PulseConversation } from '../types';
-import { classifyConversation, ClassificationResult } from '../nlp/heuristics';
+import { ClassificationResult } from '../nlp/heuristics';
 import { calculatePercentile } from './stats';
 import { formatPT } from '../utils/timezone';
 
@@ -240,6 +240,13 @@ export function getVisibleParts(conv: PulseConversation) {
     .sort((a, b) => a.created_at - b.created_at);
 }
 
+export function getAiAgentRating(conv: PulseConversation): number | null {
+  if (conv.llm_classification?.support_insights?.customer_experience_rating) {
+    return conv.llm_classification.support_insights.customer_experience_rating;
+  }
+  return null;
+}
+
 export function getFrustratedParts(conv: PulseConversation): Set<string> {
   const flagged = new Set<string>();
   const visibleParts = getVisibleParts(conv);
@@ -266,6 +273,9 @@ export function getFrustratedParts(conv: PulseConversation): Set<string> {
 }
 
 export function hasConversationFrustration(conv: PulseConversation): boolean {
+  if (conv.llm_classification) {
+    return conv.llm_classification.has_frustration;
+  }
   return getFrustratedParts(conv).size > 0;
 }
 
@@ -347,28 +357,35 @@ export function extractFrustrationPairs(conversations: PulseConversation[]): Fru
   return pairs.sort((a, b) => b.conversation.created_at - a.conversation.created_at);
 }
 export const CATEGORY_FRIENDLY_NAMES: Record<string, string> = {
-  image_quality_technical: 'Image Quality (Technical)',
-  generation_accuracy: 'AI Generation Accuracy',
-  attribute_mismatch: 'Styling & Attribute Mismatch',
+  attribute_mismatch: 'Styling & Generation Mismatch',
   auth_access: 'Login & Account Access',
-  upload_flow: 'Photo Upload Issues',
+  upload_flow: 'Photo Upload & Access',
   payment_checkout: 'Payment & Checkout Failures',
-  customization_request: 'Customization Requests',
-  core_feature_request: 'Core Features & Formats',
   other_bugs: 'General Bugs & UI Issues',
+  customization_request: 'Customization & Retouching',
+  core_feature_request: 'Core Features & Formats',
   refund_request: 'Refund Requests',
   subscription_cancel: 'Subscriptions & Cancellations',
-  pre_sales_info: 'Pre-sales & Pricing Info',
-  delivery_status: 'Delivery Status & ETAs',
   system_automated: 'Automated System Spam',
-  general_inquiry: 'General Inquiries & Unclassified',
-  double_charge_payment: 'Double Charging & Payment Confusion',
-  access_delivered_photos: 'Accessing Delivered Photos',
-  specific_retouching: 'Specific Retouching & Edits',
-  account_deletion: 'Account Deletion & Privacy',
-  credits_quotas: 'Credits & Quotas',
+  general_inquiry: 'General Inquiries & Info',
   cross_tagged_engineering: 'Also Flagged from Support',
   cross_tagged_product_quality: 'Likeness & Quality Flags',
+};
+
+export const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  attribute_mismatch: 'Issues with AI output quality, weird artifacts, or failing to match reference photos.',
+  auth_access: 'Users unable to log in, verify email, or access their accounts.',
+  upload_flow: 'Errors or friction when uploading reference photos or downloading outputs.',
+  payment_checkout: 'Failures during the checkout process, double charges, or stripe errors.',
+  other_bugs: 'General crashes, webpage freezing, UI glitches, or broken buttons.',
+  customization_request: 'Users requesting manual retouching, specific background changes, or custom edits.',
+  core_feature_request: 'Requests for missing capabilities like 4K downloads, bulk uploads, or API access.',
+  refund_request: 'Direct requests for refunds or chargebacks.',
+  subscription_cancel: 'Inquiries about canceling auto-renewals or stopping billing cycles.',
+  system_automated: 'Spam, automated replies, and out-of-office emails.',
+  general_inquiry: 'Pre-sales questions, pricing inquiries, or checking generation status.',
+  cross_tagged_engineering: 'Primary support tickets (like billing) where the user also reported a crash or technical bug.',
+  cross_tagged_product_quality: 'Primary support tickets (like refunds) where the user expressed dissatisfaction with AI likeness or quality.',
 };
 
 export interface CategoryPainMetrics {
@@ -422,7 +439,7 @@ function calculateCategoryMetrics(
     if (classificationCache && c.id) {
       confidence = classificationCache.get(c.id)?.confidence || 'low';
     } else {
-      confidence = classifyConversation(c).confidence;
+      confidence = c.llm_classification?.confidence || 'low';
     }
 
     if (confidence === 'low') lowConfidenceCount++;
@@ -468,29 +485,28 @@ export function aggregateIssues(conversations: PulseConversation[]): {
   bugs: CategoryPainMetrics[], 
   features: CategoryPainMetrics[], 
   billing: CategoryPainMetrics[],
-  sales: CategoryPainMetrics[],
   other: CategoryPainMetrics[], 
-  totals: { bugs: number, features: number, billing: number, sales: number, other: number } 
+  totals: { bugs: number, features: number, billing: number, other: number } 
 } {
-  const totals = { bugs: 0, features: 0, billing: 0, sales: 0, other: 0 };
+  const totals = { bugs: 0, features: 0, billing: 0, other: 0 };
   const thresholds = computeDatasetThresholds(conversations);
 
-  // Split rendering quality category
-  const bugCategories = ['image_quality_technical', 'generation_accuracy', 'attribute_mismatch', 'upload_flow', 'other_bugs', 'cross_tagged_engineering'];
-  const featureCategories = ['customization_request', 'specific_retouching', 'core_feature_request'];
-  const billingCategories = ['payment_checkout', 'double_charge_payment', 'refund_request', 'subscription_cancel', 'auth_access', 'account_deletion', 'credits_quotas'];
-  const salesCategories = ['pre_sales_info', 'delivery_status', 'access_delivered_photos'];
+  const bugCategories = ['attribute_mismatch', 'upload_flow', 'other_bugs', 'cross_tagged_engineering'];
+  const featureCategories = ['customization_request', 'core_feature_request'];
+  const billingCategories = ['payment_checkout', 'refund_request', 'subscription_cancel', 'auth_access'];
   const otherCategories = ['general_inquiry']; // Exclude system_automated from dashboard lists
 
   // Initialize maps
   const groups: Record<string, PulseConversation[]> = {};
-  const allCategories = [...bugCategories, ...featureCategories, ...billingCategories, ...salesCategories, ...otherCategories, 'system_automated', 'cross_tagged_product_quality'];
+  const allCategories = [...bugCategories, ...featureCategories, ...billingCategories, ...otherCategories, 'system_automated', 'cross_tagged_product_quality'];
   allCategories.forEach(cat => groups[cat] = []);
 
   const classificationCache = new Map<string, ClassificationResult>();
 
   conversations.forEach(c => {
-    const classificationRes = classifyConversation(c);
+    const classificationRes = c.llm_classification;
+    if (!classificationRes) return; // Skip unclassified data
+    
     if (c.id) {
       classificationCache.set(c.id, classificationRes);
     }
@@ -519,8 +535,6 @@ export function aggregateIssues(conversations: PulseConversation[]): {
       totals.features++;
     } else if (billingCategories.includes(classification)) {
       totals.billing++;
-    } else if (salesCategories.includes(classification)) {
-      totals.sales++;
     } else if (classification !== 'system_automated') {
       totals.other++;
     }
@@ -537,8 +551,34 @@ export function aggregateIssues(conversations: PulseConversation[]): {
     bugs: sortAndFilter(bugCategories),
     features: sortAndFilter(featureCategories),
     billing: sortAndFilter(billingCategories),
-    sales: sortAndFilter(salesCategories),
     other: sortAndFilter(otherCategories),
     totals
+  };
+}
+
+export function getEngineeringInsights(conv: PulseConversation) {
+  if (conv.llm_classification?.engineering_insights) {
+    return conv.llm_classification.engineering_insights;
+  }
+
+  // Fallback to map legacy heuristic/LLM classifications to new schema
+  const legacyCat = conv.llm_classification?.category;
+  const relevant = conv.llm_classification?.also_relevant_to || [];
+  
+  let type = 'none';
+  if (legacyCat === 'other_bugs' || legacyCat === 'attribute_mismatch' || legacyCat === 'upload_flow' || relevant.includes('engineering')) {
+    type = 'bug';
+  } else if (legacyCat === 'core_feature_request' || legacyCat === 'customization_request') {
+    type = 'missing_feature';
+  } else if (legacyCat === 'payment_checkout') {
+    type = 'ui_friction';
+  } else {
+    type = 'other';
+  }
+
+  return {
+    technical_issue_type: type,
+    specific_failure_point: null,
+    engineering_action_item: null
   };
 }

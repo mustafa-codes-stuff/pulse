@@ -1,11 +1,8 @@
-"use client";
-
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
 import { MessageSquare } from 'lucide-react';
-import { classifyConversation } from '@/lib/nlp/heuristics';
 import { CATEGORY_FRIENDLY_NAMES } from '@/lib/analytics/aggregations';
-import ConversationModal from './ConversationModal';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
 
 interface SupportCategoryMetrics {
   category: string;
@@ -17,10 +14,7 @@ interface SupportCategoryMetrics {
   conversations: PulseConversation[];
 }
 
-export default function SupportCategoryBreakdown({ data }: { data: PulseConversation[] }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState('');
-  const [modalData, setModalData] = useState<PulseConversation[]>([]);
+export default function SupportCategoryBreakdown({ data, onCardClick }: { data: PulseConversation[], onCardClick?: (conversations: PulseConversation[], title: string) => void }) {
 
   const topCategories = useMemo(() => {
     if (data.length === 0) return [];
@@ -31,7 +25,7 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
 
     let totalOpsCount = 0;
     data.forEach(c => {
-      const { category: classification } = classifyConversation(c);
+      const classification = c.llm_classification?.category || 'general_inquiry';
       if (supportCategories.includes(classification)) {
         groups[classification].push(c);
         totalOpsCount++;
@@ -118,15 +112,25 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
       <h2 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
         <MessageSquare className="w-5 h-5 text-chart-1" />
         Top customer issues
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="w-4 h-4 rounded-full border border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-[10px] font-bold cursor-help hover:text-foreground hover:border-foreground/50 transition-colors ml-1">
+              ?
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            The highest volume support categories extracted from the conversations.
+          </TooltipContent>
+        </Tooltip>
       </h2>
       <div className="flex-1 bg-card border border-border/60 rounded-2xl shadow-sm overflow-hidden flex flex-col">
         {topCategories.map((item, index) => (
           <div 
             key={item.category} 
             onClick={() => {
-              setModalTitle(`Category: ${item.title}`);
-              setModalData(item.conversations);
-              setIsModalOpen(true);
+              if (onCardClick) {
+                onCardClick(item.conversations, `Category: ${item.title}`);
+              }
             }}
             className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 ${index !== 0 ? 'border-t border-border/40' : ''} hover:bg-secondary/40 transition-colors gap-4 cursor-pointer group`}
           >
@@ -147,9 +151,16 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
                   }
 
                   return (
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold border ${badgeColor}`}>
-                      {item.signalLabel}
-                    </span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold border cursor-help ${badgeColor}`}>
+                          {item.signalLabel}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        This category has an unusually extreme metric compared to others.
+                      </TooltipContent>
+                    </Tooltip>
                   );
                 })()}
               </div>
@@ -157,13 +168,6 @@ export default function SupportCategoryBreakdown({ data }: { data: PulseConversa
           </div>
         ))}
       </div>
-
-      <ConversationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={modalTitle}
-        conversations={modalData}
-      />
     </div>
   );
 }

@@ -2,19 +2,14 @@
 
 import { useState, useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
-import { computeDatasetThresholds, computeEscalationRisk, extractFrustrationPairs, aggregateDailyVolume } from '@/lib/analytics/aggregations';
+import { computeDatasetThresholds, computeEscalationRisk, extractFrustrationPairs, aggregateDailyVolume, getEngineeringInsights } from '@/lib/analytics/aggregations';
 import { detectSpikes } from '@/lib/analytics/anomalies';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { formatPT } from '@/lib/utils/timezone';
-import ConversationModal from './ConversationModal';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
 
-export default function AttentionCallouts({ data, mode = 'support' }: { data: PulseConversation[], mode?: 'support' | 'engineering' }) {
-// I will not replace the whole chunk if it's too long, let's just do targeted replace for the top part and then another for the render.
-// Wait, actually I can just specify StartLine and EndLine to be the exact lines I want to change.
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState('');
-  const [modalData, setModalData] = useState<PulseConversation[]>([]);
+export default function AttentionCallouts({ data, mode = 'support', onCardClick }: { data: PulseConversation[], mode?: 'support' | 'engineering', onCardClick?: (conversations: PulseConversation[], title: string) => void }) {
 
   const formatTime = (secs: number) => {
     if (secs < 60) return `${Math.floor(secs)}s`;
@@ -127,28 +122,34 @@ export default function AttentionCallouts({ data, mode = 'support' }: { data: Pu
       activeItems.sort((a, b) => a.severity - b.severity);
 
     } else {
-      // ENGINEERING MODE (Option A: Volume spikes)
-      const dailyVol = aggregateDailyVolume(data);
-      const series = dailyVol.map(d => ({ date: d.date, value: d.total }));
-      const detected = detectSpikes(series, 7, 1.5).filter(d => d.isAnomaly);
-      
-      if (detected.length > 0) {
-        // Sort by value (largest spike first)
-        detected.sort((a, b) => b.value - a.value);
-        detected.slice(0, 3).forEach((anomaly, index) => {
-          const convs = data.filter(c => formatPT(c.created_at, 'yyyy-MM-dd') === anomaly.date);
-          let desc = `${anomaly.value.toLocaleString()} conversations created.`;
-          if (index === 0) {
-             desc = `${anomaly.value.toLocaleString()} conversations created — the largest spike this period.`;
-          }
-          activeItems.push({
-            id: `spike-${anomaly.date}`,
-            title: `Volume spike on ${format(parseISO(anomaly.date), 'MMM d')}`,
-            description: desc,
-            conversations: convs
-          });
+      // ENGINEERING MODE
+      const criticalBugs = data.filter(c => {
+        const eng = getEngineeringInsights(c);
+        return eng.technical_issue_type === 'bug' && (c.llm_classification?.churn_risk_1_to_10 || 1) >= 7;
+      });
+
+      if (criticalBugs.length > 0) {
+        activeItems.push({
+          id: 'critical-bugs',
+          title: 'Critical Escaped Defects',
+          description: `${criticalBugs.length} high-severity bug${criticalBugs.length === 1 ? ' is' : 's are'} causing high churn risk (>= 7/10).`,
+          conversations: criticalBugs,
+          severity: 0
         });
       }
+
+      const uiFriction = data.filter(c => getEngineeringInsights(c).technical_issue_type === 'ui_friction');
+      if (uiFriction.length > 0) {
+        activeItems.push({
+          id: 'ui-friction',
+          title: 'UI Friction Points',
+          description: `${uiFriction.length} conversation${uiFriction.length === 1 ? ' indicates' : 's indicate'} confusing UI or UX issues.`,
+          conversations: uiFriction,
+          severity: 2
+        });
+      }
+      
+      activeItems.sort((a, b) => a.severity - b.severity);
     }
 
     return { items: activeItems, healthyCount: hCount, healthyLabels: hLabels };
@@ -161,9 +162,21 @@ export default function AttentionCallouts({ data, mode = 'support' }: { data: Pu
       <h2 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
         <AlertCircle className="w-5 h-5 text-chart-4" />
         {mode === 'support' ? (
-           <span>Needs attention</span>
+           <div className="flex items-center gap-2">
+             <span>Attention Required</span>
+             <Tooltip>
+               <TooltipTrigger asChild>
+                 <div className="w-4 h-4 rounded-full border border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-[10px] font-bold cursor-help hover:text-foreground hover:border-foreground/50 transition-colors ml-1">
+                   ?
+                 </div>
+               </TooltipTrigger>
+               <TooltipContent>
+                 High-priority issues and unresolved customer frustrations that need immediate review.
+               </TooltipContent>
+             </Tooltip>
+           </div>
         ) : (
-           <span>Product signals needing review</span>
+           <span>Engineering Escalations</span>
         )}
       </h2>
       <div className="flex-1 bg-card border border-border/60 rounded-2xl shadow-sm flex flex-col">
@@ -174,30 +187,34 @@ export default function AttentionCallouts({ data, mode = 'support' }: { data: Pu
         ) : (
           items.map((item, index) => {
             let severityBadge = null;
-            if (mode === 'support') {
+            if (mode === 'support' || mode === 'engineering') {
               if (item.severity === 0 || item.severity === 2) {
                 severityBadge = (
-                  <span className="relative group/severity inline-flex items-center">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold bg-destructive/10 text-destructive border border-destructive/20 cursor-help">
-                      <span className="w-1.5 h-1.5 rounded-full bg-destructive mr-1.5 animate-pulse" />
-                      Action Required
-                    </span>
-                    <span className="absolute bottom-full mb-2 right-0 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/severity:opacity-100 transition-opacity duration-200 group-hover/severity:delay-300 pointer-events-none z-50 border border-border shadow-md text-center">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold bg-destructive/10 text-destructive border border-destructive/20 cursor-help">
+                        <span className="w-1.5 h-1.5 rounded-full bg-destructive mr-1.5 animate-pulse" />
+                        Action Required
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
                       High priority items that need immediate attention.
-                    </span>
-                  </span>
+                    </TooltipContent>
+                  </Tooltip>
                 );
               } else {
                 severityBadge = (
-                  <span className="relative group/severity inline-flex items-center">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold bg-chart-4/10 text-chart-4 border border-chart-4/20 cursor-help">
-                      <span className="w-1.5 h-1.5 rounded-full bg-chart-4 mr-1.5" />
-                      Needs Review
-                    </span>
-                    <span className="absolute bottom-full mb-2 right-0 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/severity:opacity-100 transition-opacity duration-200 group-hover/severity:delay-300 pointer-events-none z-50 border border-border shadow-md text-center">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold bg-chart-4/10 text-chart-4 border border-chart-4/20 cursor-help">
+                        <span className="w-1.5 h-1.5 rounded-full bg-chart-4 mr-1.5" />
+                        Needs Review
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
                       Items that are slipping from our targets.
-                    </span>
-                  </span>
+                    </TooltipContent>
+                  </Tooltip>
                 );
               }
             }
@@ -206,9 +223,9 @@ export default function AttentionCallouts({ data, mode = 'support' }: { data: Pu
               <div 
                 key={item.id} 
                 onClick={() => {
-                  setModalTitle(item.title);
-                  setModalData(item.conversations);
-                  setIsModalOpen(true);
+                  if (onCardClick) {
+                    onCardClick(item.conversations, item.title);
+                  }
                 }}
                 className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 ${index !== 0 ? 'border-t border-border/40' : ''} hover:bg-secondary/40 transition-colors gap-4 cursor-pointer group first:rounded-t-2xl last:rounded-b-2xl`}
               >
@@ -224,13 +241,6 @@ export default function AttentionCallouts({ data, mode = 'support' }: { data: Pu
           })
         )}
       </div>
-      
-      <ConversationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={modalTitle}
-        conversations={modalData}
-      />
     </div>
   );
 }

@@ -31,7 +31,7 @@ export default function FlaggedMoments({ data, isTab = false }: { data: PulseCon
         </div>
       )}
       
-      <div className="overflow-y-auto pr-2 scrollbar-thin max-h-[300px]">
+      <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin min-h-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {flaggedPairs.length === 0 ? (
             <div className="md:col-span-2 py-8 flex flex-col items-center justify-center text-muted-foreground text-sm h-full bg-secondary/10 rounded-xl border-2 border-border border-dashed">

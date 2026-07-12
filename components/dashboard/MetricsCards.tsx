@@ -1,17 +1,11 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { PulseConversation } from '@/lib/types';
 import { calculateResponseTimePercentiles, computeEscalationRisk, computeDatasetThresholds, hasFrustrationPattern } from '@/lib/analytics/aggregations';
 import { Users, Clock, ThumbsUp, RefreshCw, AlertTriangle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import ConversationModal from './ConversationModal';
-
-export default function MetricsCards({ data, mode = 'primary' }: { data: PulseConversation[], mode?: 'primary' | 'secondary' | 'secondary_rows' }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState('');
-// ... replacing just the top line and then I'll add the new block lower down. Wait, I should replace exactly what I need.
-  const [modalData, setModalData] = useState<PulseConversation[]>([]);
-  const [modalInitialFilter, setModalInitialFilter] = useState<{ sort?: string; classification?: string } | undefined>(undefined);
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip';
+export default function MetricsCards({ data, mode = 'primary', onCardClick }: { data: PulseConversation[], mode?: 'primary' | 'secondary' | 'secondary_rows', onCardClick?: (filter: { sort?: string }, title?: string) => void }) {
 
   const metrics = useMemo(() => {
     const total = data.length;
@@ -138,10 +132,9 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
             <div 
               key={card.title} 
               onClick={() => {
-                setModalTitle(card.title);
-                setModalData(card.filterFn(data));
-                setModalInitialFilter({ sort: card.sort });
-                setIsModalOpen(true);
+                if (onCardClick) {
+                  onCardClick({ sort: card.sort }, card.title);
+                }
               }}
               className="flex items-center justify-between py-4 px-2 hover:bg-secondary/40 transition-colors border-b border-border/40 last:border-0 rounded-lg cursor-pointer group"
             >
@@ -159,8 +152,7 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
               </div>
               
               <div className="flex items-center gap-4 text-right shrink-0 ml-4">
-                <div className="flex flex-col items-end">
-                  <div className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-1">
+                <div className="flex-1 flex flex-col justify-end">                <div className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-1">
                     Value
                   </div>
                   <div className="flex items-baseline gap-1.5">
@@ -183,13 +175,6 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
             </div>
           );
         })}
-        <ConversationModal 
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={modalTitle}
-          conversations={modalData}
-          initialFilter={modalInitialFilter}
-        />
       </div>
     );
   }
@@ -203,10 +188,9 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
             <div 
               key={card.title} 
               onClick={() => {
-                setModalTitle(card.title);
-                setModalData(card.filterFn(data));
-                setModalInitialFilter({ sort: card.sort });
-                setIsModalOpen(true);
+                if (onCardClick) {
+                  onCardClick({ sort: card.sort }, card.title);
+                }
               }}
               className="flex items-center gap-3 px-4 py-2 bg-background border border-border/50 shadow-sm hover:shadow hover:-translate-y-0.5 rounded-xl cursor-pointer transition-all duration-300"
             >
@@ -229,13 +213,6 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
             </div>
           );
         })}
-        <ConversationModal 
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={modalTitle}
-          conversations={modalData}
-          initialFilter={modalInitialFilter}
-        />
       </div>
     );
   }
@@ -251,10 +228,9 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
             <div 
               key={card.title} 
               onClick={() => {
-                setModalTitle(card.title);
-                setModalData(card.filterFn(data));
-                setModalInitialFilter({ sort: card.sort });
-                setIsModalOpen(true);
+                if (onCardClick) {
+                  onCardClick({ sort: card.sort }, card.title);
+                }
               }}
               className="px-6 py-4 bg-card border border-border/60 shadow-sm rounded-2xl flex items-center justify-between hover:-translate-y-1 hover:shadow-lg hover:border-border transition-all duration-300 group cursor-pointer"
             >
@@ -262,14 +238,16 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
                 <div className="flex items-center gap-2 relative">
                   <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{card.title}</p>
                   {card.tooltip && (
-                    <div className="group/tooltip relative flex items-center">
-                      <div className="w-4 h-4 rounded-full border border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-[10px] font-bold cursor-help group-hover/tooltip:text-foreground group-hover/tooltip:border-foreground/50 transition-colors">
-                        ?
-                      </div>
-                      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-2 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10 border-2 border-border shadow-sm shadow-md text-center">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="w-4 h-4 rounded-full border border-muted-foreground/30 text-muted-foreground/50 flex items-center justify-center text-[10px] font-bold cursor-help hover:text-foreground hover:border-foreground/50 transition-colors">
+                          ?
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
                         {card.tooltip}
-                      </div>
-                    </div>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
                 <div className="flex items-baseline gap-2 mt-2 flex-wrap">
@@ -291,13 +269,6 @@ export default function MetricsCards({ data, mode = 'primary' }: { data: PulseCo
         })}
       </div>
 
-      <ConversationModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={modalTitle}
-        conversations={modalData}
-        initialFilter={modalInitialFilter}
-      />
     </div>
   );
 }

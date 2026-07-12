@@ -59,4 +59,5 @@ export interface IntercomConversation {
 // Internal wrapped type that includes the source filename
 export interface PulseConversation extends IntercomConversation {
   _sourceFilename: string;
+  llm_classification?: any;
 }

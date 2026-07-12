@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { UploadCloud, FileJson, Loader2, AlertCircle } from 'lucide-react';
+import { UploadCloud, Loader2, AlertCircle } from 'lucide-react';
 import { saveConversations, clearConversations } from '@/lib/storage';
 import { PulseConversation } from '@/lib/types';
 import { ParseRequest, ParseResponse } from '@/lib/parser/worker';
@@ -80,7 +80,7 @@ export default function Dropzone() {
         });
         
         await saveConversations(deduplicated);
-        router.push('/support');
+        router.push('/processing');
       } catch {
         // Fallback for IDB failures (e.g. quota exceeded)
         console.warn("Could not save to IndexedDB.");
@@ -111,36 +111,20 @@ export default function Dropzone() {
     }
   }, [processFiles]);
 
-  const loadSampleData = useCallback(() => {
-    setIsParsing(true);
-    setError(null);
-    
-    const worker = new Worker(new URL('../../lib/parser/worker.ts', import.meta.url), { type: 'module' });
-    
-    worker.onmessage = async (event: MessageEvent<ParseResponse>) => {
-      const response = event.data;
-      if (response.type === 'success') {
-        try {
-          await saveConversations(response.data);
-          router.push('/support');
-        } catch {
-          setError("Failed to load sample data. Please make sure sample-data.json exists.");
-          setIsParsing(false);
-        }
-      } else {
-        setError(response.error);
-        setIsParsing(false);
-      }
-      worker.terminate();
-    };
-
-    worker.postMessage({
-      type: 'parse_url',
-      url: '/sample-conversations.json', // Will be served from public folder
-      filename: 'sample-conversations.json'
-    } as ParseRequest);
-    
-  }, [router]);
+  const loadSampleData = async () => {
+    try {
+      setIsParsing(true);
+      setError(null);
+      const res = await fetch('/sample-conversations.json');
+      if (!res.ok) throw new Error('Failed to fetch sample data');
+      const blob = await res.blob();
+      const file = new File([blob], 'sample-conversations.json', { type: 'application/json' });
+      await processFiles([file]);
+    } catch (err: any) {
+      setError(err.message);
+      setIsParsing(false);
+    }
+  };
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
@@ -148,8 +132,8 @@ export default function Dropzone() {
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={onDrop}
-        className={`relative flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-xl transition-colors
-          ${isDragging ? 'border-primary bg-secondary/50' : 'border-border hover:border-primary/50 hover:bg-secondary/20'}
+        className={`relative flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-xl transition-all shadow-sm
+          ${isDragging ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-primary/50 hover:bg-muted/50 hover:shadow-md'}
           ${isParsing ? 'opacity-50 pointer-events-none' : ''}
         `}
       >
@@ -166,8 +150,8 @@ export default function Dropzone() {
           <div className="flex flex-col items-center space-y-4 text-muted-foreground">
             <Loader2 className="w-12 h-12 animate-spin text-primary" />
             <div>
-              <p className="text-lg font-medium text-foreground">Parsing Export...</p>
-              <p className="text-sm">This happens entirely in your browser.</p>
+              <p className="text-lg font-medium text-foreground">Processing Uploads...</p>
+              <p className="text-sm">This may take a moment for large datasets.</p>
             </div>
           </div>
         ) : (
@@ -176,12 +160,8 @@ export default function Dropzone() {
               <UploadCloud className="w-8 h-8" />
             </div>
             <div>
-              <p className="text-lg font-medium text-foreground">Upload your Intercom JSON Export</p>
-              <p className="text-sm text-muted-foreground mt-1">Drag and drop, or click to browse</p>
-            </div>
-            <div className="flex items-center gap-2 text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 mt-4">
-              <FileJson className="w-4 h-4" />
-              Processed entirely in your browser — nothing is uploaded to a server
+              <p className="text-lg font-medium text-foreground">Upload Daily Snapshots</p>
+              <p className="text-sm text-muted-foreground mt-1">Drag and drop your Intercom snapshot JSON files, or click to browse</p>
             </div>
           </div>
         )}
@@ -194,16 +174,17 @@ export default function Dropzone() {
         </div>
       )}
 
-      <div className="flex flex-col items-center gap-4 pt-6 border-t border-border">
-        <p className="mt-2 text-sm text-muted-foreground">Don&apos;t have an export handy?</p>
-        <button 
-          onClick={loadSampleData}
-          disabled={isParsing}
-          className="px-6 py-2.5 text-sm font-medium rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors disabled:opacity-50"
-        >
-          Explore with Sample Data
-        </button>
-      </div>
+      {process.env.NODE_ENV === 'development' && (
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={loadSampleData}
+            disabled={isParsing}
+            className="text-sm px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-md transition-colors"
+          >
+            Load Sample Data for QA
+          </button>
+        </div>
+      )}
     </div>
   );
 }

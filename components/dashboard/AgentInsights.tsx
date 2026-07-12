@@ -10,7 +10,7 @@ export default function AgentInsights({ data }: { data: PulseConversation[] }) {
   const [activeTab, setActiveTab] = useState<'performance' | 'coverage'>('performance');
 
   return (
-    <div className="flex flex-col overflow-hidden h-full">
+    <div className="flex flex-col h-full min-h-0">
       <div className="border-b border-border/40 flex items-center px-2">
         <button 
           onClick={() => setActiveTab('performance')}
