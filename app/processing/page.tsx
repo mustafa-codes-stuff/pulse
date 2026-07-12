@@ -111,6 +111,7 @@ export default function ProcessingPage() {
                     modified = true;
                   }
                 });
+                setRateLimitMessage(null);
                 break; // Success! Exit retry loop
               } catch (err: any) {
                 attempt++;
@@ -118,6 +119,14 @@ export default function ProcessingPage() {
                 if (attempt >= maxAttempts) {
                   throw err; // Give up, throw to outer catch
                 }
+                
+                // Show the retry clearly to the user instead of silently hanging
+                if (err.message.includes('429') || err.message.includes('rate limit')) {
+                  setRateLimitMessage(`API Rate limit paused processing. Retrying in ${attempt * 2}s...`);
+                } else {
+                  setRateLimitMessage(`Network hiccup. Retrying batch (Attempt ${attempt}/${maxAttempts})...`);
+                }
+                
                 // Exponential backoff
                 await new Promise(resolve => setTimeout(resolve, attempt * 2000));
               }
